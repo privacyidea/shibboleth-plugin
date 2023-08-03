@@ -1,0 +1,73 @@
+<assembly
+        xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+    <id>bin</id>
+    <formats>
+        <format>tar.gz</format>
+        <format>tar.bz2</format>
+        <format>zip</format>
+    </formats>
+
+    <fileSets>
+        <!-- The plugin property file -->
+        <fileSet>
+            <directory>../privacyIDEA-impl/target/classes/org/privacyidea</directory>
+            <outputDirectory>bootstrap</outputDirectory>
+            <includes>
+                <include>plugin.properties</include>
+            </includes>
+        </fileSet>
+
+        <!--  The implementation jar -->
+        <fileSet>
+            <directory>../privacyIDEA-impl/target</directory>
+            <outputDirectory>webapp/WEB-INF/lib</outputDirectory>
+            <includes>
+                <include>idp-plugin-privacyIDEA-impl-*.jar</include>
+            </includes>
+            <excludes>
+                <exclude>*test*.jar</exclude>
+                <exclude>*javadoc.jar</exclude>
+                <exclude>*sources.jar</exclude>
+            </excludes>
+        </fileSet>
+
+        <!--  The API jar -->
+        <fileSet>
+            <directory>../privacyIDEA-api/target</directory>
+            <outputDirectory>webapp/WEB-INF/lib</outputDirectory>
+            <includes>
+                <include>idp-plugin-privacyIDEA-api-*.jar</include>
+            </includes>
+            <excludes>
+                <exclude>*test*.jar</exclude>
+                <exclude>*javadoc.jar</exclude>
+                <exclude>*sources.jar</exclude>
+            </excludes>
+        </fileSet>
+
+        <!--  The dependencies -->
+        <fileSet>
+            <directory>../privacyIDEA-impl/target/dependency</directory>
+            <outputDirectory>webapp/WEB-INF/lib</outputDirectory>
+            <includes>
+                <include>*.jar</include>
+            </includes>
+            <excludes>
+                <exclude>*test*.jar</exclude>
+                <exclude>*javadoc.jar</exclude>
+                <exclude>*sources.jar</exclude>
+            </excludes>
+        </fileSet>
+
+        <!-- The signing certificates -->
+        <fileSet>
+            <directory>src/main/resources/bootstrap</directory>
+            <outputDirectory>bootstrap</outputDirectory>
+            <includes>
+                <include>keys.txt</include>
+            </includes>
+        </fileSet>
+    </fileSets>
+</assembly>

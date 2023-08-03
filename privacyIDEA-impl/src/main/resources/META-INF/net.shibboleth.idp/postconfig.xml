@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:util="http://www.springframework.org/schema/util" xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:c="http://www.springframework.org/schema/c" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+                           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd"
+       default-init-method="initialize" default-destroy-method="destroy">
+
+    <!-- System beans needed for extension to function, loaded after global.xml -->
+    <bean id="authn/privacyIDEA" parent="shibboleth.AuthenticationFlow"
+          p:order="%{idp.authn.privacyIDEA.order:1000}"
+          p:nonBrowserSupported="%{idp.authn.privacyIDEA.nonBrowserSupported:true}"
+          p:passiveAuthenticationSupported="%{idp.authn.privacyIDEA.passiveAuthenticationSupported:true}"
+          p:forcedAuthenticationSupported="%{idp.authn.privacyIDEA.forcedAuthenticationSupported:true}"
+          p:proxyRestrictionsEnforced="%{idp.authn.privacyIDEA.proxyRestrictionsEnforced:%{idp.authn.enforceProxyRestrictions:true}}"
+          p:proxyScopingEnforced="%{idp.authn.privacyIDEA.proxyScopingEnforced:false}"
+          p:discoveryRequired="%{idp.authn.privacyIDEA.discoveryRequired:false}"
+          p:lifetime="%{idp.authn.privacyIDEA.lifetime:%{idp.authn.defaultLifetime:PT1H}}"
+          p:inactivityTimeout="%{idp.authn.privacyIDEA.inactivityTimeout:%{idp.authn.defaultTimeout:PT30M}}"
+          p:reuseCondition-ref="#{'%{idp.authn.privacyIDEA.reuseCondition:shibboleth.Conditions.TRUE}'.trim()}"
+          p:activationCondition-ref="#{'%{idp.authn.privacyIDEA.activationCondition:shibboleth.Conditions.TRUE}'.trim()}">
+        <!--<property name="supportedPrincipals">
+            <list>
+                <bean parent="shibboleth.SAML2AuthnContextClassRef"
+                      c:classRef="urn:de:zedat:fudis:SAML:2.0:ac:classes:CR"/>
+            </list>
+        </property>-->
+        <property name="supportedPrincipalsByString">
+            <bean parent="shibboleth.CommaDelimStringArray"
+                  c:_0="#{'%{idp.authn.privacyIDEA.supportedPrincipals:}'.trim()}"/>
+        </property>
+    </bean>
+</beans>
