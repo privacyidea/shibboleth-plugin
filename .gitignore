@@ -1,0 +1,11 @@
+*/target
+*/test-output
+*~
+*/.classpath
+*/.project
+*/.settings
+/.project
+/.settings
+../privacyidea-shibboleth-plugin/target
+/.idea
+privacyIDEA-impl/idp-plugin-privacyIDEA-impl.iml
