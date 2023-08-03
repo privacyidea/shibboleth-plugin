@@ -1,0 +1,30 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.privacyidea</groupId>
+        <artifactId>java-idp-plugin-privacyidea-parent</artifactId>
+        <version>0.0.1</version>
+    </parent>
+
+    <artifactId>idp-plugin-privacyIDEA-api</artifactId>
+    <packaging>jar</packaging>
+    <name>Shibboleth IdP :: Plugins :: privacyIDEA API</name>
+    <description>IdP privacyIDEA plugin API.</description>
+
+    <properties>
+        <checkstyle.configLocation>${project.basedir}/../checkstyle.xml</checkstyle.configLocation>
+        <automatic.module.name>org.privacyidea.privacyIDEA.api</automatic.module.name>
+    </properties>
+
+    <dependencies>
+        <!-- Provided dependencies -->
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+</project>
