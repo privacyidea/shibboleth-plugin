@@ -11,16 +11,20 @@
 4. **Check if the MFA Module is activated: `/bin/module.sh -l`.**
 5. **Install the privacyIDEA Plugin: `/bin/plugin.sh -i path/to/files/from/step/1 --noCheck`.**
 6. **Check if the privacyIDEA Plugin is installed correctly: `/bin/plugin.sh -l`.**<br>
-If you see the `org.privacyidea.privacyIDEA` on the list, the plugin is installed successfully.<br>
+If you see the *org.privacyidea.privacyIDEA* on the list, the plugin is installed successfully.<br>
 Otherwise, re-run the command from step 5.
 
 ### Configuration:
-1. **Create the `privacyidea.properties` file in: `/config/auth/`.**<br>
-   You can find a template in the repo in: `/privacyIDEA-impl/src/resources/org/privacyidea/conf/authn/`.<br>
+1. **Create the *privacyidea.properties* file in: `/config/auth/`.**<br>
+   You can find a template in the resources: `/privacyIDEA-impl/src/resources/org/privacyidea/conf/authn/`.<br>
    The config file should contain the following configuration variables:
    - `privacyidea.server_url=https://localhost`
    - `privacyidea.realm=defrealm`
    - `privacyidea.verify_ssl=true`
+
+2. **Add the privacyIDEA subflow to the MFA flow.**<br>
+   - Path to the MFA flow configuration file: `/conf/authn/mfa-authn-config.xml`.
+   - Example of the *util:map* is located in the resources at the end of the *privacyidea.properties* file (`/privacyIDEA-impl/src/resources/org/privacyidea/conf/authn/privacyidea.properties`).
 
 ### Log check:
 - **Main log: `/logs/idp-process.log`.**
