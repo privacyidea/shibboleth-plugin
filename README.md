@@ -14,6 +14,14 @@
 If you see the `org.privacyidea.privacyIDEA` on the list, the plugin is installed successfully.<br>
 Otherwise, re-run the command from step 5.
 
+### Configuration:
+1. **Create the `privacyidea.properties` file in: `/config/auth/`.**<br>
+   You can find a template in the repo in: `/privacyIDEA-impl/src/resources/org/privacyidea/conf/authn/`.<br>
+   The config file should contain the following configuration variables:
+   - `privacyidea.server_url=https://localhost`
+   - `privacyidea.realm=defrealm`
+   - `privacyidea.verify_ssl=true`
+
 ### Log check:
 - **Main log: `/logs/idp-process.log`.**
 - **Warn and error log: `/logs/idp-warn.log`.**
