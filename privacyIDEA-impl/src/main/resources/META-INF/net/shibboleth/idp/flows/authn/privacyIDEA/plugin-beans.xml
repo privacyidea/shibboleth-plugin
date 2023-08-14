@@ -22,7 +22,8 @@
     <bean id="initPIContext" class="org.privacyidea.action.InitializePIContext" scope="prototype"
           p:serverURL="%{privacyidea.server_url:#{'https://localhost'}}"
           p:realm="%{privacyidea.realm:#{null}}"
-          p:verifySSL="%{privacyidea.verify_ssl:true}"/>
+          p:verifySSL="%{privacyidea.verify_ssl:true}"
+          p:defaultMessage="%{privacyidea.default_message:#{null}}"/>
 
     <bean id="piAuthenticator" class="org.privacyidea.action.PrivacyIDEAAuthenticator" scope="prototype"
           p:httpServletRequest-ref="shibboleth.HttpServletRequest"/>
