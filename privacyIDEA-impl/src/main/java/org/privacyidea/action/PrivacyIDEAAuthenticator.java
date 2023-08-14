@@ -20,9 +20,7 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction im
     /**
      * Constructor
      */
-    public PrivacyIDEAAuthenticator()
-    {
-    }
+    public PrivacyIDEAAuthenticator() {}
 
     @Override
     protected final void doExecute(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext, @Nonnull PIServerConfigContext piServerConfigContext)
@@ -88,26 +86,14 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction im
     }
 
     @Override
-    public void log(String message)
-    {
-        LOGGER.info("PrivacyIDEA Client: " + message);
-    }
+    public void log(String message) {LOGGER.info("PrivacyIDEA Client: " + message);}
 
     @Override
-    public void error(String message)
-    {
-        LOGGER.error("PrivacyIDEA Client: " + message);
-    }
+    public void error(String message) {LOGGER.error("PrivacyIDEA Client: " + message);}
 
     @Override
-    public void log(Throwable throwable)
-    {
-        LOGGER.info("PrivacyIDEA Client: " + throwable);
-    }
+    public void log(Throwable throwable) {LOGGER.info("PrivacyIDEA Client: " + throwable);}
 
     @Override
-    public void error(Throwable throwable)
-    {
-        LOGGER.error("PrivacyIDEA Client: " + throwable);
-    }
+    public void error(Throwable throwable) {LOGGER.error("PrivacyIDEA Client: " + throwable);}
 }
