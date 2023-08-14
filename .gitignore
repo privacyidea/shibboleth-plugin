@@ -6,10 +6,10 @@
 */.settings
 /.project
 /.settings
-../privacyidea-shibboleth-plugin/target
-/privacyIDEA-api/target
-/privacyIDEA-dist/target
-/privacyIDEA-impl/target
+/target
 /.idea
 privacyIDEA-impl/idp-plugin-privacyIDEA-impl.iml
 *.jar
+/privacyIDEA-impl/target/
+/privacyIDEA-api/target/
+/privacyIDEA-dist/target/
