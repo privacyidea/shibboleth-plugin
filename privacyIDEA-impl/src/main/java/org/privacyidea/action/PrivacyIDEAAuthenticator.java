@@ -87,13 +87,13 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction im
     }
 
     @Override
-    public void log(String message) {LOGGER.warn("PrivacyIDEA Client: " + message);} //todo change to info
+    public void log(String message) {LOGGER.info("PrivacyIDEA Client: " + message);}
 
     @Override
     public void error(String message) {LOGGER.error("PrivacyIDEA Client: " + message);}
 
     @Override
-    public void log(Throwable throwable) {LOGGER.warn("PrivacyIDEA Client: " + throwable);} //todo change to info
+    public void log(Throwable throwable) {LOGGER.info("PrivacyIDEA Client: " + throwable);}
 
     @Override
     public void error(Throwable throwable) {LOGGER.error("PrivacyIDEA Client: " + throwable);}
