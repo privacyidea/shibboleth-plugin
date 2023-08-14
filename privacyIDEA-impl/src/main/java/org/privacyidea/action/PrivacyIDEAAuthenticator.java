@@ -47,7 +47,7 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction im
 
                 if (otp != null)
                 {
-                    piResponse = privacyIDEA.validateCheck(piContext.getUsername(), otp, null, null);
+                    piResponse = privacyIDEA.validateCheck(piContext.getUsername(), otp, piContext.getTransactionID(), null);
                 }
                 else
                 {
@@ -57,6 +57,7 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction im
                 if (piResponse != null)
                 {
                     piContext.setMessage(piResponse.message);
+                    piContext.setTransactionID(piResponse.transactionID);
 
                     if (piResponse.error != null)
                     {
