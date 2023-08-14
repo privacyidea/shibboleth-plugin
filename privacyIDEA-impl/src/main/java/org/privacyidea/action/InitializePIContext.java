@@ -24,7 +24,9 @@ public class InitializePIContext extends AbstractAuthenticationAction
     private String serverURL;
     @Nullable
     private String realm;
-    private boolean verifySSL; //todo is boolean possible in config?
+    private boolean verifySSL;
+    @Nullable
+    private String defaultMessage;
 
     //todo get useragent
 
@@ -54,7 +56,7 @@ public class InitializePIContext extends AbstractAuthenticationAction
             log.info("{} Create PIServerConfigContext {}", this.getLogPrefix(), piServerConfigContext);
             authenticationContext.addSubcontext(piServerConfigContext);
 
-            PIContext piContext = new PIContext(user);
+            PIContext piContext = new PIContext(user, defaultMessage);
             log.info("{} Create PIContext {}", this.getLogPrefix(), piContext);
             authenticationContext.addSubcontext(piContext);
         }
@@ -88,4 +90,5 @@ public class InitializePIContext extends AbstractAuthenticationAction
     {
         this.verifySSL = verifySSL;
     }
+    public void setDefaultMessage(@Nonnull String defaultMessage) { this.defaultMessage = defaultMessage; }
 }
