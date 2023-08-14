@@ -60,22 +60,28 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction im
                 if (piResponse != null)
                 {
                     piContext.setMessage(piResponse.message);
+
                     if (piResponse.error != null)
                     {
-                        LOGGER.error("{} privacyIDEA server error: " + piResponse.error.message, this.getLogPrefix());
+                        LOGGER.error("{} privacyIDEA server error: {}!", this.getLogPrefix(), piResponse.error.message);
                         ActionSupport.buildEvent(profileRequestContext, "AuthenticationException");
+                        return;
                     }
+
                     if (!piResponse.multichallenge.isEmpty())
                     {
+                        LOGGER.info("{} Next challenge encountered. Building form...", this.getLogPrefix());
                         ActionSupport.buildEvent(profileRequestContext, "reload");
                     }
                     else if (piResponse.value)
                     {
+                        LOGGER.info("{} Authentication succeeded!", this.getLogPrefix());
                         ActionSupport.buildEvent(profileRequestContext, "success");
                     }
                     else
                     {
-                        ActionSupport.buildEvent(profileRequestContext, "AuthenticationException");
+                        LOGGER.info("{} Received a server message. Building form...", this.getLogPrefix());
+                        ActionSupport.buildEvent(profileRequestContext, "reload");
                     }
                 }
             }
