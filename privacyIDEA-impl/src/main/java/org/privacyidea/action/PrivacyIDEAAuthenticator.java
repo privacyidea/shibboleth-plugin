@@ -25,8 +25,7 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction im
     }
 
     @Override
-    protected final void doExecute(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext, @Nonnull
-    PIServerConfigContext piServerConfigContext)
+    protected final void doExecute(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext, @Nonnull PIServerConfigContext piServerConfigContext)
     {
         if (privacyIDEA == null)
         {
@@ -44,13 +43,13 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction im
         {
             if (request.getParameterValues("pi_otp_input") != null)
             {
-                String extractedOTP = request.getParameterValues("pi_otp_input")[0];
+                String otp = request.getParameterValues("pi_otp_input")[0];
 
                 PIResponse piResponse = null;
 
-                if (extractedOTP != null)
+                if (otp != null)
                 {
-                    piResponse = privacyIDEA.validateCheck(piContext.getUsername(), extractedOTP, null, null);
+                    piResponse = privacyIDEA.validateCheck(piContext.getUsername(), otp, null, null);
                 }
                 else
                 {
