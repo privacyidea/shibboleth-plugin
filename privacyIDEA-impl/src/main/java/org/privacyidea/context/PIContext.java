@@ -12,7 +12,9 @@ public class PIContext extends BaseContext
     private final User user;
     @Nonnull
     private final String defaultMessage;
-    private String piMessage = "";
+    private String message = "";
+    @Nullable
+    private String transactionID = null;
 
     /**
      * Constructor
@@ -26,17 +28,22 @@ public class PIContext extends BaseContext
     @Nonnull
     public String getUsername() {return user.getUsername();}
 
-    public void setMessage(String message) {piMessage = message;}
+    public void setMessage(String message) {this.message = message;}
 
     public String getMessage()
     {
-        if (!piMessage.isEmpty())
+        if (!message.isEmpty())
         {
-            return piMessage;
+            return message;
         }
         else
         {
             return defaultMessage;
         }
     }
+
+    public void setTransactionID(@Nonnull String transactionID) {this.transactionID = transactionID;}
+
+    @Nullable
+    public String getTransactionID() {return transactionID;}
 }
