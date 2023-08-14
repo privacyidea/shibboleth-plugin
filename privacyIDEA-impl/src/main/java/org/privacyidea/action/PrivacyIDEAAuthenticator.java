@@ -59,12 +59,24 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction im
 
                 if (piResponse != null)
                 {
-                    if (piResponse.value)
+                    piContext.setMessage(piResponse.message);
+                    if (piResponse.error != null)
+                    {
+                        LOGGER.error("{} privacyIDEA server error: " + piResponse.error.message, this.getLogPrefix());
+                        ActionSupport.buildEvent(profileRequestContext, "AuthenticationException");
+                    }
+                    if (!piResponse.multichallenge.isEmpty())
+                    {
+                        ActionSupport.buildEvent(profileRequestContext, "reload");
+                    }
+                    else if (piResponse.value)
                     {
                         ActionSupport.buildEvent(profileRequestContext, "success");
-                        return;
                     }
-                    ActionSupport.buildEvent(profileRequestContext, "AuthenticationException");
+                    else
+                    {
+                        ActionSupport.buildEvent(profileRequestContext, "AuthenticationException");
+                    }
                 }
             }
         }
@@ -73,7 +85,7 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction im
     @Override
     public void log(String message)
     {
-        LOGGER.warn("PrivacyIDEA Client: " + message); //todo change to info
+        LOGGER.info("PrivacyIDEA Client: " + message);
     }
 
     @Override
@@ -85,7 +97,7 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction im
     @Override
     public void log(Throwable throwable)
     {
-        LOGGER.warn("PrivacyIDEA Client: " + throwable); //todo change to info
+        LOGGER.info("PrivacyIDEA Client: " + throwable);
     }
 
     @Override

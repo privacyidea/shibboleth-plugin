@@ -48,7 +48,6 @@ public class InitializePIContext extends AbstractAuthenticationAction
         if (user == null)
         {
             log.info("{} No principal name available.", getLogPrefix());
-            //todo add username input to template
         }
         else
         {
@@ -90,5 +89,6 @@ public class InitializePIContext extends AbstractAuthenticationAction
     {
         this.verifySSL = verifySSL;
     }
-    public void setDefaultMessage(@Nonnull String defaultMessage) { this.defaultMessage = defaultMessage; }
+
+    public void setDefaultMessage(@Nonnull String defaultMessage) {this.defaultMessage = defaultMessage;}
 }
