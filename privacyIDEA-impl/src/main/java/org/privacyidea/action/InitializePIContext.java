@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
-
 public class InitializePIContext extends AbstractAuthenticationAction
 {
     private static final Logger log = LoggerFactory.getLogger(InitializePIContext.class);
@@ -27,7 +26,6 @@ public class InitializePIContext extends AbstractAuthenticationAction
     private boolean verifySSL;
     @Nullable
     private String defaultMessage;
-
     //todo get useragent
 
     /**
@@ -48,7 +46,6 @@ public class InitializePIContext extends AbstractAuthenticationAction
         if (user == null)
         {
             log.info("{} No principal name available.", getLogPrefix());
-            //todo add username input to template
         }
         else
         {
@@ -76,19 +73,12 @@ public class InitializePIContext extends AbstractAuthenticationAction
         }
     }
 
-    public void setServerURL(@Nonnull String serverURL)
-    {
-        this.serverURL = serverURL;
-    }
+    // Spring bean property helper functions
+    public void setServerURL(@Nonnull String serverURL) {this.serverURL = serverURL;}
 
-    public void setRealm(@Nonnull String realm)
-    {
-        this.realm = realm;
-    }
+    public void setRealm(@Nonnull String realm) {this.realm = realm;}
 
-    public void setVerifySSL(boolean verifySSL)
-    {
-        this.verifySSL = verifySSL;
-    }
-    public void setDefaultMessage(@Nonnull String defaultMessage) { this.defaultMessage = defaultMessage; }
+    public void setVerifySSL(boolean verifySSL) {this.verifySSL = verifySSL;}
+
+    public void setDefaultMessage(@Nonnull String defaultMessage) {this.defaultMessage = defaultMessage;}
 }

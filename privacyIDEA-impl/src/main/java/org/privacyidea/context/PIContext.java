@@ -8,9 +8,14 @@ import org.opensaml.messaging.context.BaseContext;
 
 public class PIContext extends BaseContext
 {
+    @Nonnull
     private final User user;
     @Nonnull
     private final String defaultMessage;
+    private String message = "";
+    @Nullable
+    private String transactionID = null;
+
     /**
      * Constructor
      */
@@ -21,11 +26,24 @@ public class PIContext extends BaseContext
     }
 
     @Nonnull
-    public String getUsername()
+    public String getUsername() {return user.getUsername();}
+
+    public void setMessage(String message) {this.message = message;}
+
+    public String getMessage()
     {
-        return this.user.getUsername();
+        if (!message.isEmpty())
+        {
+            return message;
+        }
+        else
+        {
+            return defaultMessage;
+        }
     }
 
-    @Nonnull
-    public String getDefaultMessage() { return this.defaultMessage; }
+    public void setTransactionID(@Nonnull String transactionID) {this.transactionID = transactionID;}
+
+    @Nullable
+    public String getTransactionID() {return transactionID;}
 }

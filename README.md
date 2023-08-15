@@ -5,8 +5,7 @@
 
 ### Installation:
 1. **Copy the package to the server:**
-    - Go to: `/privacyIDEA-dist/target/`.
-    - Find a compression data with extention which you need (.zip, .tar.gr, .tar.bz2).
+    - Chose the archive type for your system from the release page (.zip, .tar.gr, .tar.bz2).
     - Copy it with the corresponding signature data (.asc).
     - Place both data somewhere in your shibboleth server.
 2. **Open the terminal and run: `sudo -i` for admin rights.**
@@ -35,4 +34,4 @@ Otherwise, re-run the command from step 5.
 - **Warn and error log: `/logs/idp-warn.log`.**
 
 ### Plugin update:
-To update the plugin, repeat the installation process with the new package data.
+To update the plugin, repeat the installation process with the new archive data.
