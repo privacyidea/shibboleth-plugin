@@ -57,7 +57,10 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction im
                 if (piResponse != null)
                 {
                     piContext.setMessage(piResponse.message);
-                    piContext.setTransactionID(piResponse.transactionID);
+                    if (piContext.getTransactionID() == null)
+                    {
+                        piContext.setTransactionID(piResponse.transactionID);
+                    }
 
                     if (piResponse.error != null)
                     {
