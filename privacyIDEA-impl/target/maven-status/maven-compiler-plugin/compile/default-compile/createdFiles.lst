@@ -1,0 +1,8 @@
+org\privacyidea\action\PrivacyIDEAAuthenticator.class
+org\privacyidea\context\User.class
+org\privacyidea\action\AbstractChallengeResponseAction.class
+org\privacyidea\context\PIContext.class
+org\privacyidea\context\PIServerConfigContext.class
+org\privacyidea\action\InitializePIContext.class
+org\privacyidea\PrivacyIDEAPlugin.class
+org\privacyidea\PrivacyIDEAModule.class

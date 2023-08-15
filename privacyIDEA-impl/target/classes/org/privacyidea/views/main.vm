@@ -1,0 +1,100 @@
+## Velocity Template for with main template
+##
+## Velocity context will contain the following properties
+## flowExecutionUrl - the form action location
+## flowRequestContext - the Spring Web Flow RequestContext
+## flowExecutionKey - the SWF execution key (this is built into the flowExecutionUrl)
+## profileRequestContext - root of context tree
+## authenticationContext - context with authentication request information
+## authenticationErrorContext - context with login error state
+## authenticationWarningContext - context with login warning state
+## rpUIContext - the context with SP UI information from the metadata
+## rpContext - RelyingPartyContext
+## encoder - HTMLEncoder class
+## request - HttpServletRequest
+## response - HttpServletResponse
+## environment - Spring Environment object for property resolution
+## custom - arbitrary object injected by deployer
+## piContext - privacyIDEA Context
+##
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>#springMessageText("$titleMessageTextProperty", "Token Login Service")</title>
+    <link rel="stylesheet" type="text/css" href="$request.getContextPath()#springMessageText("idp.css", "/css/placeholder.css")">
+</head>
+
+<body>
+<div class="wrapper">
+    <div class="container">
+        <header>
+            <img class="main-logo" src="$request.getContextPath()#springMessageText("idp.logo", "/images/placeholder-logo.png")"
+                 alt="#springMessageText("idp.logo.alt-text", "logo")">
+            #set ($serviceName = $rpUIContext.serviceName)
+            #if ($serviceName && !$rpContext.getRelyingPartyId().contains($serviceName))
+                <h1>#springMessageText("idp.login.loginTo", "Login to ") $encoder.encodeForHTML($serviceName)</h1>
+            #end
+        </header>
+
+        <div class="content">
+            <div class="column one">
+                #*
+                //
+                //    SP Description & Logo (optional)
+                //    These idpui lines will display added information (if available
+                //    in the metadata) about the Service Provider (SP) that requested
+                //    authentication. These idpui lines are "active" in this example
+                //    (not commented out) - this extra SP info will be displayed.
+                //    Remove or comment out these lines to stop the display of the
+                //    added SP information.
+                //
+                *#
+                #set ($logo = $rpUIContext.getLogo())
+                #if ($logo)
+                    <img class="service-logo" src="$encoder.encodeForHTMLAttribute($logo)" alt="$encoder.encodeForHTMLAttribute($serviceName)">
+                #end
+                #set ($desc = $rpUIContext.getServiceDescription())
+                #if ($desc)
+                    <p>$encoder.encodeForHTML($desc)</p>
+                #end
+
+                <div id="privacyIDEA form">
+                    <form id="privacyidea-form" action="$flowExecutionUrl" method="post" autocomplete="off">
+                        #parse("csrf/csrf.vm")
+                        <div class="content">
+                            <p>Hello $piContext.getUsername()!</p>
+                            <br>
+                            <p>$piContext.getMessage()</p>
+                            <br>
+                        </div>
+
+                        <div class="form-element-wrapper">
+                            <input id="pi_otp_input" class="form-element form-field" name="pi_otp_input" type="password" autofocus placeholder="PIN+OTP" value="">
+                            <br>
+                            <button class="form-element form-button" type="submit" name="_eventId_proceed">Submit</button>
+                            <br><br>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="column two">
+                <ul class="list list-help">
+                    <li class="list-help-item"><a href="#springMessageText("idp.url.helpdesk", '#')"><span
+                            class="item-marker">&rsaquo;</span> #springMessageText("idp.login.needHelp", "Need Help?")
+                    </a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container container-footer">
+            <p class="footer-text">#springMessageText("idp.footer", "Insert your footer text here.")</p>
+        </div>
+    </footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:c="http://www.springframework.org/schema/c"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+                           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd"
+
+       default-init-method="initialize"
+       default-destroy-method="destroy">
+    <!--todo Are all the imports above actually used? Check when all work will be done to avoid hard to diagnose problems.-->
+    
+    <bean class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer"
+          p:placeholderPrefix="%{" p:placeholderSuffix="}"/>
+
+    <bean class="net.shibboleth.ext.spring.config.IdentifiableBeanPostProcessor"/>
+    <bean class="net.shibboleth.idp.profile.impl.ProfileActionBeanPostProcessor"/>
+
+    <bean id="initPIContext" class="org.privacyidea.action.InitializePIContext" scope="prototype"
+          p:serverURL="%{privacyidea.server_url:#{'https://localhost'}}"
+          p:realm="%{privacyidea.realm:#{null}}"
+          p:verifySSL="%{privacyidea.verify_ssl:true}"
+          p:defaultMessage="%{privacyidea.default_message:#{null}}"/>
+
+    <bean id="piAuthenticator" class="org.privacyidea.action.PrivacyIDEAAuthenticator" scope="prototype"
+          p:httpServletRequest-ref="shibboleth.HttpServletRequest"/>
+</beans>
