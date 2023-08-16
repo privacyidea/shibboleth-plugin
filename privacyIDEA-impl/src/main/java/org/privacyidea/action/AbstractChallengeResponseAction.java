@@ -49,7 +49,6 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction
                     return true;
                 }
             }
-
         }
         else
         {

@@ -28,6 +28,7 @@ public class InitializePIContext extends AbstractAuthenticationAction
     private String defaultMessage;
     @Nullable
     private String otpFieldHint;
+    private boolean debug;
 
     /**
      * Constructor
@@ -50,7 +51,7 @@ public class InitializePIContext extends AbstractAuthenticationAction
         }
         else
         {
-            PIServerConfigContext piServerConfigContext = new PIServerConfigContext(serverURL, realm, verifySSL);
+            PIServerConfigContext piServerConfigContext = new PIServerConfigContext(serverURL, realm, verifySSL, debug);
             log.info("{} Create PIServerConfigContext {}", this.getLogPrefix(), piServerConfigContext);
             authenticationContext.addSubcontext(piServerConfigContext);
 
@@ -80,4 +81,5 @@ public class InitializePIContext extends AbstractAuthenticationAction
     public void setVerifySSL(boolean verifySSL) {this.verifySSL = verifySSL;}
     public void setDefaultMessage(@Nonnull String defaultMessage) {this.defaultMessage = defaultMessage;}
     public void setOtpFieldHint(@Nonnull String otpFieldHint) {this.otpFieldHint = otpFieldHint;}
+    public void setDebug(boolean debug) {this.debug = debug;}
 }
