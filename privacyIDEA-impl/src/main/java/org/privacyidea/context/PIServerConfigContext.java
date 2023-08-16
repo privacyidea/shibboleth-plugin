@@ -11,18 +11,20 @@ public class PIServerConfigContext extends BaseContext
     @Nullable
     private final String realm;
     private final boolean verifySSL;
+    private final boolean debug;
 
     /**
      * Constructor
      */
-    public PIServerConfigContext(@Nonnull String serverURL, @Nullable String realm, boolean verifySSL)
+    public PIServerConfigContext(@Nonnull String serverURL, @Nullable String realm, boolean verifySSL, boolean debug)
     {
         this.serverURL = serverURL;
         this.realm = realm;
         this.verifySSL = verifySSL;
+        this.debug = debug;
     }
 
-    // Getters
+    // Config getters
     @Nonnull
     public String getServerURL()
     {
@@ -36,5 +38,9 @@ public class PIServerConfigContext extends BaseContext
     public boolean getVerifySSL()
     {
         return verifySSL;
+    }
+    public boolean getDebug()
+    {
+        return debug;
     }
 }
