@@ -8,11 +8,9 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
                            http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
                            http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd"
-
        default-init-method="initialize"
        default-destroy-method="destroy">
-    <!--todo Are all the imports above actually used? Check when all work will be done to avoid hard to diagnose problems.-->
-    
+
     <bean class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer"
           p:placeholderPrefix="%{" p:placeholderSuffix="}"/>
 
@@ -23,7 +21,9 @@
           p:serverURL="%{privacyidea.server_url:#{'https://localhost'}}"
           p:realm="%{privacyidea.realm:#{null}}"
           p:verifySSL="%{privacyidea.verify_ssl:true}"
-          p:defaultMessage="%{privacyidea.default_message:#{null}}"/>
+          p:defaultMessage="%{privacyidea.default_message:#{null}}"
+          p:otpFieldHint="%{privacyidea.otp_field_hint:#{null}}"
+          p:debug="%{privacyidea.debug:false}"/>
 
     <bean id="piAuthenticator" class="org.privacyidea.action.PrivacyIDEAAuthenticator" scope="prototype"
           p:httpServletRequest-ref="shibboleth.HttpServletRequest"/>

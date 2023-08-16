@@ -49,7 +49,6 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction
                     return true;
                 }
             }
-
         }
         else
         {
@@ -61,7 +60,6 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction
     {
         this.doExecute(profileRequestContext, this.piContext, this.piServerConfigContext);
     }
-
     protected void doExecute(@Nonnull ProfileRequestContext profileRequestContext,
                              @Nonnull PIContext piContext,
                              @Nonnull PIServerConfigContext piServerConfigContext) {}

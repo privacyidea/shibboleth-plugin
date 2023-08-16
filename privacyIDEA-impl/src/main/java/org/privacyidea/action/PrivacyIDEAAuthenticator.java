@@ -16,6 +16,7 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction im
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(PrivacyIDEAAuthenticator.class);
     private PrivacyIDEA privacyIDEA;
+    private boolean debug = false;
 
     /**
      * Constructor
@@ -25,9 +26,14 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction im
     @Override
     protected final void doExecute(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext, @Nonnull PIServerConfigContext piServerConfigContext)
     {
+        if (piServerConfigContext.getDebug())
+        {
+            debug = piServerConfigContext.getDebug();
+        }
+
         if (privacyIDEA == null)
         {
-            privacyIDEA = PrivacyIDEA.newBuilder(piServerConfigContext.getServerURL(), "privacyIDEA-Shibboleth-Plugin") //todo get useragent
+            privacyIDEA = PrivacyIDEA.newBuilder(piServerConfigContext.getServerURL(), "privacyIDEA-Shibboleth-Plugin")
                                      .sslVerify(piServerConfigContext.getVerifySSL()).realm(piServerConfigContext.getRealm()).logger(this).build();
         }
 
@@ -43,7 +49,7 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction im
             {
                 String otp = request.getParameterValues("pi_otp_input")[0];
 
-                PIResponse piResponse = null;
+                PIResponse piResponse;
 
                 if (otp != null)
                 {
@@ -51,12 +57,17 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction im
                 }
                 else
                 {
-                    LOGGER.info("{} Cannot send password because it is null!", this.getLogPrefix());
+                    if (debug)
+                    {
+                        LOGGER.info("{} Cannot send password because it is null!", this.getLogPrefix());
+                    }
+                    return;
                 }
 
                 if (piResponse != null)
                 {
                     piContext.setMessage(piResponse.message);
+
                     if (piContext.getTransactionID() == null)
                     {
                         piContext.setTransactionID(piResponse.transactionID);
@@ -71,17 +82,26 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction im
 
                     if (!piResponse.multichallenge.isEmpty())
                     {
-                        LOGGER.info("{} Next challenge encountered. Building form...", this.getLogPrefix());
+                        if (debug)
+                        {
+                            LOGGER.info("{} Another challenge encountered. Building form...", this.getLogPrefix());
+                        }
                         ActionSupport.buildEvent(profileRequestContext, "reload");
                     }
                     else if (piResponse.value)
                     {
-                        LOGGER.info("{} Authentication succeeded!", this.getLogPrefix());
+                        if (debug)
+                        {
+                            LOGGER.info("{} Authentication succeeded!", this.getLogPrefix());
+                        }
                         ActionSupport.buildEvent(profileRequestContext, "success");
                     }
                     else
                     {
-                        LOGGER.info("{} Received a server message. Building form...", this.getLogPrefix());
+                        if (debug)
+                        {
+                            LOGGER.info("{} Received a server message. Building form...", this.getLogPrefix());
+                        }
                         ActionSupport.buildEvent(profileRequestContext, "reload");
                     }
                 }
@@ -89,15 +109,37 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction im
         }
     }
 
+    // Log helper functions
     @Override
-    public void log(String message) {LOGGER.info("PrivacyIDEA Client: " + message);}
-
+    public void log(String message)
+    {
+        if (debug)
+        {
+            LOGGER.info("PrivacyIDEA Client: " + message);
+        }
+    }
     @Override
-    public void error(String message) {LOGGER.error("PrivacyIDEA Client: " + message);}
-
+    public void error(String message)
+    {
+        if (debug)
+        {
+            LOGGER.error("PrivacyIDEA Client: " + message);
+        }
+    }
     @Override
-    public void log(Throwable throwable) {LOGGER.info("PrivacyIDEA Client: " + throwable);}
-
+    public void log(Throwable throwable)
+    {
+        if (debug)
+        {
+            LOGGER.info("PrivacyIDEA Client: " + throwable);
+        }
+    }
     @Override
-    public void error(Throwable throwable) {LOGGER.error("PrivacyIDEA Client: " + throwable);}
+    public void error(Throwable throwable)
+    {
+        if (debug)
+        {
+            LOGGER.error("PrivacyIDEA Client: " + throwable);
+        }
+    }
 }

@@ -26,7 +26,9 @@ public class InitializePIContext extends AbstractAuthenticationAction
     private boolean verifySSL;
     @Nullable
     private String defaultMessage;
-    //todo get useragent
+    @Nullable
+    private String otpFieldHint;
+    private boolean debug;
 
     /**
      * Constructor
@@ -49,11 +51,11 @@ public class InitializePIContext extends AbstractAuthenticationAction
         }
         else
         {
-            PIServerConfigContext piServerConfigContext = new PIServerConfigContext(serverURL, realm, verifySSL);
+            PIServerConfigContext piServerConfigContext = new PIServerConfigContext(serverURL, realm, verifySSL, debug);
             log.info("{} Create PIServerConfigContext {}", this.getLogPrefix(), piServerConfigContext);
             authenticationContext.addSubcontext(piServerConfigContext);
 
-            PIContext piContext = new PIContext(user, defaultMessage);
+            PIContext piContext = new PIContext(user, defaultMessage, otpFieldHint);
             log.info("{} Create PIContext {}", this.getLogPrefix(), piContext);
             authenticationContext.addSubcontext(piContext);
         }
@@ -73,12 +75,11 @@ public class InitializePIContext extends AbstractAuthenticationAction
         }
     }
 
-    // Spring bean property helper functions
+    // Spring bean property setters
     public void setServerURL(@Nonnull String serverURL) {this.serverURL = serverURL;}
-
     public void setRealm(@Nonnull String realm) {this.realm = realm;}
-
     public void setVerifySSL(boolean verifySSL) {this.verifySSL = verifySSL;}
-
     public void setDefaultMessage(@Nonnull String defaultMessage) {this.defaultMessage = defaultMessage;}
+    public void setOtpFieldHint(@Nonnull String otpFieldHint) {this.otpFieldHint = otpFieldHint;}
+    public void setDebug(boolean debug) {this.debug = debug;}
 }
