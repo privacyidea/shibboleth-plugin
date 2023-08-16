@@ -1,7 +1,6 @@
 package org.privacyidea.context;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import net.shibboleth.utilities.java.support.annotation.constraint.NotEmpty;
 import org.jetbrains.annotations.NotNull;
 

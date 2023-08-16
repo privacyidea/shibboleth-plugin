@@ -27,7 +27,7 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction im
     {
         if (privacyIDEA == null)
         {
-            privacyIDEA = PrivacyIDEA.newBuilder(piServerConfigContext.getServerURL(), "privacyIDEA-Shibboleth-Plugin") //todo get useragent
+            privacyIDEA = PrivacyIDEA.newBuilder(piServerConfigContext.getServerURL(), "privacyIDEA-Shibboleth-Plugin")
                                      .sslVerify(piServerConfigContext.getVerifySSL()).realm(piServerConfigContext.getRealm()).logger(this).build();
         }
 
@@ -91,13 +91,10 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction im
 
     @Override
     public void log(String message) {LOGGER.info("PrivacyIDEA Client: " + message);}
-
     @Override
     public void error(String message) {LOGGER.error("PrivacyIDEA Client: " + message);}
-
     @Override
     public void log(Throwable throwable) {LOGGER.info("PrivacyIDEA Client: " + throwable);}
-
     @Override
     public void error(Throwable throwable) {LOGGER.error("PrivacyIDEA Client: " + throwable);}
 }

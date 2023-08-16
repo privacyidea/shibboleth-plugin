@@ -22,18 +22,17 @@ public class PIServerConfigContext extends BaseContext
         this.verifySSL = verifySSL;
     }
 
+    // Getters
     @Nonnull
     public String getServerURL()
     {
         return serverURL;
     }
-
     @Nullable
     public String getRealm()
     {
         return realm;
     }
-
     public boolean getVerifySSL()
     {
         return verifySSL;
