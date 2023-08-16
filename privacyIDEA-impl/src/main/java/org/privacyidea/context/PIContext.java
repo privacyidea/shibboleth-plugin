@@ -15,35 +15,28 @@ public class PIContext extends BaseContext
     private String message = "";
     @Nullable
     private String transactionID = null;
+    @Nonnull
+    private final String otpFieldHint;
 
     /**
      * Constructor
      */
-    public PIContext(@Nonnull User user, @Nullable String defaultMessage)
+    public PIContext(@Nonnull User user, @Nullable String defaultMessage, @Nullable String otpFieldHint)
     {
         this.user = Constraint.isNotNull(user, "User cannot be null.");
         this.defaultMessage = Objects.requireNonNullElse(defaultMessage, "Please enter the OTP!");
+        this.otpFieldHint = Objects.requireNonNullElse(otpFieldHint, "OTP");
     }
 
+    // Getters and Setters
     @Nonnull
     public String getUsername() {return user.getUsername();}
-
     public void setMessage(String message) {this.message = message;}
-
-    public String getMessage()
-    {
-        if (!message.isEmpty())
-        {
-            return message;
-        }
-        else
-        {
-            return defaultMessage;
-        }
-    }
-
+    @Nonnull
+    public String getMessage() {return (!message.isEmpty()) ? message : defaultMessage;}
     public void setTransactionID(@Nonnull String transactionID) {this.transactionID = transactionID;}
-
     @Nullable
     public String getTransactionID() {return transactionID;}
+    @Nonnull
+    public String getOtpFieldHint() {return otpFieldHint;}
 }
