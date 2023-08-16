@@ -22,7 +22,8 @@
           p:realm="%{privacyidea.realm:#{null}}"
           p:verifySSL="%{privacyidea.verify_ssl:true}"
           p:defaultMessage="%{privacyidea.default_message:#{null}}"
-          p:otpFieldHint="%{privacyidea.otp_field_hint:#{null}}"/>
+          p:otpFieldHint="%{privacyidea.otp_field_hint:#{null}}"
+          p:debug="%{privacyidea.debug:false}"/>
 
     <bean id="piAuthenticator" class="org.privacyidea.action.PrivacyIDEAAuthenticator" scope="prototype"
           p:httpServletRequest-ref="shibboleth.HttpServletRequest"/>
