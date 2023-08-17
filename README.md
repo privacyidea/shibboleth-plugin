@@ -24,6 +24,8 @@ Otherwise, re-run the command from step 5.
    - `privacyidea.realm=defrealm`
    - `privacyidea.verify_ssl=true`
    - `privacyidea.default_message=Please enter the OTP`
+   - `privacyidea.otp_field_hint=OTP`
+   - `privacyidea.debug=false`
 
 2. **Add the privacyIDEA subflow to the MFA flow.**<br>
    - Path to the MFA flow configuration file: `/conf/authn/mfa-authn-config.xml`.
