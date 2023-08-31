@@ -63,4 +63,7 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction
     protected void doExecute(@Nonnull ProfileRequestContext profileRequestContext,
                              @Nonnull PIContext piContext,
                              @Nonnull PIServerConfigContext piServerConfigContext) {}
+    protected void doPreExecute(@Nonnull ProfileRequestContext profileRequestContext,
+                             @Nonnull PIContext piContext,
+                             @Nonnull PIServerConfigContext piServerConfigContext) {}
 }
