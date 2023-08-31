@@ -2,6 +2,7 @@ package org.privacyidea.action;
 
 import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
+import net.shibboleth.idp.authn.context.AuthenticationContext;
 import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.context.ProfileRequestContext;
 import org.privacyidea.IPILogger;
@@ -24,19 +25,61 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction im
     public PrivacyIDEAAuthenticator() {}
 
     @Override
-    protected final void doExecute(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext, @Nonnull PIServerConfigContext piServerConfigContext)
+    protected final void doPreExecute(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext, @Nonnull PIServerConfigContext piServerConfigContext)
     {
-        if (piServerConfigContext.getDebug())
+        if (piServerConfigContext.getConfigParams().getDebug())
         {
-            debug = piServerConfigContext.getDebug();
+            debug = piServerConfigContext.getConfigParams().getDebug();
         }
 
         if (privacyIDEA == null)
         {
-            privacyIDEA = PrivacyIDEA.newBuilder(piServerConfigContext.getServerURL(), "privacyIDEA-Shibboleth-Plugin")
-                                     .sslVerify(piServerConfigContext.getVerifySSL()).realm(piServerConfigContext.getRealm()).logger(this).build();
+            privacyIDEA = PrivacyIDEA.newBuilder(piServerConfigContext.getConfigParams().getServerURL(), "privacyIDEA-Shibboleth-Plugin")
+                                     .sslVerify(piServerConfigContext.getConfigParams().getVerifySSL())
+                                     .realm(piServerConfigContext.getConfigParams().getRealm())
+                                     .serviceAccount(piServerConfigContext.getConfigParams().getServiceName(), piServerConfigContext.getConfigParams().getServicePass())
+                                     .serviceRealm(piServerConfigContext.getConfigParams().getServiceRealm())
+                                     .logger(this)
+                                     .build();
         }
 
+        PIResponse triggerredResponse = null;
+        if (piServerConfigContext.getConfigParams().getTriggerChallenge())
+        {
+            if (debug)
+            {
+                LOGGER.info("{} Triggering the challenges...", this.getLogPrefix());
+            }
+            triggerredResponse = privacyIDEA.triggerChallenges(piContext.getUsername());
+        }
+
+        if (triggerredResponse != null)
+        {
+            if (triggerredResponse.error != null)
+            {
+                LOGGER.error("{} privacyIDEA server error: {}!", this.getLogPrefix(), triggerredResponse.error.message);
+                ActionSupport.buildEvent(profileRequestContext, "AuthenticationException");
+                return;
+            }
+
+            if (!triggerredResponse.multichallenge.isEmpty())
+            {
+                if (debug)
+                {
+                    LOGGER.info("{} Extracting the form data from triggered challenges...", this.getLogPrefix());
+                }
+                extractChallengeData(piContext, triggerredResponse);
+            }
+        }
+        else
+        {
+            LOGGER.error("{} triggerChallenge failed. Response was null. Fallback to standard procedure.", this.getLogPrefix());
+        }
+    }
+
+    @Override
+    protected final void doExecute(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext, @Nonnull PIServerConfigContext piServerConfigContext)
+    {
         HttpServletRequest request = this.getHttpServletRequest();
         if (request == null)
         {
@@ -67,11 +110,7 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction im
                 if (piResponse != null)
                 {
                     piContext.setMessage(piResponse.message);
-
-                    if (piContext.getTransactionID() == null)
-                    {
-                        piContext.setTransactionID(piResponse.transactionID);
-                    }
+                    extractChallengeData(piContext, piResponse);
 
                     if (piResponse.error != null)
                     {
@@ -106,6 +145,14 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction im
                     }
                 }
             }
+        }
+    }
+
+    private void extractChallengeData(@Nonnull PIContext piContext, @Nonnull PIResponse piResponse)
+    {
+        if (piResponse.transactionID != null && !piResponse.transactionID.isEmpty())
+        {
+            piContext.setTransactionID(piResponse.transactionID);
         }
     }
 
