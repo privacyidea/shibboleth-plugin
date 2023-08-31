@@ -148,6 +148,12 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction im
         }
     }
 
+    /**
+     * Extract challenge data from server response, and save it in context.
+     *
+     * @param piContext privacyIDEA context
+     * @param piResponse server response
+     */
     private void extractChallengeData(@Nonnull PIContext piContext, @Nonnull PIResponse piResponse)
     {
         if (piResponse.transactionID != null && !piResponse.transactionID.isEmpty())
