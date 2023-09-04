@@ -23,7 +23,7 @@
           p:verifySSL="%{privacyidea.verify_ssl:true}"
           p:defaultMessage="%{privacyidea.default_message:#{null}}"
           p:otpFieldHint="%{privacyidea.otp_field_hint:#{null}}"
-          p:triggerChallenge="%{privacyidea.trigger_challenge:false}"
+          p:triggerChallenge="%{privacyidea.triggerchallenge:false}"
           p:serviceName="%{privacyidea.service_name:#{null}}"
           p:servicePass="%{privacyidea.service_pass:#{null}}"
           p:serviceRealm="%{privacyidea.service_realm:#{null}}"
@@ -31,4 +31,6 @@
 
     <bean id="piAuthenticator" class="org.privacyidea.action.PrivacyIDEAAuthenticator" scope="prototype"
           p:httpServletRequest-ref="shibboleth.HttpServletRequest"/>
+
+    <bean id="triggerChallenge" class="org.privacyidea.action.TriggerChallenge" scope="prototype"/>
 </beans>
