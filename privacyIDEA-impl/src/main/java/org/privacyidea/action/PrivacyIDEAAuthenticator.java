@@ -27,21 +27,7 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction im
     @Override
     protected final void doPreExecute(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext, @Nonnull PIServerConfigContext piServerConfigContext)
     {
-        if (piServerConfigContext.getConfigParams().getDebug())
-        {
-            debug = piServerConfigContext.getConfigParams().getDebug();
-        }
-
-        if (privacyIDEA == null)
-        {
-            privacyIDEA = PrivacyIDEA.newBuilder(piServerConfigContext.getConfigParams().getServerURL(), "privacyIDEA-Shibboleth-Plugin")
-                                     .sslVerify(piServerConfigContext.getConfigParams().getVerifySSL())
-                                     .realm(piServerConfigContext.getConfigParams().getRealm())
-                                     .serviceAccount(piServerConfigContext.getConfigParams().getServiceName(), piServerConfigContext.getConfigParams().getServicePass())
-                                     .serviceRealm(piServerConfigContext.getConfigParams().getServiceRealm())
-                                     .logger(this)
-                                     .build();
-        }
+        initPI(piServerConfigContext);
 
         PIResponse triggerredResponse = null;
         if (piServerConfigContext.getConfigParams().getTriggerChallenge())
@@ -80,6 +66,8 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction im
     @Override
     protected final void doExecute(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext, @Nonnull PIServerConfigContext piServerConfigContext)
     {
+        initPI(piServerConfigContext);
+
         HttpServletRequest request = this.getHttpServletRequest();
         if (request == null)
         {
@@ -145,6 +133,31 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction im
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Prepare the privacyIDEA object.
+     * On/Off debug.
+     *
+     * @param piServerConfigContext Configuration for the privacyIDEA server.
+     */
+    private void initPI(@Nonnull PIServerConfigContext piServerConfigContext)
+    {
+        if (piServerConfigContext.getConfigParams().getDebug())
+        {
+            debug = piServerConfigContext.getConfigParams().getDebug();
+        }
+
+        if (privacyIDEA == null)
+        {
+            privacyIDEA = PrivacyIDEA.newBuilder(piServerConfigContext.getConfigParams().getServerURL(), "privacyIDEA-Shibboleth-Plugin")
+                                     .sslVerify(piServerConfigContext.getConfigParams().getVerifySSL())
+                                     .realm(piServerConfigContext.getConfigParams().getRealm())
+                                     .serviceAccount(piServerConfigContext.getConfigParams().getServiceName(), piServerConfigContext.getConfigParams().getServicePass())
+                                     .serviceRealm(piServerConfigContext.getConfigParams().getServiceRealm())
+                                     .logger(this)
+                                     .build();
         }
     }
 
