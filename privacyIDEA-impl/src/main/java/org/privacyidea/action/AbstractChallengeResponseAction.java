@@ -7,16 +7,21 @@ import net.shibboleth.idp.profile.AbstractProfileAction;
 import org.opensaml.messaging.context.navigate.ChildContextLookup;
 import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.context.ProfileRequestContext;
+import org.privacyidea.IPILogger;
+import org.privacyidea.PIResponse;
+import org.privacyidea.PrivacyIDEA;
 import org.privacyidea.context.PIServerConfigContext;
 import org.privacyidea.context.PIContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AbstractChallengeResponseAction extends AbstractProfileAction
+public class AbstractChallengeResponseAction extends AbstractProfileAction implements IPILogger
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractChallengeResponseAction.class);
     private PIServerConfigContext piServerConfigContext;
     private PIContext piContext;
+    protected PrivacyIDEA privacyIDEA;
+    protected boolean debug = false;
     @Nonnull
     private final Function<ProfileRequestContext, PIContext> piContextLookupStrategy = (new ChildContextLookup(PIContext.class, false)).compose(
             new ChildContextLookup(AuthenticationContext.class));
@@ -28,24 +33,39 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction
     {
         if (super.doPreExecute(profileRequestContext))
         {
-            this.piServerConfigContext = this.piServerConfigLookupStrategy.apply(profileRequestContext);
-            if (this.piServerConfigContext == null)
+            piServerConfigContext = piServerConfigLookupStrategy.apply(profileRequestContext);
+            if (piServerConfigContext == null)
             {
-                LOGGER.error("{} Unable to create/access privacyIDEA Server Config.", this.getLogPrefix());
+                LOGGER.error("{} Unable to create/access privacyIDEA server config context.", this.getLogPrefix());
                 ActionSupport.buildEvent(profileRequestContext, "InvalidProfileContext");
                 return false;
             }
             else
             {
-                this.piContext = this.piContextLookupStrategy.apply(profileRequestContext);
-                if (this.piContext == null)
+                piContext = piContextLookupStrategy.apply(profileRequestContext);
+                if (piContext == null)
                 {
-                    LOGGER.error("{} Unable to create/access privacyIDEA Context.", this.getLogPrefix());
+                    LOGGER.error("{} Unable to create/access privacyIDEA context.", this.getLogPrefix());
                     ActionSupport.buildEvent(profileRequestContext, "InvalidProfileContext");
                     return false;
                 }
                 else
                 {
+                    if (piServerConfigContext.getConfigParams().getDebug())
+                    {
+                        debug = piServerConfigContext.getConfigParams().getDebug();
+                    }
+
+                    if (privacyIDEA == null)
+                    {
+                        privacyIDEA = PrivacyIDEA.newBuilder(piServerConfigContext.getConfigParams().getServerURL(), "privacyIDEA-Shibboleth-Plugin")
+                                                 .sslVerify(piServerConfigContext.getConfigParams().getVerifySSL())
+                                                 .realm(piServerConfigContext.getConfigParams().getRealm())
+                                                 .serviceAccount(piServerConfigContext.getConfigParams().getServiceName(), piServerConfigContext.getConfigParams().getServicePass())
+                                                 .serviceRealm(piServerConfigContext.getConfigParams().getServiceRealm())
+                                                 .logger(this)
+                                                 .build();
+                    }
                     return true;
                 }
             }
@@ -60,10 +80,59 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction
     {
         this.doExecute(profileRequestContext, this.piContext, this.piServerConfigContext);
     }
+
     protected void doExecute(@Nonnull ProfileRequestContext profileRequestContext,
                              @Nonnull PIContext piContext,
                              @Nonnull PIServerConfigContext piServerConfigContext) {}
-    protected void doPreExecute(@Nonnull ProfileRequestContext profileRequestContext,
-                             @Nonnull PIContext piContext,
-                             @Nonnull PIServerConfigContext piServerConfigContext) {}
+
+    /**
+     * Extract challenge data from server response, and save it in context.
+     *
+     * @param piResponse server response
+     */
+    protected void extractChallengeData(@Nonnull PIResponse piResponse)
+    {
+        if (piResponse.message != null && !piResponse.message.isEmpty())
+        {
+            piContext.setMessage(piResponse.message);
+        }
+        if (piResponse.transactionID != null && !piResponse.transactionID.isEmpty())
+        {
+            piContext.setTransactionID(piResponse.transactionID);
+        }
+    }
+
+    // Logger implementation
+    @Override
+    public void log(String message)
+    {
+        if (debug)
+        {
+            LOGGER.info("PrivacyIDEA Client: " + message);
+        }
+    }
+    @Override
+    public void error(String message)
+    {
+        if (debug)
+        {
+            LOGGER.error("PrivacyIDEA Client: " + message);
+        }
+    }
+    @Override
+    public void log(Throwable throwable)
+    {
+        if (debug)
+        {
+            LOGGER.info("PrivacyIDEA Client: " + throwable);
+        }
+    }
+    @Override
+    public void error(Throwable throwable)
+    {
+        if (debug)
+        {
+            LOGGER.error("PrivacyIDEA Client: " + throwable);
+        }
+    }
 }
