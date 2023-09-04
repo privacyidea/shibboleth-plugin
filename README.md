@@ -25,6 +25,10 @@ Otherwise, re-run the command from step 5.
    - `privacyidea.verify_ssl=true`
    - `privacyidea.default_message=Please enter the OTP`
    - `privacyidea.otp_field_hint=OTP`
+   - `privacyidea.triggerchallenge=false`
+   - `privacyidea.service_name=service`
+   - `privacyidea.service_pass=service`
+   - `privacyidea.service_realm=defrealm`
    - `privacyidea.debug=false`
 
 2. **Add the privacyIDEA subflow to the MFA flow.**<br>
