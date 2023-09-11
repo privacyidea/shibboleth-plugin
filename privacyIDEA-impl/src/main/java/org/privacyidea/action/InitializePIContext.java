@@ -8,6 +8,7 @@ import net.shibboleth.idp.authn.context.AuthenticationContext;
 import net.shibboleth.idp.session.context.navigate.CanonicalUsernameLookupStrategy;
 import org.jetbrains.annotations.NotNull;
 import org.opensaml.profile.context.ProfileRequestContext;
+import org.privacyidea.context.Config;
 import org.privacyidea.context.PIContext;
 import org.privacyidea.context.PIServerConfigContext;
 import org.privacyidea.context.User;
@@ -26,13 +27,17 @@ public class InitializePIContext extends AbstractAuthenticationAction
     private boolean verifySSL;
     @Nullable
     private String defaultMessage;
+    private boolean triggerChallenge;
+    @Nullable
+    private String serviceName;
+    @Nullable
+    private String servicePass;
+    @Nullable
+    private String serviceRealm;
     @Nullable
     private String otpFieldHint;
     private boolean debug;
 
-    /**
-     * Constructor
-     */
     public InitializePIContext()
     {
         usernameLookupStrategy = new CanonicalUsernameLookupStrategy();
@@ -51,7 +56,8 @@ public class InitializePIContext extends AbstractAuthenticationAction
         }
         else
         {
-            PIServerConfigContext piServerConfigContext = new PIServerConfigContext(serverURL, realm, verifySSL, debug);
+            Config configParams = new Config(serverURL, realm, verifySSL, triggerChallenge, serviceName, servicePass, serviceRealm, debug);
+            PIServerConfigContext piServerConfigContext = new PIServerConfigContext(configParams);
             log.info("{} Create PIServerConfigContext {}", this.getLogPrefix(), piServerConfigContext);
             authenticationContext.addSubcontext(piServerConfigContext);
 
@@ -81,5 +87,9 @@ public class InitializePIContext extends AbstractAuthenticationAction
     public void setVerifySSL(boolean verifySSL) {this.verifySSL = verifySSL;}
     public void setDefaultMessage(@Nonnull String defaultMessage) {this.defaultMessage = defaultMessage;}
     public void setOtpFieldHint(@Nonnull String otpFieldHint) {this.otpFieldHint = otpFieldHint;}
+    public void setTriggerChallenge(boolean triggerChallenge) {this.triggerChallenge = triggerChallenge;}
+    public void setServiceName(@Nonnull String serviceName) {this.serviceName = serviceName;}
+    public void setServicePass(@Nonnull String servicePass) {this.servicePass = servicePass;}
+    public void setServiceRealm(@Nonnull String serviceRealm) {this.serviceRealm = serviceRealm;}
     public void setDebug(boolean debug) {this.debug = debug;}
 }

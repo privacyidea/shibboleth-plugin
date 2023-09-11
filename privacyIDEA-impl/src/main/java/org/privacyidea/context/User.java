@@ -9,10 +9,7 @@ public class User
     @Nonnull
     @NotEmpty
     private final String username;
-
-    /**
-     * Constructor
-     */
+    
     public User(@Nonnull @NotEmpty String username)
     {
         this.username = username;

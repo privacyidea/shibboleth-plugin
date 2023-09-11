@@ -4,39 +4,21 @@ import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
 import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.context.ProfileRequestContext;
-import org.privacyidea.IPILogger;
 import org.privacyidea.PIResponse;
-import org.privacyidea.PrivacyIDEA;
 import org.privacyidea.context.PIContext;
 import org.privacyidea.context.PIServerConfigContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction implements IPILogger
+public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(PrivacyIDEAAuthenticator.class);
-    private PrivacyIDEA privacyIDEA;
-    private boolean debug = false;
 
-    /**
-     * Constructor
-     */
     public PrivacyIDEAAuthenticator() {}
 
     @Override
     protected final void doExecute(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext, @Nonnull PIServerConfigContext piServerConfigContext)
     {
-        if (piServerConfigContext.getDebug())
-        {
-            debug = piServerConfigContext.getDebug();
-        }
-
-        if (privacyIDEA == null)
-        {
-            privacyIDEA = PrivacyIDEA.newBuilder(piServerConfigContext.getServerURL(), "privacyIDEA-Shibboleth-Plugin")
-                                     .sslVerify(piServerConfigContext.getVerifySSL()).realm(piServerConfigContext.getRealm()).logger(this).build();
-        }
-
         HttpServletRequest request = this.getHttpServletRequest();
         if (request == null)
         {
@@ -66,12 +48,7 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction im
 
                 if (piResponse != null)
                 {
-                    piContext.setMessage(piResponse.message);
-
-                    if (piContext.getTransactionID() == null)
-                    {
-                        piContext.setTransactionID(piResponse.transactionID);
-                    }
+                    extractChallengeData(piResponse);
 
                     if (piResponse.error != null)
                     {
@@ -106,40 +83,6 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction im
                     }
                 }
             }
-        }
-    }
-
-    // Log helper functions
-    @Override
-    public void log(String message)
-    {
-        if (debug)
-        {
-            LOGGER.info("PrivacyIDEA Client: " + message);
-        }
-    }
-    @Override
-    public void error(String message)
-    {
-        if (debug)
-        {
-            LOGGER.error("PrivacyIDEA Client: " + message);
-        }
-    }
-    @Override
-    public void log(Throwable throwable)
-    {
-        if (debug)
-        {
-            LOGGER.info("PrivacyIDEA Client: " + throwable);
-        }
-    }
-    @Override
-    public void error(Throwable throwable)
-    {
-        if (debug)
-        {
-            LOGGER.error("PrivacyIDEA Client: " + throwable);
         }
     }
 }
