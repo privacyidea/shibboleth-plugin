@@ -37,6 +37,7 @@
                       result="viewScope.custom"/>
 
             <evaluate expression="authenticationContext.getSubcontext(T(org.privacyidea.context.PIContext))" result="viewScope.piContext"/>
+            <evaluate expression="authenticationContext.getSubcontext(T(org.privacyidea.context.PIFormContext))" result="viewScope.piFormContext"/>
         </on-render>
 
         <transition on="proceed" to="piAuthenticator"/>
