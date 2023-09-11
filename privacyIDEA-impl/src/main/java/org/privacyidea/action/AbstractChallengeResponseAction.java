@@ -10,6 +10,7 @@ import org.opensaml.profile.context.ProfileRequestContext;
 import org.privacyidea.IPILogger;
 import org.privacyidea.PIResponse;
 import org.privacyidea.PrivacyIDEA;
+import org.privacyidea.context.PIFormContext;
 import org.privacyidea.context.PIServerConfigContext;
 import org.privacyidea.context.PIContext;
 import org.slf4j.Logger;
@@ -20,10 +21,14 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction imple
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractChallengeResponseAction.class);
     private PIServerConfigContext piServerConfigContext;
     private PIContext piContext;
+    private PIFormContext piFormContext;
     protected PrivacyIDEA privacyIDEA;
     protected boolean debug = false;
     @Nonnull
     private final Function<ProfileRequestContext, PIContext> piContextLookupStrategy = (new ChildContextLookup(PIContext.class, false)).compose(
+            new ChildContextLookup(AuthenticationContext.class));
+    @Nonnull
+    private final Function<ProfileRequestContext, PIFormContext> piFormContextLookupStrategy = (new ChildContextLookup(PIFormContext.class, false)).compose(
             new ChildContextLookup(AuthenticationContext.class));
     @Nonnull
     private final Function<ProfileRequestContext, PIServerConfigContext> piServerConfigLookupStrategy = (new ChildContextLookup(PIServerConfigContext.class, false)).compose(
@@ -51,22 +56,33 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction imple
                 }
                 else
                 {
-                    if (piServerConfigContext.getConfigParams().getDebug())
+                    piFormContext = piFormContextLookupStrategy.apply(profileRequestContext);
+                    if (piFormContext == null)
                     {
-                        debug = piServerConfigContext.getConfigParams().getDebug();
+                        LOGGER.error("{} Unable to create/access privacyIDEA form context.", this.getLogPrefix());
+                        ActionSupport.buildEvent(profileRequestContext, "InvalidProfileContext");
+                        return false;
                     }
+                    else
+                    {
+                        if (piServerConfigContext.getConfigParams().getDebug())
+                        {
+                            debug = piServerConfigContext.getConfigParams().getDebug();
+                        }
 
-                    if (privacyIDEA == null)
-                    {
-                        privacyIDEA = PrivacyIDEA.newBuilder(piServerConfigContext.getConfigParams().getServerURL(), "privacyIDEA-Shibboleth-Plugin")
-                                                 .sslVerify(piServerConfigContext.getConfigParams().getVerifySSL())
-                                                 .realm(piServerConfigContext.getConfigParams().getRealm())
-                                                 .serviceAccount(piServerConfigContext.getConfigParams().getServiceName(), piServerConfigContext.getConfigParams().getServicePass())
-                                                 .serviceRealm(piServerConfigContext.getConfigParams().getServiceRealm())
-                                                 .logger(this)
-                                                 .build();
+                        if (privacyIDEA == null)
+                        {
+                            privacyIDEA = PrivacyIDEA.newBuilder(piServerConfigContext.getConfigParams().getServerURL(), "privacyIDEA-Shibboleth-Plugin")
+                                                     .sslVerify(piServerConfigContext.getConfigParams().getVerifySSL())
+                                                     .realm(piServerConfigContext.getConfigParams().getRealm())
+                                                     .serviceAccount(piServerConfigContext.getConfigParams().getServiceName(),
+                                                                     piServerConfigContext.getConfigParams().getServicePass())
+                                                     .serviceRealm(piServerConfigContext.getConfigParams().getServiceRealm())
+                                                     .logger(this)
+                                                     .build();
+                        }
+                        return true;
                     }
-                    return true;
                 }
             }
         }
@@ -94,7 +110,7 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction imple
     {
         if (piResponse.message != null && !piResponse.message.isEmpty())
         {
-            piContext.setMessage(piResponse.message);
+            piFormContext.setMessage(piResponse.message);
         }
         if (piResponse.transactionID != null && !piResponse.transactionID.isEmpty())
         {
