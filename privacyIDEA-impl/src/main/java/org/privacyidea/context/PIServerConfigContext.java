@@ -1,7 +1,6 @@
 package org.privacyidea.context;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import org.opensaml.messaging.context.BaseContext;
 
 public class PIServerConfigContext extends BaseContext

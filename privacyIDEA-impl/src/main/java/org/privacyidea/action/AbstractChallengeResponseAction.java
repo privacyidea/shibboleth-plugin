@@ -10,9 +10,9 @@ import org.opensaml.profile.context.ProfileRequestContext;
 import org.privacyidea.IPILogger;
 import org.privacyidea.PIResponse;
 import org.privacyidea.PrivacyIDEA;
+import org.privacyidea.context.PIContext;
 import org.privacyidea.context.PIFormContext;
 import org.privacyidea.context.PIServerConfigContext;
-import org.privacyidea.context.PIContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,9 +97,7 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction imple
         this.doExecute(profileRequestContext, this.piContext, this.piServerConfigContext);
     }
 
-    protected void doExecute(@Nonnull ProfileRequestContext profileRequestContext,
-                             @Nonnull PIContext piContext,
-                             @Nonnull PIServerConfigContext piServerConfigContext) {}
+    protected void doExecute(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext, @Nonnull PIServerConfigContext piServerConfigContext) {}
 
     /**
      * Extract challenge data from server response, and save it in context.
