@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.opensaml.profile.context.ProfileRequestContext;
 import org.privacyidea.context.Config;
 import org.privacyidea.context.PIContext;
+import org.privacyidea.context.PIFormContext;
 import org.privacyidea.context.PIServerConfigContext;
 import org.privacyidea.context.User;
 import org.slf4j.Logger;
@@ -61,9 +62,13 @@ public class InitializePIContext extends AbstractAuthenticationAction
             log.info("{} Create PIServerConfigContext {}", this.getLogPrefix(), piServerConfigContext);
             authenticationContext.addSubcontext(piServerConfigContext);
 
-            PIContext piContext = new PIContext(user, defaultMessage, otpFieldHint);
+            PIContext piContext = new PIContext(user);
             log.info("{} Create PIContext {}", this.getLogPrefix(), piContext);
             authenticationContext.addSubcontext(piContext);
+
+            PIFormContext piFormContext = new PIFormContext(defaultMessage, otpFieldHint);
+            log.info("{} Create PIFormContext {}", this.getLogPrefix(), piFormContext);
+            authenticationContext.addSubcontext(piFormContext);
         }
     }
 
@@ -83,13 +88,22 @@ public class InitializePIContext extends AbstractAuthenticationAction
 
     // Spring bean property setters
     public void setServerURL(@Nonnull String serverURL) {this.serverURL = serverURL;}
+
     public void setRealm(@Nonnull String realm) {this.realm = realm;}
+
     public void setVerifySSL(boolean verifySSL) {this.verifySSL = verifySSL;}
+
     public void setDefaultMessage(@Nonnull String defaultMessage) {this.defaultMessage = defaultMessage;}
+
     public void setOtpFieldHint(@Nonnull String otpFieldHint) {this.otpFieldHint = otpFieldHint;}
+
     public void setTriggerChallenge(boolean triggerChallenge) {this.triggerChallenge = triggerChallenge;}
+
     public void setServiceName(@Nonnull String serviceName) {this.serviceName = serviceName;}
+
     public void setServicePass(@Nonnull String servicePass) {this.servicePass = servicePass;}
+
     public void setServiceRealm(@Nonnull String serviceRealm) {this.serviceRealm = serviceRealm;}
+
     public void setDebug(boolean debug) {this.debug = debug;}
 }
