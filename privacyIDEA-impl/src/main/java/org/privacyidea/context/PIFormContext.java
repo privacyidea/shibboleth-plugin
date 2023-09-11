@@ -16,7 +16,7 @@ public class PIFormContext extends BaseContext
     @Nonnull
     private final String otpFieldHint;
 
-    public PIFormContext (@Nullable String defaultMessage, @Nullable String otpFieldHint)
+    public PIFormContext(@Nullable String defaultMessage, @Nullable String otpFieldHint)
     {
         this.defaultMessage = Objects.requireNonNullElse(defaultMessage, "Please enter the OTP!");
         this.otpFieldHint = Objects.requireNonNullElse(otpFieldHint, "OTP");
