@@ -111,6 +111,7 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction imple
             LOGGER.info("PrivacyIDEA Client: " + message);
         }
     }
+
     @Override
     public void error(String message)
     {
@@ -119,6 +120,7 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction imple
             LOGGER.error("PrivacyIDEA Client: " + message);
         }
     }
+
     @Override
     public void log(Throwable throwable)
     {
@@ -127,6 +129,7 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction imple
             LOGGER.info("PrivacyIDEA Client: " + throwable);
         }
     }
+
     @Override
     public void error(Throwable throwable)
     {

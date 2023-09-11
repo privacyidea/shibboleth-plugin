@@ -13,9 +13,6 @@ public class TriggerChallenge extends AbstractChallengeResponseAction
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(PrivacyIDEAAuthenticator.class);
 
-    /**
-     * Constructor
-     */
     public TriggerChallenge() {}
 
     @Override

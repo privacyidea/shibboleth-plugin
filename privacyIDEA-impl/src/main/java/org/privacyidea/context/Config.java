@@ -37,34 +37,41 @@ public class Config
     {
         return serverURL;
     }
+
     @Nullable
     public String getRealm()
     {
         return realm;
     }
+
     public boolean getVerifySSL()
     {
         return verifySSL;
     }
+
     public boolean getTriggerChallenge()
     {
         return triggerChallenge;
     }
+
     @Nullable
     public String getServiceName()
     {
         return serviceName;
     }
+
     @Nullable
     public String getServicePass()
     {
         return servicePass;
     }
+
     @Nullable
     public String getServiceRealm()
     {
         return serviceRealm;
     }
+
     public boolean getDebug()
     {
         return debug;

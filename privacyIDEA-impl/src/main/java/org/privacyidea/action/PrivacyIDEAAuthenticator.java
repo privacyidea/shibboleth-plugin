@@ -14,9 +14,6 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(PrivacyIDEAAuthenticator.class);
 
-    /**
-     * Constructor
-     */
     public PrivacyIDEAAuthenticator() {}
 
     @Override

@@ -38,9 +38,6 @@ public class InitializePIContext extends AbstractAuthenticationAction
     private String otpFieldHint;
     private boolean debug;
 
-    /**
-     * Constructor
-     */
     public InitializePIContext()
     {
         usernameLookupStrategy = new CanonicalUsernameLookupStrategy();

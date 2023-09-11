@@ -9,9 +9,6 @@ public class PIServerConfigContext extends BaseContext
     @Nonnull
     Config configParams;
 
-    /**
-     * Constructor
-     */
     public PIServerConfigContext(@Nonnull Config configParams)
     {
         this.configParams = configParams;

@@ -18,9 +18,6 @@ public class PIContext extends BaseContext
     @Nonnull
     private final String otpFieldHint;
 
-    /**
-     * Constructor
-     */
     public PIContext(@Nonnull User user, @Nullable String defaultMessage, @Nullable String otpFieldHint)
     {
         this.user = Constraint.isNotNull(user, "User cannot be null.");
