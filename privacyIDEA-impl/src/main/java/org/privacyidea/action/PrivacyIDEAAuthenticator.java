@@ -27,60 +27,77 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction
         }
         else
         {
-            if (request.getParameterValues("pi_otp_input") != null)
+            piContext.setMode(request.getParameterValues("mode")[0]);
+            piContext.setWebauthnSignResponse(request.getParameterValues("webauthnSignResponse")[0]);
+            piContext.setOrigin(request.getParameterValues("origin")[0]);
+            PIResponse piResponse = null;
+
+            if (piContext.getWebauthnSignResponse() != null && !piContext.getWebauthnSignResponse().isEmpty())
             {
-                String otp = request.getParameterValues("pi_otp_input")[0];
-
-                PIResponse piResponse;
-
-                if (otp != null)
+                if (piContext.getOrigin() == null || piContext.getOrigin().isEmpty())
                 {
-                    piResponse = privacyIDEA.validateCheck(piContext.getUsername(), otp, piContext.getTransactionID(), null);
+                    LOGGER.error("Origin is missing for WebAuthn authentication!");
                 }
                 else
                 {
-                    if (debug)
-                    {
-                        LOGGER.info("{} Cannot send password because it is null!", this.getLogPrefix());
-                    }
-                    return;
+                    piResponse = privacyIDEA.validateCheckWebAuthn(piContext.getUsername(), piContext.getTransactionID(), piContext.getWebauthnSignResponse(),
+                                                                   piContext.getOrigin(), null);
                 }
-
-                if (piResponse != null)
+            }
+            else if (piContext.getMode().equals("otp"))
+            {
+                if (request.getParameterValues("pi_otp_input") != null)
                 {
-                    extractChallengeData(piResponse);
-
-                    if (piResponse.error != null)
+                    String otp = request.getParameterValues("pi_otp_input")[0];
+                    if (otp != null)
                     {
-                        LOGGER.error("{} privacyIDEA server error: {}!", this.getLogPrefix(), piResponse.error.message);
-                        ActionSupport.buildEvent(profileRequestContext, "AuthenticationException");
-                        return;
-                    }
-
-                    if (!piResponse.multichallenge.isEmpty())
-                    {
-                        if (debug)
-                        {
-                            LOGGER.info("{} Another challenge encountered. Building form...", this.getLogPrefix());
-                        }
-                        ActionSupport.buildEvent(profileRequestContext, "reload");
-                    }
-                    else if (piResponse.value)
-                    {
-                        if (debug)
-                        {
-                            LOGGER.info("{} Authentication succeeded!", this.getLogPrefix());
-                        }
-                        ActionSupport.buildEvent(profileRequestContext, "success");
+                        piResponse = privacyIDEA.validateCheck(piContext.getUsername(), otp, piContext.getTransactionID(), null);
                     }
                     else
                     {
                         if (debug)
                         {
-                            LOGGER.info("{} Received a server message. Building form...", this.getLogPrefix());
+                            LOGGER.info("{} Cannot send password because it is null!", this.getLogPrefix());
                         }
-                        ActionSupport.buildEvent(profileRequestContext, "reload");
+                        return;
                     }
+                }
+            }
+
+            if (piResponse != null)
+            {
+                extractChallengeData(piResponse);
+
+                if (piResponse.error != null)
+                {
+                    LOGGER.error("{} privacyIDEA server error: {}!", this.getLogPrefix(), piResponse.error.message);
+                    ActionSupport.buildEvent(profileRequestContext, "AuthenticationException");
+                    return;
+                }
+
+                if (!piResponse.multichallenge.isEmpty())
+                {
+                    if (debug)
+                    {
+                        LOGGER.info("{} Another challenge encountered. Building form...", this.getLogPrefix());
+                    }
+                    ActionSupport.buildEvent(profileRequestContext, "reload");
+                }
+                else if (piResponse.value)
+                {
+                    if (debug)
+                    {
+                        LOGGER.info("{} Authentication succeeded!", this.getLogPrefix());
+                    }
+                    ActionSupport.buildEvent(profileRequestContext, "success");
+                }
+                else
+                {
+                    if (debug)
+                    {
+                        LOGGER.info("{} Received a server message. Building form...", this.getLogPrefix());
+                    }
+                    ActionSupport.buildEvent(profileRequestContext, "reload");
                 }
             }
         }
