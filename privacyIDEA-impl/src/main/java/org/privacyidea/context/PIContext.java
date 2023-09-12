@@ -11,6 +11,8 @@ public class PIContext extends BaseContext
     private final User user;
     @Nullable
     private String transactionID = null;
+    @Nonnull
+    private String webauthnSignRequest = "";
     @Nullable
     private String webauthnSignResponse = null;
     @Nullable
@@ -63,5 +65,16 @@ public class PIContext extends BaseContext
     public void setMode(@Nonnull String mode)
     {
         this.mode = mode;
+    }
+
+    @Nonnull
+    public String getWebauthnSignRequest()
+    {
+        return webauthnSignRequest;
+    }
+
+    public void setWebauthnSignRequest(@Nonnull String webauthnSignRequest)
+    {
+        this.webauthnSignRequest = webauthnSignRequest;
     }
 }

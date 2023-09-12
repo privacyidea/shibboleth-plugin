@@ -81,10 +81,9 @@
 
                         <div class="form-options">
                             <input id="mode" name="mode" value="$piContext.getMode()" type="hidden">
-                            <input id="modeChanged" name="modeChanged" value="false" type="hidden">
                             <input id="errorMessage" name="errorMessage" value="" type="hidden">
 
-                            <input id="webauthnSignRequest" name="webauthnSignRequest" value="$piFormContext.getWebauthnSignRequest()" type="hidden">
+                            <input id="webauthnSignRequest" name="webauthnSignRequest" value="$piContext.getWebauthnSignRequest()" type="hidden">
                             <input id="webauthnSignResponse" name="webauthnSignResponse" value="" type="hidden">
                             <input id="origin" name="origin" value="" type="hidden">
                         </div>
@@ -99,15 +98,16 @@
                                 {
                                     // Submit the form to pass the change to the authenticator
                                     document.getElementById("mode").value = newMode;
-                                    document.getElementById("modeChanged").value = "true";
                                     document.forms["kc-otp-login-form"].submit();
                                 }
                             </script>
 
+                            <input class="form-element form-button" id="otpButton" name="otpButton" onclick="changeMode('otp')" type="button" value="One-Time-Password">
+
                             #* WEBAUTHN *#
-                            #set ($webauthnSignRequest = $piFormContext.getWebauthnSignRequest())
+                            #set ($webauthnSignRequest = $piContext.getWebauthnSignRequest())
                             #if ($webauthnSignRequest != "")
-                                <input id="useWebAuthnButton" name="useWebAuthnButton" onclick="doWebAuthn()" type="button" value="WebAuthn">
+                                <input class="form-element form-button" id="useWebAuthnButton" name="useWebAuthnButton" onclick="doWebAuthn()" type="button" value="WebAuthn">
                                 <script type="text/javascript" src="/org.privacyidea.static.js/pi-webauthn.js"></script>
                                 <script>
                                     'use strict';
