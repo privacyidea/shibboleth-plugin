@@ -7,8 +7,6 @@ import org.opensaml.messaging.context.BaseContext;
 
 public class PIFormContext extends BaseContext
 {
-    @Nonnull
-    private String mode = "otp";
     private String webauthnSignRequest = "";
     @Nonnull
     private final String defaultMessage;
@@ -20,17 +18,6 @@ public class PIFormContext extends BaseContext
     {
         this.defaultMessage = Objects.requireNonNullElse(defaultMessage, "Please enter the OTP!");
         this.otpFieldHint = Objects.requireNonNullElse(otpFieldHint, "OTP");
-    }
-
-    @Nonnull
-    public String getMode()
-    {
-        return mode;
-    }
-
-    public void setMode(@Nonnull String mode)
-    {
-        this.mode = mode;
     }
 
     public String getWebauthnSignRequest()

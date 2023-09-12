@@ -11,6 +11,12 @@ public class PIContext extends BaseContext
     private final User user;
     @Nullable
     private String transactionID = null;
+    @Nullable
+    private String webauthnSignResponse = null;
+    @Nullable
+    private String origin = null;
+    @Nonnull
+    private String mode = "otp";
 
     public PIContext(@Nonnull User user)
     {
@@ -25,4 +31,37 @@ public class PIContext extends BaseContext
 
     @Nullable
     public String getTransactionID() {return transactionID;}
+
+    @Nullable
+    public String getWebauthnSignResponse()
+    {
+        return webauthnSignResponse;
+    }
+
+    public void setWebauthnSignResponse(@Nullable String webauthnSignResponse)
+    {
+        this.webauthnSignResponse = webauthnSignResponse;
+    }
+
+    @Nullable
+    public String getOrigin()
+    {
+        return origin;
+    }
+
+    public void setOrigin(@Nullable String origin)
+    {
+        this.origin = origin;
+    }
+
+    @Nonnull
+    public String getMode()
+    {
+        return mode;
+    }
+
+    public void setMode(@Nonnull String mode)
+    {
+        this.mode = mode;
+    }
 }
