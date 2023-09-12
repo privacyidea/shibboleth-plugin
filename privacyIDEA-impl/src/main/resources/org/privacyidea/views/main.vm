@@ -71,6 +71,7 @@
                             <br>
                         </div>
 
+                        #* OTP *#
                         <div class="form-element-wrapper">
                             <input id="pi_otp_input" class="form-element form-field" name="pi_otp_input" type="password" autofocus placeholder=$piContext.getOtpFieldHint() value="">
                             <br>
@@ -79,19 +80,90 @@
                         </div>
 
                         <div class="form-options">
-                            <input id="mode" name="mode" value="$piFormContext.getMode()" type="hidden">
+                            <input id="mode" name="mode" value="$piContext.getMode()" type="hidden">
                             <input id="modeChanged" name="modeChanged" value="false" type="hidden">
                             <input id="errorMessage" name="errorMessage" value="" type="hidden">
 
                             <input id="webauthnSignRequest" name="webauthnSignRequest" value="$piFormContext.getWebauthnSignRequest()" type="hidden">
-                            <input id="webauthnSignResponse" name="webauthnSignResponse" value="$piFormContext.getWebauthnSignRequest()" type="hidden">
+                            <input id="webauthnSignResponse" name="webauthnSignResponse" value="" type="hidden">
                             <input id="origin" name="origin" value="" type="hidden">
                         </div>
 
+                        #* ALTERNATE TOKENS SECTION *#
                         <div class="form-element-wrapper" style="padding-top: 20px">
                             <h3 id="alternateTokenHeader">Alternate Login Options</h3>
 
-                        </div>
+                            <script>
+                                'use strict';
+                                function changeMode(newMode)
+                                {
+                                    // Submit the form to pass the change to the authenticator
+                                    document.getElementById("mode").value = newMode;
+                                    document.getElementById("modeChanged").value = "true";
+                                    document.forms["kc-otp-login-form"].submit();
+                                }
+                            </script>
+
+                            #* WEBAUTHN *#
+                            #set ($webauthnSignRequest = $piFormContext.getWebauthnSignRequest())
+                            #if ($webauthnSignRequest != "")
+                                <input id="useWebAuthnButton" name="useWebAuthnButton" onclick="doWebAuthn()" type="button" value="WebAuthn">
+                                <script type="text/javascript" src="/org.privacyidea.static.js/pi-webauthn.js"></script>
+                                <script>
+                                    'use strict';
+                                    if (document.getElementById("webauthnSignRequest").value === "")
+                                    {
+                                        document.getElementById("useWebAuthnButton").style.display = "none";
+                                    }
+
+                                    if (document.getElementById("mode").value === "webauthn")
+                                    {
+                                        window.onload = () =>
+                                        {
+                                            doWebAuthn();
+                                        }
+                                    }
+
+                                    if (!window.location.origin)
+                                    {
+                                        window.location.origin = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port : '');
+                                    }
+                                    document.getElementById("origin").value = window.origin;
+
+                                    function doWebAuthn()
+                                    {
+                                        // If we are in push mode, reload the page because in push mode the page refreshes every x seconds which could interrupt webauthn
+                                        // Afterward, webauthn is started directly
+                                        if (document.getElementById("mode").value === "push")
+                                        {
+                                            changeMode("webauthn");
+                                        }
+                                        try
+                                        {
+                                            const requestStr = document.getElementById("webauthnSignRequest").value;
+                                            const requestjson = JSON.parse(requestStr);
+
+                                            const webAuthnSignResponse = window.pi_webauthn.sign(requestjson);
+                                            webAuthnSignResponse.then((webauthnresponse) =>
+                                            {
+                                                document.getElementById("webauthnSignResponse").value = JSON.stringify(webauthnresponse);
+                                                document.forms["kc-otp-login-form"].submit();
+                                            });
+                                        }
+                                        catch (err)
+                                        {
+                                            console.log("Error while trying WebAuthn: " + err);
+                                            document.getElementById("errorMessage").value = "Error while trying WebAuthn: " + err;
+                                        }
+                                    }
+                                </script>
+                            #end
+                            #if ($webauthnSignRequest == "")
+                                <script>
+                                    document.getElementById("alternateToken").style.display = "none";
+                                </script>
+                            #end
+                            </div>
                     </form>
                 </div>
             </div>
