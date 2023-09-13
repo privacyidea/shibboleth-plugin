@@ -67,7 +67,7 @@
                         <div class="content">
                             <p>Hello $piContext.getUsername()!</p>
                             <br>
-                            <p>$piContext.getMessage()</p>
+                            <p>$piFormContext.getMessage()</p>
                             <br>
                         </div>
 
@@ -108,7 +108,7 @@
                             #set ($webauthnSignRequest = $piContext.getWebauthnSignRequest())
                             #if ($webauthnSignRequest != "")
                                 <input class="form-element form-button" id="useWebAuthnButton" name="useWebAuthnButton" onclick="doWebAuthn()" type="button" value="WebAuthn">
-                                <script type="text/javascript" src="/org.privacyidea.static.js/pi-webauthn.js"></script>
+                                <script type="text/javascript" src="pi-webauthn.js"></script>
                                 <script>
                                     'use strict';
                                     if (document.getElementById("webauthnSignRequest").value === "")
@@ -141,13 +141,14 @@
                                         try
                                         {
                                             const requestStr = document.getElementById("webauthnSignRequest").value;
-                                            const requestjson = JSON.parse(requestStr);
+                                            console.log("webauthnsignrequest: " + requestStr);
+                                            const requestJSON = JSON.parse(requestStr);
 
-                                            const webAuthnSignResponse = window.pi_webauthn.sign(requestjson);
+                                            const webAuthnSignResponse = window.pi_webauthn.sign(requestJSON);
                                             webAuthnSignResponse.then((webauthnresponse) =>
                                             {
                                                 document.getElementById("webauthnSignResponse").value = JSON.stringify(webauthnresponse);
-                                                document.forms["kc-otp-login-form"].submit();
+                                                document.forms["privacyidea-form"].submit();
                                             });
                                         }
                                         catch (err)
@@ -157,6 +158,7 @@
                                         }
                                     }
                                 </script>
+                                <br><br>
                             #end
                             #if ($webauthnSignRequest == "")
                                 <script>
