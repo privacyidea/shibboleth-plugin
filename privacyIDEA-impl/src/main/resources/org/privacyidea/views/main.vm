@@ -83,7 +83,7 @@
                             <input id="mode" name="mode" value="$piContext.getMode()" type="hidden">
                             <input id="errorMessage" name="errorMessage" value="" type="hidden">
 
-                            <input id="webauthnSignRequest" name="webauthnSignRequest" value="$piContext.getWebauthnSignRequest()" type="hidden">
+                            <input id="webauthnSignRequest" name="webauthnSignRequest" value='$piContext.getWebauthnSignRequest()' type="hidden">
                             <input id="webauthnSignResponse" name="webauthnSignResponse" value="" type="hidden">
                             <input id="origin" name="origin" value="" type="hidden">
                         </div>
@@ -98,7 +98,7 @@
                                 {
                                     // Submit the form to pass the change to the authenticator
                                     document.getElementById("mode").value = newMode;
-                                    document.forms["kc-otp-login-form"].submit();
+                                    document.forms["privacyidea-form"].submit();
                                 }
                             </script>
 
@@ -108,7 +108,7 @@
                             #set ($webauthnSignRequest = $piContext.getWebauthnSignRequest())
                             #if ($webauthnSignRequest != "")
                                 <input class="form-element form-button" id="useWebAuthnButton" name="useWebAuthnButton" onclick="doWebAuthn()" type="button" value="WebAuthn">
-                                <script type="text/javascript" src="pi-webauthn.js"></script>
+                                <script src="$request.getContextPath()/js/pi-webauthn.js"></script>
                                 <script>
                                     'use strict';
                                     if (document.getElementById("webauthnSignRequest").value === "")
