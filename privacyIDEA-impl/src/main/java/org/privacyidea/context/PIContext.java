@@ -16,6 +16,8 @@ public class PIContext extends BaseContext
     @Nullable
     private String webauthnSignResponse = null;
     @Nullable
+    private String formErrorMessage = null;
+    @Nullable
     private String origin = null;
     @Nonnull
     private String mode = "otp";
@@ -76,5 +78,16 @@ public class PIContext extends BaseContext
     public void setWebauthnSignRequest(@Nonnull String webauthnSignRequest)
     {
         this.webauthnSignRequest = webauthnSignRequest;
+    }
+
+    @Nullable
+    public String getFormErrorMessage()
+    {
+        return formErrorMessage;
+    }
+
+    public void setFormErrorMessage(@Nullable String formErrorMessage)
+    {
+        this.formErrorMessage = formErrorMessage;
     }
 }

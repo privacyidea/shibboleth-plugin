@@ -30,6 +30,7 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction
             piContext.setMode(request.getParameterValues("mode")[0]);
             piContext.setWebauthnSignResponse(request.getParameterValues("webauthnSignResponse")[0]);
             piContext.setOrigin(request.getParameterValues("origin")[0]);
+            piContext.setFormErrorMessage(request.getParameterValues("errorMessage")[0]);
             PIResponse piResponse = null;
 
             if (piContext.getWebauthnSignResponse() != null && !piContext.getWebauthnSignResponse().isEmpty())

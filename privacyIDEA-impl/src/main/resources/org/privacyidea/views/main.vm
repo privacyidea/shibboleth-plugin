@@ -69,6 +69,8 @@
                             <br>
                             <p>$piFormContext.getMessage()</p>
                             <br>
+                            <p>$piContext.getErrorMessage()</p>
+                            <br>
                         </div>
 
                         #* OTP *#
@@ -89,7 +91,7 @@
                         </div>
 
                         #* ALTERNATE TOKENS SECTION *#
-                        <div class="form-element-wrapper" style="padding-top: 20px">
+                        <div class="form-element-wrapper" id="alternateToken" style="padding-top: 20px">
                             <h3 id="alternateTokenHeader">Alternate Login Options</h3>
 
                             <script>
@@ -102,7 +104,7 @@
                                 }
                             </script>
 
-                            <input class="form-element form-button" id="otpButton" name="otpButton" onclick="changeMode('otp')" type="button" value="One-Time-Password">
+                            <input class="form-element form-button" id="otpButton" name="otpButton" onclick="changeMode('otp')" type="button" value="OTP">
 
                             #* WEBAUTHN *#
                             #set ($webauthnSignRequest = $piContext.getWebauthnSignRequest())
@@ -141,7 +143,6 @@
                                         try
                                         {
                                             const requestStr = document.getElementById("webauthnSignRequest").value;
-                                            console.log("webauthnsignrequest: " + requestStr);
                                             const requestJSON = JSON.parse(requestStr);
 
                                             const webAuthnSignResponse = window.pi_webauthn.sign(requestJSON);
