@@ -29,6 +29,7 @@ Otherwise, re-run the command from step 5.
    - `privacyidea.service_name=service`
    - `privacyidea.service_pass=service`
    - `privacyidea.service_realm=defrealm`
+   - `privacyidea.forward_headers=header1,header2,header3`
    - `privacyidea.debug=false`
 
 2. **Add the privacyIDEA subflow to the MFA flow.**<br>
