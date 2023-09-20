@@ -25,7 +25,7 @@ public class TriggerChallenge extends AbstractChallengeResponseAction
                 LOGGER.info("{} Triggering challenges...", this.getLogPrefix());
             }
 
-            PIResponse triggerredResponse = privacyIDEA.triggerChallenges(piContext.getUsername());
+            PIResponse triggerredResponse = privacyIDEA.triggerChallenges(piContext.getUsername(), this.getHeadersToForward(this.getHttpServletRequest()));
 
             if (triggerredResponse != null)
             {
