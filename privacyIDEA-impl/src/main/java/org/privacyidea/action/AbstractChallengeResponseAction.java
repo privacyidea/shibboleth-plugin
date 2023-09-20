@@ -1,7 +1,14 @@
 package org.privacyidea.action;
 
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import javax.servlet.http.HttpServletRequest;
 import net.shibboleth.idp.authn.context.AuthenticationContext;
 import net.shibboleth.idp.profile.AbstractProfileAction;
 import org.opensaml.messaging.context.navigate.ChildContextLookup;
@@ -100,6 +107,41 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction imple
         {
             piContext.setTransactionID(piResponse.transactionID);
         }
+    }
+
+    /**
+     * Search for the configured headers in HttpServletRequest and return all found with their values.
+     *
+     * @param request http servlet request
+     * @return headers to forward with their values
+     */
+    protected Map<String, String> getHeadersToForward(HttpServletRequest request)
+    {
+        if (piServerConfigContext.getConfigParams().getForwardHeaders() != null)
+        {
+            String cleanHeaders = piServerConfigContext.getConfigParams().getForwardHeaders().replaceAll(" ", "");
+            List<String> headersList = List.of(cleanHeaders.split(","));
+            Map<String, String> headersToForward = new LinkedHashMap<>();
+
+            for (String header : headersList.stream().distinct().collect(Collectors.toList()))
+            {
+                List<String> headerValues = new ArrayList<>();
+                for (Enumeration<String> e = request.getHeaders(header); e.hasMoreElements();)
+                    headerValues.add(e.nextElement());
+
+                if(!headerValues.isEmpty())
+                {
+                    String temp = String.join(",", headerValues);
+                    headersToForward.put(header, temp);
+                }
+                else
+                {
+                    LOGGER.info("{} No values for header " + header + "found.", this.getLogPrefix());
+                }
+            }
+            return headersToForward;
+        }
+        return new LinkedHashMap<>();
     }
 
     // Logger implementation
