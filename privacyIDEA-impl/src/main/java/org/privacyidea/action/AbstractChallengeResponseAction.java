@@ -117,26 +117,32 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction imple
      */
     protected Map<String, String> getHeadersToForward(HttpServletRequest request)
     {
-        if (piServerConfigContext.getConfigParams().getForwardHeaders() != null)
+        if (piServerConfigContext.getConfigParams().getForwardHeaders() != null && !piServerConfigContext.getConfigParams().getForwardHeaders().isEmpty())
         {
             String cleanHeaders = piServerConfigContext.getConfigParams().getForwardHeaders().replaceAll(" ", "");
             List<String> headersList = List.of(cleanHeaders.split(","));
             Map<String, String> headersToForward = new LinkedHashMap<>();
 
-            for (String header : headersList.stream().distinct().collect(Collectors.toList()))
+            for (String headerName : headersList.stream().distinct().collect(Collectors.toList()))
             {
                 List<String> headerValues = new ArrayList<>();
-                for (Enumeration<String> e = request.getHeaders(header); e.hasMoreElements();)
-                    headerValues.add(e.nextElement());
+                Enumeration<String> e = request.getHeaders(headerName);
+                if (e != null)
+                {
+                    while (e.hasMoreElements())
+                    {
+                        headerValues.add(e.nextElement());
+                    }
+                }
 
                 if(!headerValues.isEmpty())
                 {
                     String temp = String.join(",", headerValues);
-                    headersToForward.put(header, temp);
+                    headersToForward.put(headerName, temp);
                 }
                 else
                 {
-                    LOGGER.info("{} No values for header " + header + "found.", this.getLogPrefix());
+                    LOGGER.info("{} No values for header \"" + headerName + "\" found.", this.getLogPrefix());
                 }
             }
             return headersToForward;
