@@ -17,12 +17,15 @@ public class PIContext extends BaseContext
     private String transactionID = null;
     @Nonnull
     private final String otpFieldHint;
+    @Nullable
+    private final Integer otpLength;
 
-    public PIContext(@Nonnull User user, @Nullable String defaultMessage, @Nullable String otpFieldHint)
+    public PIContext(@Nonnull User user, @Nullable String defaultMessage, @Nullable String otpFieldHint, @Nullable Integer otpLength)
     {
         this.user = Constraint.isNotNull(user, "User cannot be null.");
         this.defaultMessage = Objects.requireNonNullElse(defaultMessage, "Please enter the OTP!");
         this.otpFieldHint = Objects.requireNonNullElse(otpFieldHint, "OTP");
+        this.otpLength = otpLength;
     }
 
     // Getters and Setters
@@ -36,4 +39,6 @@ public class PIContext extends BaseContext
     public String getTransactionID() {return transactionID;}
     @Nonnull
     public String getOtpFieldHint() {return otpFieldHint;}
+    @Nullable
+    public Integer getOtpLength() {return otpLength;}
 }
