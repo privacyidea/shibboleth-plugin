@@ -1,6 +1,9 @@
 package org.privacyidea.action;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import javax.annotation.Nonnull;
+import javax.servlet.http.HttpServletRequest;
 import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.context.ProfileRequestContext;
 import org.privacyidea.PIResponse;
@@ -25,7 +28,18 @@ public class TriggerChallenge extends AbstractChallengeResponseAction
                 LOGGER.info("{} Triggering challenges...", this.getLogPrefix());
             }
 
-            PIResponse triggerredResponse = privacyIDEA.triggerChallenges(piContext.getUsername(), this.getHeadersToForward(this.getHttpServletRequest()));
+            HttpServletRequest request = this.getHttpServletRequest();
+            Map<String, String> headers = new LinkedHashMap<>();
+            if (request != null)
+            {
+                 headers = this.getHeadersToForward(request);
+            }
+            else
+            {
+                LOGGER.info("{} Failed to attach headers to triggerchallenge request because HTTP Servlet Request was null", this.getLogPrefix());
+            }
+
+            PIResponse triggerredResponse = privacyIDEA.triggerChallenges(piContext.getUsername(), headers);
 
             if (triggerredResponse != null)
             {
