@@ -1,7 +1,14 @@
 package org.privacyidea.action;
 
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import javax.servlet.http.HttpServletRequest;
 import net.shibboleth.idp.authn.context.AuthenticationContext;
 import net.shibboleth.idp.profile.AbstractProfileAction;
 import org.opensaml.messaging.context.navigate.ChildContextLookup;
@@ -10,8 +17,8 @@ import org.opensaml.profile.context.ProfileRequestContext;
 import org.privacyidea.IPILogger;
 import org.privacyidea.PIResponse;
 import org.privacyidea.PrivacyIDEA;
-import org.privacyidea.context.PIServerConfigContext;
 import org.privacyidea.context.PIContext;
+import org.privacyidea.context.PIServerConfigContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,6 +107,46 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction imple
         {
             piContext.setTransactionID(piResponse.transactionID);
         }
+    }
+
+    /**
+     * Search for the configured headers in HttpServletRequest and return all found with their values.
+     *
+     * @param request http servlet request
+     * @return headers to forward with their values
+     */
+    protected Map<String, String> getHeadersToForward(HttpServletRequest request)
+    {
+        Map<String, String> headersToForward = new LinkedHashMap<>();
+        if (piServerConfigContext.getConfigParams().getForwardHeaders() != null && !piServerConfigContext.getConfigParams().getForwardHeaders().isEmpty())
+        {
+            String cleanHeaders = piServerConfigContext.getConfigParams().getForwardHeaders().replaceAll(" ", "");
+            List<String> headersList = List.of(cleanHeaders.split(","));
+
+            for (String headerName : headersList.stream().distinct().collect(Collectors.toList()))
+            {
+                List<String> headerValues = new ArrayList<>();
+                Enumeration<String> e = request.getHeaders(headerName);
+                if (e != null)
+                {
+                    while (e.hasMoreElements())
+                    {
+                        headerValues.add(e.nextElement());
+                    }
+                }
+
+                if (!headerValues.isEmpty())
+                {
+                    String temp = String.join(",", headerValues);
+                    headersToForward.put(headerName, temp);
+                }
+                else
+                {
+                    LOGGER.info("{} No values for header \"" + headerName + "\" found.", this.getLogPrefix());
+                }
+            }
+        }
+        return headersToForward;
     }
 
     // Logger implementation
