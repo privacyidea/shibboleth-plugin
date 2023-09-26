@@ -32,7 +32,7 @@ public class TriggerChallenge extends AbstractChallengeResponseAction
             Map<String, String> headers = new LinkedHashMap<>();
             if (request != null)
             {
-                 headers = this.getHeadersToForward(request);
+                headers = this.getHeadersToForward(request);
             }
             else
             {

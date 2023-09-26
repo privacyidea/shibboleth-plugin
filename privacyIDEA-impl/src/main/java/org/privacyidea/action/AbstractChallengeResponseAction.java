@@ -17,8 +17,8 @@ import org.opensaml.profile.context.ProfileRequestContext;
 import org.privacyidea.IPILogger;
 import org.privacyidea.PIResponse;
 import org.privacyidea.PrivacyIDEA;
-import org.privacyidea.context.PIServerConfigContext;
 import org.privacyidea.context.PIContext;
+import org.privacyidea.context.PIServerConfigContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -117,11 +117,11 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction imple
      */
     protected Map<String, String> getHeadersToForward(HttpServletRequest request)
     {
+        Map<String, String> headersToForward = new LinkedHashMap<>();
         if (piServerConfigContext.getConfigParams().getForwardHeaders() != null && !piServerConfigContext.getConfigParams().getForwardHeaders().isEmpty())
         {
             String cleanHeaders = piServerConfigContext.getConfigParams().getForwardHeaders().replaceAll(" ", "");
             List<String> headersList = List.of(cleanHeaders.split(","));
-            Map<String, String> headersToForward = new LinkedHashMap<>();
 
             for (String headerName : headersList.stream().distinct().collect(Collectors.toList()))
             {
@@ -135,7 +135,7 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction imple
                     }
                 }
 
-                if(!headerValues.isEmpty())
+                if (!headerValues.isEmpty())
                 {
                     String temp = String.join(",", headerValues);
                     headersToForward.put(headerName, temp);
@@ -145,9 +145,8 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction imple
                     LOGGER.info("{} No values for header \"" + headerName + "\" found.", this.getLogPrefix());
                 }
             }
-            return headersToForward;
         }
-        return new LinkedHashMap<>();
+        return headersToForward;
     }
 
     // Logger implementation
