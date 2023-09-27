@@ -33,6 +33,23 @@ Otherwise, re-run the command from step 5.
    - `privacyidea.forward_headers=header1,header2,header3`
    - `privacyidea.debug=false`
 
+The different configuration parameters that are available on the configuration page of the execution are explained in the following table:
+
+| Configuration                  | Explanation                                                                                                                                                                                            |
+|--------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `privacyidea.server_url`       | The URL of your privacyIDEA server. This must to be reachable from the Shibboleth IdP server.                                                                                                          |
+| `privacyidea.realm`            | This realm will be appended to all requests to the privacyIDEA. Leave it empty to use the default one.                                                                                                 |
+| `privacyidea.verify_ssl`       | You can choose if the Shibboleth should verify the SSL certificate from the privacyIDEA. <br/>Note: Always verify the SSL certificate in a productive environment!                                     |
+| `privacyidea.default_message`  | Use this parameter to edit the default message.                                                                                                                                                        |
+| `privacyidea.otp_field_hint`   | Use this parameter to edit the default placeholder of the OTP input field.                                                                                                                             |
+| `privacyidea.triggerchallenge` | Set this to true, if all challenges should be triggered beforehand using the provided service account.                                                                                                 |
+| `privacyidea.service_name`     | The username of the service account required by the triggerchallenge config option. Please make sure, that the service account has the correct rights.                                                 |
+| `privacyidea.service_pass`     | The password of your service account.                                                                                                                                                                  |
+| `privacyidea.service_realm`    | Specify a separate service account's realm if needed. If the service account is located in the same realm as the users, it is sufficient to specify the realm in the `privacyidea.realm` config param. |
+| `privacyidea.forward_headers`  | Set the headers that should be forwarded to the privacyIDEA. If some header doesn't exist or has no value, will be ignored. The header names should be separated by a comma (",").                     |
+| `privacyidea.debug`            | Set this param to true to see the debug messages in the `idp-process.log`.                                                                                                                             |
+
+
 2. **Add the privacyIDEA subflow to the MFA flow.**<br>
    - Path to the MFA flow configuration file: `$idp_install_path/conf/authn/mfa-authn-config.xml`.
    - Example of the *util:map* is located in the resources at the end of the *privacyidea.properties* file (`/privacyIDEA-impl/src/resources/org/privacyidea/conf/authn/privacyidea.properties`).
