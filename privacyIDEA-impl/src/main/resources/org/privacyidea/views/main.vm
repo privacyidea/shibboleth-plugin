@@ -70,10 +70,18 @@
                             <br>
                         </div>
 
+                        <script>
+                            function autoSubmit(inputObject, otpLength)
+                            {
+                                if (otpLength != null && inputObject.value.length === otpLength)
+                                {
+                                    document.getElementById("pi-form-submit-button").click();
+                                }
+                            }
+                        </script>
+
                         <div class="form-element-wrapper">
-                            <input id="pi_otp_input" class="form-element form-field" name="pi_otp_input" type="password"
-                                   onKeyUp='if($piContext.getOtpLength()!=null&&this.value.length===$piContext.getOtpLength())document.getElementById("pi-form-submit-button").click()'
-                                   autofocus placeholder=$piContext.getOtpFieldHint() value="">
+                            <input id="pi_otp_input" class="form-element form-field" name="pi_otp_input" type="password" onKeyUp="autoSubmit(this, $piContext.getOtpLength())" autofocus placeholder=$piContext.getOtpFieldHint() value="">
                             <br>
                             <button class="form-element form-button" id="pi-form-submit-button" type="submit" name="_eventId_proceed">Submit</button>
                             <br><br>
