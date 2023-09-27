@@ -31,14 +31,20 @@ public class PIContext extends BaseContext
     // Getters and Setters
     @Nonnull
     public String getUsername() {return user.getUsername();}
+
     public void setMessage(String message) {this.message = message;}
+
     @Nonnull
     public String getMessage() {return (!message.isEmpty()) ? message : defaultMessage;}
+
     public void setTransactionID(@Nonnull String transactionID) {this.transactionID = transactionID;}
+
     @Nullable
     public String getTransactionID() {return transactionID;}
+
     @Nonnull
     public String getOtpFieldHint() {return otpFieldHint;}
+
     @Nullable
     public Integer getOtpLength() {return otpLength;}
 }

@@ -1,6 +1,5 @@
 package org.privacyidea.action;
 
-import java.nio.channels.ScatteringByteChannel;
 import java.util.function.Function;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -105,15 +104,26 @@ public class InitializePIContext extends AbstractAuthenticationAction
 
     // Spring bean property setters
     public void setServerURL(@Nonnull String serverURL) {this.serverURL = serverURL;}
+
     public void setRealm(@Nullable String realm) {this.realm = realm;}
+
     public void setVerifySSL(boolean verifySSL) {this.verifySSL = verifySSL;}
+
     public void setDefaultMessage(@Nullable String defaultMessage) {this.defaultMessage = defaultMessage;}
+
     public void setOtpFieldHint(@Nullable String otpFieldHint) {this.otpFieldHint = otpFieldHint;}
+
     public void setTriggerChallenge(boolean triggerChallenge) {this.triggerChallenge = triggerChallenge;}
+
     public void setServiceName(@Nullable String serviceName) {this.serviceName = serviceName;}
+
     public void setServicePass(@Nullable String servicePass) {this.servicePass = servicePass;}
+
     public void setServiceRealm(@Nullable String serviceRealm) {this.serviceRealm = serviceRealm;}
+
     public void setForwardHeaders(@Nullable String forwardHeaders) {this.forwardHeaders = forwardHeaders;}
+
     public void setOtpLength(@Nullable String otpLength) {this.otpLength = otpLength;}
+
     public void setDebug(boolean debug) {this.debug = debug;}
 }
