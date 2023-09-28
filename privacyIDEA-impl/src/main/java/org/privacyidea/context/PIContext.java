@@ -1,6 +1,5 @@
 package org.privacyidea.context;
 
-import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import net.shibboleth.utilities.java.support.logic.Constraint;
@@ -10,11 +9,18 @@ public class PIContext extends BaseContext
 {
     @Nonnull
     private final User user;
-    @Nonnull
-    private final String defaultMessage;
-    private String message = "";
     @Nullable
     private String transactionID = null;
+    @Nonnull
+    private String webauthnSignRequest = "";
+    @Nullable
+    private String webauthnSignResponse = null;
+    @Nullable
+    private String formErrorMessage = null;
+    @Nullable
+    private String origin = null;
+    @Nonnull
+    private String mode = "otp";
     @Nonnull
     private final String otpFieldHint;
     @Nullable
@@ -42,6 +48,31 @@ public class PIContext extends BaseContext
     @Nullable
     public String getTransactionID() {return transactionID;}
 
+    @Nullable
+    public String getWebauthnSignResponse() {return webauthnSignResponse;}
+
+    public void setWebauthnSignResponse(@Nullable String webauthnSignResponse) {this.webauthnSignResponse = webauthnSignResponse;}
+
+    @Nullable
+    public String getOrigin() {return origin;}
+
+    public void setOrigin(@Nullable String origin) {this.origin = origin;}
+
+    @Nonnull
+    public String getMode() {return mode;}
+
+    public void setMode(@Nonnull String mode) {this.mode = mode;}
+
+    @Nonnull
+    public String getWebauthnSignRequest() {return webauthnSignRequest;}
+
+    public void setWebauthnSignRequest(@Nonnull String webauthnSignRequest) {this.webauthnSignRequest = webauthnSignRequest;}
+
+    @Nullable
+    public String getFormErrorMessage() {return formErrorMessage;}
+
+    public void setFormErrorMessage(@Nullable String formErrorMessage) {this.formErrorMessage = formErrorMessage;}
+    
     @Nonnull
     public String getOtpFieldHint() {return otpFieldHint;}
 

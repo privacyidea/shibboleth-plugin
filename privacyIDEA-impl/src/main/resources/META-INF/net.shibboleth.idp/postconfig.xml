@@ -21,12 +21,6 @@
           p:inactivityTimeout="%{idp.authn.privacyIDEA.inactivityTimeout:%{idp.authn.defaultTimeout:PT30M}}"
           p:reuseCondition-ref="#{'%{idp.authn.privacyIDEA.reuseCondition:shibboleth.Conditions.TRUE}'.trim()}"
           p:activationCondition-ref="#{'%{idp.authn.privacyIDEA.activationCondition:shibboleth.Conditions.TRUE}'.trim()}">
-        <!--<property name="supportedPrincipals">
-            <list>
-                <bean parent="shibboleth.SAML2AuthnContextClassRef"
-                      c:classRef="urn:de:zedat:fudis:SAML:2.0:ac:classes:CR"/>
-            </list>
-        </property>-->
         <property name="supportedPrincipalsByString">
             <bean parent="shibboleth.CommaDelimStringArray"
                   c:_0="#{'%{idp.authn.privacyIDEA.supportedPrincipals:}'.trim()}"/>

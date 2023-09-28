@@ -16,6 +16,7 @@
 ## environment - Spring Environment object for property resolution
 ## custom - arbitrary object injected by deployer
 ## piContext - privacyIDEA Context
+## piFormContext - privacyIDEA Form Context
 ##
 <!DOCTYPE html>
 <html lang="en">
@@ -60,16 +61,19 @@
                     <p>$encoder.encodeForHTML($desc)</p>
                 #end
 
-                <div id="privacyIDEA form">
+                <div id="privacyidea">
                     <form id="privacyidea-form" action="$flowExecutionUrl" method="post" autocomplete="off">
                         #parse("csrf/csrf.vm")
                         <div class="content">
                             <p>Hello $piContext.getUsername()!</p>
                             <br>
-                            <p>$piContext.getMessage()</p>
+                            <p>$piFormContext.getMessage()</p>
+                            <br>
+                            <p>$piContext.getErrorMessage()</p>
                             <br>
                         </div>
 
+                        #* OTP *#
                         <script>
                             function autoSubmit(inputObject, otpLength)
                             {
@@ -86,6 +90,93 @@
                             <button class="form-element form-button" id="pi-form-submit-button" type="submit" name="_eventId_proceed">Submit</button>
                             <br><br>
                         </div>
+
+                        <div class="form-options">
+                            <input id="mode" name="mode" value="$piContext.getMode()" type="hidden">
+                            <input id="errorMessage" name="errorMessage" value="" type="hidden">
+
+                            <input id="webauthnSignRequest" name="webauthnSignRequest" value='$piContext.getWebauthnSignRequest()' type="hidden">
+                            <input id="webauthnSignResponse" name="webauthnSignResponse" value="" type="hidden">
+                            <input id="origin" name="origin" value="" type="hidden">
+                        </div>
+
+                        #* ALTERNATE TOKENS SECTION *#
+                        <div class="form-element-wrapper" id="alternateToken" style="padding-top: 20px">
+                            <h3 id="alternateTokenHeader">Alternate Login Options</h3>
+
+                            <script>
+                                'use strict';
+                                function changeMode(newMode)
+                                {
+                                    // Submit the form to pass the change to the authenticator
+                                    document.getElementById("mode").value = newMode;
+                                    document.getElementById("pi-form-submit-button").click();
+                                }
+                            </script>
+
+                            <input class="form-element form-button" id="otpButton" name="otpButton" onclick="changeMode('otp')" type="button" value="OTP">
+
+                            #* WEBAUTHN *#
+                            #set ($webauthnSignRequest = $piContext.getWebauthnSignRequest())
+                            #if ($webauthnSignRequest != "")
+                                <input class="form-element form-button" id="useWebAuthnButton" name="useWebAuthnButton" onclick="doWebAuthn()" type="button" value="WebAuthn">
+                                <script src="$request.getContextPath()/js/pi-webauthn.js"></script>
+                                <script>
+                                    'use strict';
+                                    if (document.getElementById("webauthnSignRequest").value === "")
+                                    {
+                                        document.getElementById("useWebAuthnButton").style.display = "none";
+                                    }
+
+                                    if (document.getElementById("mode").value === "webauthn")
+                                    {
+                                        window.onload = () =>
+                                        {
+                                            doWebAuthn();
+                                        }
+                                    }
+
+                                    if (!window.location.origin)
+                                    {
+                                        window.location.origin = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port : '');
+                                    }
+                                    document.getElementById("origin").value = window.origin;
+
+                                    function doWebAuthn()
+                                    {
+                                        // If we are in push mode, reload the page because in push mode the page refreshes every x seconds which could interrupt webauthn
+                                        // Afterward, webauthn is started directly
+                                        if (document.getElementById("mode").value === "push")
+                                        {
+                                            changeMode("webauthn");
+                                        }
+                                        try
+                                        {
+                                            const requestStr = document.getElementById("webauthnSignRequest").value;
+                                            const requestJSON = JSON.parse(requestStr);
+
+                                            const webAuthnSignResponse = window.pi_webauthn.sign(requestJSON);
+                                            webAuthnSignResponse.then((webauthnresponse) =>
+                                            {
+                                                document.getElementById("webauthnSignResponse").value = JSON.stringify(webauthnresponse);
+                                                document.getElementById("pi-form-submit-button").click();
+                                            });
+                                        }
+                                        catch (err)
+                                        {
+                                            console.log("Error while trying WebAuthn: " + err);
+                                            document.getElementById("errorMessage").value = "Error while trying WebAuthn: " + err;
+                                        }
+                                    }
+                                </script>
+                                <br><br>
+                            #end
+                            #if ($webauthnSignRequest == "")
+                                <script>
+                                    document.getElementById("alternateToken").style.display = "none";
+                                </script>
+                            #end
+                            </div>
                     </form>
                 </div>
             </div>

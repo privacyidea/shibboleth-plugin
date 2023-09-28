@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.opensaml.profile.context.ProfileRequestContext;
 import org.privacyidea.context.Config;
 import org.privacyidea.context.PIContext;
+import org.privacyidea.context.PIFormContext;
 import org.privacyidea.context.PIServerConfigContext;
 import org.privacyidea.context.User;
 import org.slf4j.Logger;
@@ -66,6 +67,7 @@ public class InitializePIContext extends AbstractAuthenticationAction
             authenticationContext.addSubcontext(piServerConfigContext);
             PIContext piContext;
 
+            PIContext piContext = new PIContext(user);
             if (otpLength != null)
             {
                 try
@@ -85,6 +87,10 @@ public class InitializePIContext extends AbstractAuthenticationAction
             }
             log.info("{} Create PIContext {}", this.getLogPrefix(), piContext);
             authenticationContext.addSubcontext(piContext);
+
+            PIFormContext piFormContext = new PIFormContext(defaultMessage, otpFieldHint);
+            log.info("{} Create PIFormContext {}", this.getLogPrefix(), piFormContext);
+            authenticationContext.addSubcontext(piFormContext);
         }
     }
 
