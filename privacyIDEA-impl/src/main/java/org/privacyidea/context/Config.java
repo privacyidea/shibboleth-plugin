@@ -18,8 +18,10 @@ public class Config
     private final String servicePass;
     @Nullable
     private final String serviceRealm;
+    @Nullable
+    private final String forwardHeaders;
 
-    public Config(@Nonnull String serverURL, @Nullable String realm, boolean verifySSL, boolean triggerChallenge, @Nullable String serviceName, @Nullable String servicePass, @Nullable String serviceRealm, boolean debug)
+    public Config(@Nonnull String serverURL, @Nullable String realm, boolean verifySSL, boolean triggerChallenge, @Nullable String serviceName, @Nullable String servicePass, @Nullable String serviceRealm, @Nullable String forwardHeaders, boolean debug)
     {
         this.serverURL = serverURL;
         this.realm = realm;
@@ -28,6 +30,7 @@ public class Config
         this.serviceName = serviceName;
         this.servicePass = servicePass;
         this.serviceRealm = serviceRealm;
+        this.forwardHeaders = forwardHeaders;
         this.debug = debug;
     }
 
@@ -70,6 +73,12 @@ public class Config
     public String getServiceRealm()
     {
         return serviceRealm;
+    }
+
+    @Nullable
+    public String getForwardHeaders()
+    {
+        return forwardHeaders;
     }
 
     public boolean getDebug()

@@ -27,6 +27,7 @@
           p:serviceName="%{privacyidea.service_name:#{null}}"
           p:servicePass="%{privacyidea.service_pass:#{null}}"
           p:serviceRealm="%{privacyidea.service_realm:#{null}}"
+          p:forwardHeaders="%{privacyidea.forward_headers:#{null}}"
           p:debug="%{privacyidea.debug:false}"/>
 
     <bean id="piAuthenticator" class="org.privacyidea.action.PrivacyIDEAAuthenticator" scope="prototype"
