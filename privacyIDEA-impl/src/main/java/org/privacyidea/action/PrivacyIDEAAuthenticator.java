@@ -1,5 +1,6 @@
 package org.privacyidea.action;
 
+import java.util.Map;
 import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
 import org.opensaml.profile.action.ActionSupport;
@@ -20,6 +21,7 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction
     protected final void doExecute(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext, @Nonnull PIServerConfigContext piServerConfigContext)
     {
         HttpServletRequest request = this.getHttpServletRequest();
+        Map<String, String> headers = this.getHeadersToForward(request);
         if (request == null)
         {
             LOGGER.error("{} Profile action does not contain an HttpServletRequest.", this.getLogPrefix());
@@ -52,7 +54,7 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction
                     String otp = request.getParameterValues("pi_otp_input")[0];
                     if (otp != null)
                     {
-                        piResponse = privacyIDEA.validateCheck(piContext.getUsername(), otp, piContext.getTransactionID(), null);
+                    piResponse = privacyIDEA.validateCheck(piContext.getUsername(), otp, piContext.getTransactionID(), headers);
                     }
                     else
                     {

@@ -36,6 +36,8 @@ public class InitializePIContext extends AbstractAuthenticationAction
     @Nullable
     private String serviceRealm;
     @Nullable
+    private String forwardHeaders;
+    @Nullable
     private String otpFieldHint;
     private boolean debug;
 
@@ -57,7 +59,7 @@ public class InitializePIContext extends AbstractAuthenticationAction
         }
         else
         {
-            Config configParams = new Config(serverURL, realm, verifySSL, triggerChallenge, serviceName, servicePass, serviceRealm, debug);
+            Config configParams = new Config(serverURL, realm, verifySSL, triggerChallenge, serviceName, servicePass, serviceRealm, forwardHeaders, debug);
             PIServerConfigContext piServerConfigContext = new PIServerConfigContext(configParams);
             log.info("{} Create PIServerConfigContext {}", this.getLogPrefix(), piServerConfigContext);
             authenticationContext.addSubcontext(piServerConfigContext);
@@ -104,6 +106,8 @@ public class InitializePIContext extends AbstractAuthenticationAction
     public void setServicePass(@Nonnull String servicePass) {this.servicePass = servicePass;}
 
     public void setServiceRealm(@Nonnull String serviceRealm) {this.serviceRealm = serviceRealm;}
-
+    
+    public void setForwardHeaders(@Nonnull String forwardHeaders) {this.forwardHeaders = forwardHeaders;}
+    
     public void setDebug(boolean debug) {this.debug = debug;}
 }
