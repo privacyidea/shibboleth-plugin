@@ -77,7 +77,7 @@
                         <div class="form-element-wrapper">
                             <input id="pi_otp_input" class="form-element form-field" name="pi_otp_input" type="password" autofocus placeholder=$piContext.getOtpFieldHint() value="">
                             <br>
-                            <button class="form-element form-button" type="submit" name="_eventId_proceed">Submit</button>
+                            <button class="form-element form-button" id="pi-form-submit-button" type="submit" name="_eventId_proceed">Submit</button>
                             <br><br>
                         </div>
 
@@ -100,7 +100,7 @@
                                 {
                                     // Submit the form to pass the change to the authenticator
                                     document.getElementById("mode").value = newMode;
-                                    document.forms["privacyidea-form"].submit();
+                                    document.getElementById("pi-form-submit-button").click();
                                 }
                             </script>
 
@@ -149,7 +149,7 @@
                                             webAuthnSignResponse.then((webauthnresponse) =>
                                             {
                                                 document.getElementById("webauthnSignResponse").value = JSON.stringify(webauthnresponse);
-                                                document.forms["privacyidea-form"].submit();
+                                                document.getElementById("pi-form-submit-button").click();
                                             });
                                         }
                                         catch (err)
