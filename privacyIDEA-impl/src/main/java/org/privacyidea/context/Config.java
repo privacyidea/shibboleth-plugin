@@ -20,8 +20,10 @@ public class Config
     private final String serviceRealm;
     @Nullable
     private final String forwardHeaders;
+    @Nullable
+    private final String otpLength;
 
-    public Config(@Nonnull String serverURL, @Nullable String realm, boolean verifySSL, boolean triggerChallenge, @Nullable String serviceName, @Nullable String servicePass, @Nullable String serviceRealm, @Nullable String forwardHeaders, boolean debug)
+    public Config(@Nonnull String serverURL, @Nullable String realm, boolean verifySSL, boolean triggerChallenge, @Nullable String serviceName, @Nullable String servicePass, @Nullable String serviceRealm, @Nullable String forwardHeaders, @Nullable String otpLength, boolean debug)
     {
         this.serverURL = serverURL;
         this.realm = realm;
@@ -31,6 +33,7 @@ public class Config
         this.servicePass = servicePass;
         this.serviceRealm = serviceRealm;
         this.forwardHeaders = forwardHeaders;
+        this.otpLength = otpLength;
         this.debug = debug;
     }
 
@@ -79,6 +82,12 @@ public class Config
     public String getForwardHeaders()
     {
         return forwardHeaders;
+    }
+
+    @Nullable
+    public String getOtpLength()
+    {
+        return otpLength;
     }
 
     public boolean getDebug()
