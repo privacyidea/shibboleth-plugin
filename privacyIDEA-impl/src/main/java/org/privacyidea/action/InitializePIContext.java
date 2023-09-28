@@ -38,6 +38,8 @@ public class InitializePIContext extends AbstractAuthenticationAction
     private String forwardHeaders;
     @Nullable
     private String otpFieldHint;
+    @Nullable
+    private String otpLength;
     private boolean debug;
 
     public InitializePIContext()
@@ -58,12 +60,29 @@ public class InitializePIContext extends AbstractAuthenticationAction
         }
         else
         {
-            Config configParams = new Config(serverURL, realm, verifySSL, triggerChallenge, serviceName, servicePass, serviceRealm, forwardHeaders, debug);
+            Config configParams = new Config(serverURL, realm, verifySSL, triggerChallenge, serviceName, servicePass, serviceRealm, forwardHeaders, otpLength, debug);
             PIServerConfigContext piServerConfigContext = new PIServerConfigContext(configParams);
             log.info("{} Create PIServerConfigContext {}", this.getLogPrefix(), piServerConfigContext);
             authenticationContext.addSubcontext(piServerConfigContext);
+            PIContext piContext;
 
-            PIContext piContext = new PIContext(user, defaultMessage, otpFieldHint);
+            if (otpLength != null)
+            {
+                try
+                {
+                    int otpLengthToInt = Integer.parseInt(otpLength);
+                    piContext = new PIContext(user, defaultMessage, otpFieldHint, otpLengthToInt);
+                }
+                catch (NumberFormatException e)
+                {
+                    log.info("{} Config option \"otp_length\": Wrong format. Only digits allowed.", getLogPrefix());
+                    piContext = new PIContext(user, defaultMessage, otpFieldHint, null);
+                }
+            }
+            else
+            {
+                piContext = new PIContext(user, defaultMessage, otpFieldHint, null);
+            }
             log.info("{} Create PIContext {}", this.getLogPrefix(), piContext);
             authenticationContext.addSubcontext(piContext);
         }
@@ -85,14 +104,26 @@ public class InitializePIContext extends AbstractAuthenticationAction
 
     // Spring bean property setters
     public void setServerURL(@Nonnull String serverURL) {this.serverURL = serverURL;}
-    public void setRealm(@Nonnull String realm) {this.realm = realm;}
+
+    public void setRealm(@Nullable String realm) {this.realm = realm;}
+
     public void setVerifySSL(boolean verifySSL) {this.verifySSL = verifySSL;}
-    public void setDefaultMessage(@Nonnull String defaultMessage) {this.defaultMessage = defaultMessage;}
-    public void setOtpFieldHint(@Nonnull String otpFieldHint) {this.otpFieldHint = otpFieldHint;}
+
+    public void setDefaultMessage(@Nullable String defaultMessage) {this.defaultMessage = defaultMessage;}
+
+    public void setOtpFieldHint(@Nullable String otpFieldHint) {this.otpFieldHint = otpFieldHint;}
+
     public void setTriggerChallenge(boolean triggerChallenge) {this.triggerChallenge = triggerChallenge;}
-    public void setServiceName(@Nonnull String serviceName) {this.serviceName = serviceName;}
-    public void setServicePass(@Nonnull String servicePass) {this.servicePass = servicePass;}
-    public void setServiceRealm(@Nonnull String serviceRealm) {this.serviceRealm = serviceRealm;}
-    public void setForwardHeaders(@Nonnull String forwardHeaders) {this.forwardHeaders = forwardHeaders;}
+
+    public void setServiceName(@Nullable String serviceName) {this.serviceName = serviceName;}
+
+    public void setServicePass(@Nullable String servicePass) {this.servicePass = servicePass;}
+
+    public void setServiceRealm(@Nullable String serviceRealm) {this.serviceRealm = serviceRealm;}
+
+    public void setForwardHeaders(@Nullable String forwardHeaders) {this.forwardHeaders = forwardHeaders;}
+
+    public void setOtpLength(@Nullable String otpLength) {this.otpLength = otpLength;}
+
     public void setDebug(boolean debug) {this.debug = debug;}
 }
