@@ -44,7 +44,7 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction
                 else
                 {
                     piResponse = privacyIDEA.validateCheckWebAuthn(piContext.getUsername(), piContext.getTransactionID(), piContext.getWebauthnSignResponse(),
-                                                                   piContext.getOrigin(), null);
+                                                                   piContext.getOrigin(), headers);
                 }
             }
             else if (piContext.getMode().equals("otp"))
