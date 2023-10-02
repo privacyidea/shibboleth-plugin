@@ -1,5 +1,6 @@
 package org.privacyidea.context;
 
+import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import net.shibboleth.utilities.java.support.logic.Constraint;
@@ -21,27 +22,15 @@ public class PIContext extends BaseContext
     private String origin = null;
     @Nonnull
     private String mode = "otp";
-    @Nonnull
-    private final String otpFieldHint;
-    @Nullable
-    private final Integer otpLength;
 
-    public PIContext(@Nonnull User user, @Nullable String defaultMessage, @Nullable String otpFieldHint, @Nullable Integer otpLength)
+    public PIContext(@Nonnull User user)
     {
         this.user = Constraint.isNotNull(user, "User cannot be null.");
-        this.defaultMessage = Objects.requireNonNullElse(defaultMessage, "Please enter the OTP!");
-        this.otpFieldHint = Objects.requireNonNullElse(otpFieldHint, "OTP");
-        this.otpLength = otpLength;
     }
 
     // Getters and Setters
     @Nonnull
     public String getUsername() {return user.getUsername();}
-
-    public void setMessage(String message) {this.message = message;}
-
-    @Nonnull
-    public String getMessage() {return (!message.isEmpty()) ? message : defaultMessage;}
 
     public void setTransactionID(@Nonnull String transactionID) {this.transactionID = transactionID;}
 
@@ -72,10 +61,4 @@ public class PIContext extends BaseContext
     public String getFormErrorMessage() {return formErrorMessage;}
 
     public void setFormErrorMessage(@Nullable String formErrorMessage) {this.formErrorMessage = formErrorMessage;}
-    
-    @Nonnull
-    public String getOtpFieldHint() {return otpFieldHint;}
-
-    @Nullable
-    public Integer getOtpLength() {return otpLength;}
 }

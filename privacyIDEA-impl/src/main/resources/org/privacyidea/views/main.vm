@@ -68,8 +68,12 @@
                             <p>Hello $piContext.getUsername()!</p>
                             <br>
                             <p>$piFormContext.getMessage()</p>
-                            <br>
-                            <p>$piContext.getErrorMessage()</p>
+
+                            #set ($formErrorMsg = $piContext.getFormErrorMessage())
+                            #if ($formErrorMsg)
+                                <br>
+                                <p>$formErrorMsg</p>
+                            #end
                             <br>
                         </div>
 
@@ -85,7 +89,7 @@
                         </script>
 
                         <div class="form-element-wrapper">
-                            <input id="pi_otp_input" class="form-element form-field" name="pi_otp_input" type="password" onKeyUp="autoSubmit(this, $piContext.getOtpLength())" autofocus placeholder=$piContext.getOtpFieldHint() value="">
+                            <input id="pi_otp_input" class="form-element form-field" name="pi_otp_input" type="password" onKeyUp="autoSubmit(this, $piFormContext.getOtpLength())" autofocus placeholder=$piFormContext.getOtpFieldHint() value="">
                             <br>
                             <button class="form-element form-button" id="pi-form-submit-button" type="submit" name="_eventId_proceed">Submit</button>
                             <br><br>

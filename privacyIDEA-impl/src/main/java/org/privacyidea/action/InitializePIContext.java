@@ -65,30 +65,29 @@ public class InitializePIContext extends AbstractAuthenticationAction
             PIServerConfigContext piServerConfigContext = new PIServerConfigContext(configParams);
             log.info("{} Create PIServerConfigContext {}", this.getLogPrefix(), piServerConfigContext);
             authenticationContext.addSubcontext(piServerConfigContext);
-            PIContext piContext;
 
             PIContext piContext = new PIContext(user);
+            log.info("{} Create PIContext {}", this.getLogPrefix(), piContext);
+            authenticationContext.addSubcontext(piContext);
+
+            PIFormContext piFormContext;
             if (otpLength != null)
             {
                 try
                 {
                     int otpLengthToInt = Integer.parseInt(otpLength);
-                    piContext = new PIContext(user, defaultMessage, otpFieldHint, otpLengthToInt);
+                    piFormContext = new PIFormContext(defaultMessage, otpFieldHint, otpLengthToInt);
                 }
                 catch (NumberFormatException e)
                 {
                     log.info("{} Config option \"otp_length\": Wrong format. Only digits allowed.", getLogPrefix());
-                    piContext = new PIContext(user, defaultMessage, otpFieldHint, null);
+                    piFormContext = new PIFormContext(defaultMessage, otpFieldHint, null);
                 }
             }
             else
             {
-                piContext = new PIContext(user, defaultMessage, otpFieldHint, null);
+                piFormContext = new PIFormContext(defaultMessage, otpFieldHint, null);
             }
-            log.info("{} Create PIContext {}", this.getLogPrefix(), piContext);
-            authenticationContext.addSubcontext(piContext);
-
-            PIFormContext piFormContext = new PIFormContext(defaultMessage, otpFieldHint);
             log.info("{} Create PIFormContext {}", this.getLogPrefix(), piFormContext);
             authenticationContext.addSubcontext(piFormContext);
         }

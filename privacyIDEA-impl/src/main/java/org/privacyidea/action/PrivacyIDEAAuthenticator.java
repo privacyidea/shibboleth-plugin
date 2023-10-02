@@ -74,8 +74,8 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction
                 if (piResponse.error != null)
                 {
                     LOGGER.error("{} privacyIDEA server error: {}!", this.getLogPrefix(), piResponse.error.message);
-                    ActionSupport.buildEvent(profileRequestContext, "AuthenticationException");
-                    return;
+                    piContext.setFormErrorMessage(piResponse.error.message);
+                    ActionSupport.buildEvent(profileRequestContext, "reload");
                 }
 
                 if (!piResponse.multichallenge.isEmpty())

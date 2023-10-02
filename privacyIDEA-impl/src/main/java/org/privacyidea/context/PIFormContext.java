@@ -8,15 +8,18 @@ import org.opensaml.messaging.context.BaseContext;
 public class PIFormContext extends BaseContext
 {
     @Nonnull
-    private final String defaultMessage;
+    private String defaultMessage;
     private String message = "";
     @Nonnull
-    private final String otpFieldHint;
+    private String otpFieldHint;
+    @Nullable
+    private final Integer otpLength;
 
-    public PIFormContext(@Nullable String defaultMessage, @Nullable String otpFieldHint)
+    public PIFormContext(@Nullable String defaultMessage, @Nullable String otpFieldHint, @Nullable Integer otpLength)
     {
         this.defaultMessage = Objects.requireNonNullElse(defaultMessage, "Please enter the OTP!");
         this.otpFieldHint = Objects.requireNonNullElse(otpFieldHint, "OTP");
+        this.otpLength = otpLength;
     }
 
     public void setMessage(String message) {this.message = message;}
@@ -26,4 +29,7 @@ public class PIFormContext extends BaseContext
 
     @Nonnull
     public String getOtpFieldHint() {return otpFieldHint;}
+
+    @Nullable
+    public Integer getOtpLength() {return otpLength;}
 }
