@@ -13,7 +13,7 @@
 4. **Check if the MFA Module is activated: `$idp_install_path/bin/module.sh -l`.**
 5. **Install the privacyIDEA Plugin: `$idp_install_path/bin/plugin.sh -i path/to/zip/from/step/1 --noCheck`**<br>
 Note: The installer will automatically install and enable the privacyIDEA Module. You can check it state by repeating the step 4.
-6. **Check if the privacyIDEA Plugin is installed propertly: `$idp_install_path/bin/plugin.sh -l`**<br>
+6. **Check if the privacyIDEA Plugin is installed correctly: `$idp_install_path/bin/plugin.sh -l`**<br>
 Note: If the *org.privacyidea.privacyIDEA* is on the list, the plugin was installed successfully!<br>
 Otherwise, re-run the command from step 5 with `--verbose`.
 
@@ -40,7 +40,7 @@ The config file should contain the following configuration variables:
 3. **Turn on the MFA Module by updating following file: `$idp_install_path/conf/authn/authn.properties`.**<br>
 Note: Example of this configuration contains the *privacyidea.properties* file (`$idp_install_path/config/authn/privacyidea.properties`).
 
-The different configuration parameters, are explained in the following table:
+The different configuration parameters are explained in the following table:
 
 | Configuration                  | Explanation                                                                                                                                                                                                                      |
 |--------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
