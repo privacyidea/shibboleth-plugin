@@ -74,7 +74,7 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction
             {
                 if (debug)
                 {
-                    LOGGER.info("{} Another challenge encountered. Building form...", this.getLogPrefix());
+                    LOGGER.info("{} Challenge triggered, building form...", this.getLogPrefix());
                 }
                 ActionSupport.buildEvent(profileRequestContext, "reload");
             }
@@ -90,7 +90,7 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction
             {
                 if (debug)
                 {
-                    LOGGER.info("{} Received a server message. Building form...", this.getLogPrefix());
+                    LOGGER.info("{} Received response from server, building form...", this.getLogPrefix());
                 }
                 ActionSupport.buildEvent(profileRequestContext, "reload");
             }
