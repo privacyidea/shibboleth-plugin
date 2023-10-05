@@ -32,8 +32,8 @@
           p:debug="%{privacyidea.debug:false}"/>
 
     <bean id="piAuthenticator" class="org.privacyidea.action.PrivacyIDEAAuthenticator" scope="prototype"
-          p:httpServletRequest-ref="shibboleth.HttpServletRequest"/>
+          p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier"/>
 
     <bean id="triggerChallenge" class="org.privacyidea.action.TriggerChallenge" scope="prototype"
-          p:httpServletRequest-ref="shibboleth.HttpServletRequest"/>
+          p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier"/>
 </beans>
