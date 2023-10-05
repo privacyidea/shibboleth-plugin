@@ -7,33 +7,40 @@
 1. **Copy the package to the server:**
     - Chose the archive type for your system from the release page (.zip, .tar.gz, .tar.bz2).
     - Copy it with the corresponding signature data (.asc).
-    - Place both data somewhere in your shibboleth server.
-2. **Open the terminal and run: `sudo -i` for admin rights.**
+    - Place both files somewhere in your shibboleth server.
+2. **Open the terminal and run: `sudo -i` for the admin rights.**
 3. **Enable the MFA Module: `$idp_install_path/bin/module.sh -t idp.authn.MFA || $idp_install_path/bin/module.sh -e idp.authn.MFA`.**
 4. **Check if the MFA Module is activated: `$idp_install_path/bin/module.sh -l`.**
 5. **Install the privacyIDEA Plugin: `$idp_install_path/bin/plugin.sh -i path/to/zip/from/step/1 --noCheck`**<br>
-The installer will also install and enable the privacyIDEA Module. You can check it by repeating the step 4.
+Note: The installer will automatically install and enable the privacyIDEA Module. You can check it state by repeating the step 4.
 6. **Check if the privacyIDEA Plugin is installed correctly: `$idp_install_path/bin/plugin.sh -l`**<br>
-If you see the *org.privacyidea.privacyIDEA* on the list, the plugin is installed successfully.<br>
-Otherwise, re-run the command from step 5.
+Note: If the *org.privacyidea.privacyIDEA* is on the list, the plugin was installed successfully!<br>
+Otherwise, re-run the command from step 5 with `--verbose`.
 
 ### Configuration:
-1. **Create the *privacyidea.properties* file in: `$idp_install_path/config/authn/`**<br>
-   You can find a template in the resources in this repo: `/privacyIDEA-impl/src/resources/org/privacyidea/conf/authn/`.<br>
-   The config file should contain the following configuration variables:
-   - `privacyidea.server_url=https://localhost`
-   - `privacyidea.realm=defrealm`
-   - `privacyidea.verify_ssl=true`
-   - `privacyidea.default_message=Please enter the OTP`
-   - `privacyidea.otp_field_hint=OTP`
-   - `privacyidea.triggerchallenge=false`
-   - `privacyidea.service_name=service`
-   - `privacyidea.service_pass=service`
-   - `privacyidea.service_realm=defrealm`
-   - `privacyidea.forward_headers=header1,header2,header3`
-   - `privacyidea.debug=false`
+1. **Update the *privacyidea.properties* file (`$idp_install_path/config/authn/privacyidea.properties`) by adding your own configuration data.**<br>
+The config file should contain the following configuration variables:
+   - `privacyidea.server_url`
+   - `privacyidea.realm`
+   - `privacyidea.verify_ssl`
+   - `privacyidea.default_message`
+   - `privacyidea.otp_field_hint`
+   - `privacyidea.triggerchallenge`
+   - `privacyidea.service_name`
+   - `privacyidea.service_pass`
+   - `privacyidea.service_realm`
+   - `privacyidea.forward_headers`
+   - `privacyidea.debug`
 
-The different configuration parameters that are available on the configuration page of the execution are explained in the following table:
+2. **Add the privacyIDEA subflow to the MFA flow.**<br>
+   - Path to the MFA flow configuration file: `$idp_install_path/conf/authn/mfa-authn-config.xml`.
+   - Example of the *util:map* is located in the *privacyidea.properties* file (`$idp_install_path/conf/authn/privacyidea.properties`).
+   - Remember to activate the MFA flow.
+
+3. **Turn on the MFA Module by updating following file: `$idp_install_path/conf/authn/authn.properties`.**<br>
+Note: Example of this configuration contains the *privacyidea.properties* file (`$idp_install_path/config/authn/privacyidea.properties`).
+
+The different configuration parameters are explained in the following table:
 
 | Configuration                  | Explanation                                                                                                                                                                                                                      |
 |--------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -50,15 +57,9 @@ The different configuration parameters that are available on the configuration p
 | `privacyidea.otp_length`       | If you want to turn on the form-auto-submit function after x number of characters are entered into the OTP input field, set the expected OTP length here. <br/>Note: Only digits as the parameter's value allowed here.          |
 | `privacyidea.debug`            | Set this parameter to true to see the debug messages in the `idp-process.log`.                                                                                                                                                   |
 
-
-2. **Add the privacyIDEA subflow to the MFA flow.**<br>
-   - Path to the MFA flow configuration file: `$idp_install_path/conf/authn/mfa-authn-config.xml`.
-   - Example of the *util:map* is located in the resources at the end of the *privacyidea.properties* file (`/privacyIDEA-impl/src/resources/org/privacyidea/conf/authn/privacyidea.properties`).
-   - Remember to activate the MFA flow.
-
 ### Log check:
-- **Main log: `$idp_install_path/logs/idp-process.log`**
-- **Warn and error log: `$idp_install_path/logs/idp-warn.log`**
+- **Main log: `$idp_install_path/logs/idp-process.log`.**
+- **Warn and error log: `$idp_install_path/logs/idp-warn.log`.**
 
 ### Plugin update:
-To update the plugin, repeat the installation process with the new archive data.
+**To update the plugin, repeat the installation process with the new archive data.**

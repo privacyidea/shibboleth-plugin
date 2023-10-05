@@ -39,24 +39,24 @@ public class TriggerChallenge extends AbstractChallengeResponseAction
                 LOGGER.info("{} Failed to attach headers to triggerchallenge request because HTTP Servlet Request was null", this.getLogPrefix());
             }
 
-            PIResponse triggerredResponse = privacyIDEA.triggerChallenges(piContext.getUsername(), headers);
+            PIResponse triggeredResponse = privacyIDEA.triggerChallenges(piContext.getUsername(), headers);
 
-            if (triggerredResponse != null)
+            if (triggeredResponse != null)
             {
-                if (triggerredResponse.error != null)
+                if (triggeredResponse.error != null)
                 {
-                    LOGGER.error("{} privacyIDEA server error: {}!", this.getLogPrefix(), triggerredResponse.error.message);
+                    LOGGER.error("{} privacyIDEA server error: {}!", this.getLogPrefix(), triggeredResponse.error.message);
                     ActionSupport.buildEvent(profileRequestContext, "AuthenticationException");
                     return;
                 }
 
-                if (!triggerredResponse.multichallenge.isEmpty())
+                if (!triggeredResponse.multichallenge.isEmpty())
                 {
                     if (debug)
                     {
                         LOGGER.info("{} Extracting the form data from triggered challenges...", this.getLogPrefix());
                     }
-                    extractChallengeData(triggerredResponse);
+                    extractChallengeData(triggeredResponse);
                 }
             }
             else
