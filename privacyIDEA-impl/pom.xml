@@ -51,6 +51,11 @@
             <artifactId>privacyidea-java-client</artifactId>
             <version>1.2.0</version>
         </dependency>
+        <dependency>
+            <groupId>net.shibboleth.utilities</groupId>
+            <artifactId>java-support</artifactId>
+            <version>8.4.0</version>
+        </dependency>
     </dependencies>
 
     <build>
