@@ -18,7 +18,7 @@ Note: If the *org.privacyidea.privacyIDEA* is on the list, the plugin was instal
 Otherwise, re-run the command from step 5 with `--verbose`.
 
 ### Configuration:
-1. **Update the *privacyidea.properties* file (`$idp_install_path/config/authn/privacyidea.properties`), by adding your own configuration data.**<br>
+1. **Update the *privacyidea.properties* file (`$idp_install_path/config/authn/privacyidea.properties`) by adding your own configuration data.**<br>
 The config file should contain the following configuration variables:
    - `privacyidea.server_url`
    - `privacyidea.realm`
