@@ -67,7 +67,7 @@
                         <div class="content">
                             <p>Hello $piContext.getUsername()!</p>
                             <br>
-                            <p>$piFormContext.getMessage()</p>
+                            <p style="max-width: 700px">$piFormContext.getMessage()</p>
 
                             #set ($formErrorMsg = $piContext.getFormErrorMessage())
                             #if ($formErrorMsg)
@@ -89,7 +89,7 @@
                         </script>
 
                         <div class="form-element-wrapper">
-                            <input id="pi_otp_input" class="form-element form-field" name="pi_otp_input" type="password" onKeyUp="autoSubmit(this, $piFormContext.getOtpLength())" autofocus placeholder=$piFormContext.getOtpFieldHint() value="">
+                            <input id="pi_otp_input" class="form-element form-field" style="max-width: 260px" name="pi_otp_input" type="password" onKeyUp="autoSubmit(this, $piFormContext.getOtpLength())" autofocus placeholder=$piFormContext.getOtpFieldHint() value="">
                             <br>
                             <button class="form-element form-button" id="pi-form-submit-button" type="submit" name="_eventId_proceed">Submit</button>
                             <br><br>
@@ -118,7 +118,7 @@
                                 }
                             </script>
 
-                            <input class="form-element form-button" id="otpButton" name="otpButton" onclick="changeMode('otp')" type="button" value="OTP">
+## Show only in push mode                           <input class="form-element form-button" id="useOtpButton" name="otpButton" onclick="changeMode('otp')" type="button" value="OTP">
 
                             #* WEBAUTHN *#
                             #set ($webauthnSignRequest = $piContext.getWebauthnSignRequest())
@@ -134,6 +134,7 @@
 
                                     if (document.getElementById("mode").value === "webauthn")
                                     {
+                                        document.getElementById("useOtpButton").style.display = "";
                                         window.onload = () =>
                                         {
                                             doWebAuthn();
