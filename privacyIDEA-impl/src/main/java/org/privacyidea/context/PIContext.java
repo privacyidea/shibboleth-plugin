@@ -1,6 +1,5 @@
 package org.privacyidea.context;
 
-import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import net.shibboleth.utilities.java.support.logic.Constraint;
@@ -20,6 +19,7 @@ public class PIContext extends BaseContext
     private String formErrorMessage = null;
     @Nullable
     private String origin = null;
+    private boolean isPushAvailable = false;
     @Nonnull
     private String mode = "otp";
 
@@ -36,6 +36,10 @@ public class PIContext extends BaseContext
 
     @Nullable
     public String getTransactionID() {return transactionID;}
+
+    public void setIsPushAvailable(boolean pushAvailable) {isPushAvailable = pushAvailable;}
+
+    public boolean getIsPushAvailable() {return isPushAvailable;}
 
     @Nullable
     public String getWebauthnSignResponse() {return webauthnSignResponse;}
