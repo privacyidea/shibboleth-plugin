@@ -20,6 +20,7 @@ Otherwise, re-run the command from step 5 with `--verbose`.
 ### Configuration:
 1. **Update the *privacyidea.properties* file (`$idp_install_path/config/authn/privacyidea.properties`) by adding your own configuration data.**<br>
 The config file should contain the following configuration variables:
+   - `privacyidea.plugin_version`
    - `privacyidea.server_url`
    - `privacyidea.realm`
    - `privacyidea.verify_ssl`
@@ -44,6 +45,7 @@ The different configuration parameters are explained in the following table:
 
 | Configuration                  | Explanation                                                                                                                                                                                                                      |
 |--------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `privacyidea.plugin_version`   | The actual plugin version which will be forwarded to the privacyIDEA.                                                                                                                                                            |
 | `privacyidea.server_url`       | The URL of your privacyIDEA server. This must to be reachable from the Shibboleth IdP server.                                                                                                                                    |
 | `privacyidea.realm`            | This realm will be appended to all requests to the privacyIDEA. <br/>Note: Drop it to use the default realm.                                                                                                                     |
 | `privacyidea.verify_ssl`       | Choose if the Shibboleth should verify the SSL certificate of the privacyIDEA. <br/>Note: Always verify the SSL certificate in a productive environment!                                                                         |

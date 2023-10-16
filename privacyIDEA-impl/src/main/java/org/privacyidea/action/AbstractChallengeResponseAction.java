@@ -11,6 +11,7 @@ import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
 import net.shibboleth.idp.authn.context.AuthenticationContext;
 import net.shibboleth.idp.profile.AbstractProfileAction;
+import net.shibboleth.idp.Version;
 import org.opensaml.messaging.context.navigate.ChildContextLookup;
 import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.context.ProfileRequestContext;
@@ -22,6 +23,8 @@ import org.privacyidea.context.PIFormContext;
 import org.privacyidea.context.PIServerConfigContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.support.PropertiesLoaderSupport;
+import org.springframework.core.io.support.PropertiesLoaderUtils;
 
 public class AbstractChallengeResponseAction extends AbstractProfileAction implements IPILogger
 {
@@ -79,7 +82,10 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction imple
 
                         if (privacyIDEA == null)
                         {
-                            privacyIDEA = PrivacyIDEA.newBuilder(piServerConfigContext.getConfigParams().getServerURL(), "privacyIDEA-Shibboleth-Plugin")
+                            String shibbVersion = Version.getVersion();
+                            String pluginVersion = piContext.getPluginVersion();
+                            String userAgent = "privacyIDEA-Shibboleth/" + pluginVersion + ", Shibboleth IdP/" + shibbVersion;
+                            privacyIDEA = PrivacyIDEA.newBuilder(piServerConfigContext.getConfigParams().getServerURL(), userAgent)
                                                      .sslVerify(piServerConfigContext.getConfigParams().getVerifySSL())
                                                      .realm(piServerConfigContext.getConfigParams().getRealm())
                                                      .serviceAccount(piServerConfigContext.getConfigParams().getServiceName(),
