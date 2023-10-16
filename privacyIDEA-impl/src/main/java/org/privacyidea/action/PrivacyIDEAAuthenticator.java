@@ -79,7 +79,7 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction
                 piContext.setFormErrorMessage(piResponse.error.message);
                 ActionSupport.buildEvent(profileRequestContext, "reload");
             }
-            if (!piResponse.multichallenge.isEmpty())
+            else if (!piResponse.multichallenge.isEmpty())
             {
                 if (debug)
                 {
@@ -103,6 +103,11 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction
                 }
                 ActionSupport.buildEvent(profileRequestContext, "reload");
             }
+        }
+        else
+        {
+            LOGGER.error("{} privacyIDEA response was null. Please check the config and try again.", this.getLogPrefix());
+            ActionSupport.buildEvent(profileRequestContext, "reload");
         }
     }
 }
