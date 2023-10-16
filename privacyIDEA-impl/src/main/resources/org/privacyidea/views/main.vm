@@ -91,7 +91,7 @@
                         <div class="form-element-wrapper">
                             <input id="pi_otp_input" class="form-element form-field" style="max-width: 260px" name="pi_otp_input" type="password" onKeyUp="autoSubmit(this, $piFormContext.getOtpLength())" autofocus placeholder=$piFormContext.getOtpFieldHint() value="">
                             <br>
-                            <button class="form-element form-button" id="pi-form-submit-button" type="submit" name="_eventId_proceed">Submit</button>
+                            <button class="form-element-button" id="pi-form-submit-button" type="submit" name="_eventId_proceed">Submit</button>
                             <br><br>
                         </div>
 
@@ -118,18 +118,33 @@
                                 }
                             </script>
 
-## Show only in push mode                           <input class="form-element form-button" id="useOtpButton" name="otpButton" onclick="changeMode('otp')" type="button" value="OTP">
+                            #* PUSH *#
+                            #if ($piContext.getMode() == "push")
+                                <script>document.getElementById("pi-form-submit-button").style.display = "none"</script>
+                                <script>
+                                    window.onload = () =>
+                                    {
+                                        window.setTimeout(() =>
+                                        {
+                                            document.getElementById("pi-form-submit-button").click()
+                                        }, parseInt(${pollingInterval}) * 1000) //todo fix
+                                    }
+                                </script>
+                            #end
+                            #if ($piContext.getIsPushAvailable())
+                                <input class="form-element-button" id="usePushButton" name="pushButton" onclick="changeMode('push')" type="button" value="Push">
+                            #end
 
                             #* WEBAUTHN *#
                             #set ($webauthnSignRequest = $piContext.getWebauthnSignRequest())
                             #if ($webauthnSignRequest != "")
-                                <input class="form-element form-button" id="useWebAuthnButton" name="useWebAuthnButton" onclick="doWebAuthn()" type="button" value="WebAuthn">
+                                <input class="form-element-button" id="useWebAuthnButton" name="useWebAuthnButton" onclick="doWebAuthn()" type="button" value="WebAuthn">
                                 <script src="$request.getContextPath()/js/pi-webauthn.js"></script>
                                 <script>
                                     'use strict';
                                     if (document.getElementById("webauthnSignRequest").value === "")
                                     {
-                                        document.getElementById("useWebAuthnButton").style.display = "none";
+                                        document.getElementById("useWebAuthnButton").style.display = "none"
                                     }
 
                                     if (document.getElementById("mode").value === "webauthn")
@@ -176,7 +191,7 @@
                                 </script>
                                 <br><br>
                             #end
-                            #if ($webauthnSignRequest == "")
+                            #if ($webauthnSignRequest == "" && !$piContext.getIsPushAvailable())
                                 <script>
                                     document.getElementById("alternateToken").style.display = "none";
                                 </script>
