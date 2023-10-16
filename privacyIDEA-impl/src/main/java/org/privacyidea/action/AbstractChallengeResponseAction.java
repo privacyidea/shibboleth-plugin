@@ -24,6 +24,7 @@ import org.privacyidea.context.PIServerConfigContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.support.PropertiesLoaderSupport;
+import org.springframework.core.io.support.PropertiesLoaderUtils;
 
 public class AbstractChallengeResponseAction extends AbstractProfileAction implements IPILogger
 {
@@ -82,10 +83,8 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction imple
                         if (privacyIDEA == null)
                         {
                             String shibbVersion = Version.getVersion();
-                            getClass().getClassLoader().getResourceAsStream("/org/privacyidea/plugin.properties");
-                            String pluginVersion = AbstractChallengeResponseAction.class.getPackage().getImplementationVersion();
+                            String pluginVersion = piContext.getPluginVersion();
                             String userAgent = "privacyIDEA-Shibboleth/" + pluginVersion + ", Shibboleth IdP/" + shibbVersion;
-                            LOGGER.error("!!! Plugin - user agent: " + userAgent); //todo rm
                             privacyIDEA = PrivacyIDEA.newBuilder(piServerConfigContext.getConfigParams().getServerURL(), userAgent)
                                                      .sslVerify(piServerConfigContext.getConfigParams().getVerifySSL())
                                                      .realm(piServerConfigContext.getConfigParams().getRealm())
