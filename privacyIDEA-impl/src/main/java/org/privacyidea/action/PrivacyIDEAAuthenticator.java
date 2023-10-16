@@ -30,7 +30,16 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction
         piContext.setFormErrorMessage(request.getParameterValues("errorMessage")[0]);
 
         PIResponse piResponse = null;
-        if (piContext.getWebauthnSignResponse() != null && !piContext.getWebauthnSignResponse().isEmpty())
+        if (piContext.getMode().equals("push"))
+        {
+            // In push mode, poll for the transaction id to see if the challenge has been answered
+            if (privacyIDEA.pollTransaction(piContext.getTransactionID()))
+            {
+                // If the challenge has been answered, finalize with a call to validate check
+                piResponse = privacyIDEA.validateCheck(piContext.getUsername(), "", piContext.getTransactionID(), headers);
+            }
+        }
+        else if (piContext.getWebauthnSignResponse() != null && !piContext.getWebauthnSignResponse().isEmpty())
         {
             if (piContext.getOrigin() == null || piContext.getOrigin().isEmpty())
             {
