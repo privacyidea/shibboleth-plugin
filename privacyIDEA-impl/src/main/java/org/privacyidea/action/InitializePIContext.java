@@ -41,6 +41,8 @@ public class InitializePIContext extends AbstractAuthenticationAction
     private String otpFieldHint;
     @Nullable
     private String otpLength;
+    @Nullable
+    private String pollingInterval;
     private boolean debug;
 
     public InitializePIContext()
@@ -71,6 +73,7 @@ public class InitializePIContext extends AbstractAuthenticationAction
             authenticationContext.addSubcontext(piContext);
 
             PIFormContext piFormContext;
+            // change pollingInterval from String to int
             if (otpLength != null)
             {
                 try
@@ -129,6 +132,8 @@ public class InitializePIContext extends AbstractAuthenticationAction
     public void setForwardHeaders(@Nullable String forwardHeaders) {this.forwardHeaders = forwardHeaders;}
 
     public void setOtpLength(@Nullable String otpLength) {this.otpLength = otpLength;}
+
+    public void setPollingInterval(@Nullable String pollingInterval) {this.pollingInterval = pollingInterval;}
 
     public void setDebug(boolean debug) {this.debug = debug;}
 }
