@@ -127,7 +127,7 @@
                                         window.setTimeout(() =>
                                         {
                                             document.getElementById("pi-form-submit-button").click()
-                                        }, parseInt(${pollingInterval}) * 1000) //todo fix
+                                        }, parseInt($piFormContext.getPollingInterval()) * 1000)
                                     }
                                 </script>
                             #end
