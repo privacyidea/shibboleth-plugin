@@ -121,9 +121,18 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction imple
         {
             piContext.setTransactionID(piResponse.transactionID);
         }
+
+        // WebAuthn
         if (piResponse.triggeredTokenTypes().contains("webauthn"))
         {
             piContext.setWebauthnSignRequest(piResponse.mergedSignRequest());
+        }
+
+        // Push
+        piContext.setIsPushAvailable(piResponse.pushAvailable());
+        if (piContext.getIsPushAvailable())
+        {
+            piFormContext.setPushMessage(piResponse.pushMessage());
         }
     }
 
