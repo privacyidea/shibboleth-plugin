@@ -22,10 +22,13 @@ public class PIContext extends BaseContext
     private boolean isPushAvailable = false;
     @Nonnull
     private String mode = "otp";
+    @Nullable
+    private final String pluginVersion;
 
-    public PIContext(@Nonnull User user)
+    public PIContext(@Nonnull User user, @Nullable String pluginVersion)
     {
         this.user = Constraint.isNotNull(user, "User cannot be null.");
+        this.pluginVersion = pluginVersion;
     }
 
     // Getters and Setters
@@ -63,6 +66,9 @@ public class PIContext extends BaseContext
 
     @Nullable
     public String getFormErrorMessage() {return formErrorMessage;}
+
+    @Nullable
+    public String getPluginVersion() {return pluginVersion;}
 
     public void setFormErrorMessage(@Nullable String formErrorMessage) {this.formErrorMessage = formErrorMessage;}
 }

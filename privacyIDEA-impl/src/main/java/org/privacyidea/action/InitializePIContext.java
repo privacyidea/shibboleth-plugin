@@ -42,6 +42,8 @@ public class InitializePIContext extends AbstractAuthenticationAction
     @Nullable
     private String otpLength;
     @Nullable
+    private String pluginVersion;
+    @Nullable
     private String pollingInterval;
     private boolean debug;
 
@@ -68,7 +70,7 @@ public class InitializePIContext extends AbstractAuthenticationAction
             log.info("{} Create PIServerConfigContext {}", this.getLogPrefix(), piServerConfigContext);
             authenticationContext.addSubcontext(piServerConfigContext);
 
-            PIContext piContext = new PIContext(user);
+            PIContext piContext = new PIContext(user, pluginVersion);
             log.info("{} Create PIContext {}", this.getLogPrefix(), piContext);
             authenticationContext.addSubcontext(piContext);
 
@@ -134,6 +136,8 @@ public class InitializePIContext extends AbstractAuthenticationAction
     public void setOtpLength(@Nullable String otpLength) {this.otpLength = otpLength;}
 
     public void setPollingInterval(@Nullable String pollingInterval) {this.pollingInterval = pollingInterval;}
+
+    public void setPluginVersion(@Nullable String pluginVersion) {this.pluginVersion = pluginVersion;}
 
     public void setDebug(boolean debug) {this.debug = debug;}
 }
