@@ -41,6 +41,8 @@ public class InitializePIContext extends AbstractAuthenticationAction
     private String otpFieldHint;
     @Nullable
     private String otpLength;
+    @Nullable
+    private String pluginVersion;
     private boolean debug;
 
     public InitializePIContext()
@@ -66,7 +68,7 @@ public class InitializePIContext extends AbstractAuthenticationAction
             log.info("{} Create PIServerConfigContext {}", this.getLogPrefix(), piServerConfigContext);
             authenticationContext.addSubcontext(piServerConfigContext);
 
-            PIContext piContext = new PIContext(user);
+            PIContext piContext = new PIContext(user, pluginVersion);
             log.info("{} Create PIContext {}", this.getLogPrefix(), piContext);
             authenticationContext.addSubcontext(piContext);
 
@@ -129,6 +131,8 @@ public class InitializePIContext extends AbstractAuthenticationAction
     public void setForwardHeaders(@Nullable String forwardHeaders) {this.forwardHeaders = forwardHeaders;}
 
     public void setOtpLength(@Nullable String otpLength) {this.otpLength = otpLength;}
+
+    public void setPluginVersion(@Nullable String pluginVersion) {this.pluginVersion = pluginVersion;}
 
     public void setDebug(boolean debug) {this.debug = debug;}
 }
