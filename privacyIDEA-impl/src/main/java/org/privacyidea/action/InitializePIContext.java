@@ -75,23 +75,22 @@ public class InitializePIContext extends AbstractAuthenticationAction
             authenticationContext.addSubcontext(piContext);
 
             PIFormContext piFormContext;
-            // change pollingInterval from String to int
             if (otpLength != null)
             {
                 try
                 {
                     int otpLengthToInt = Integer.parseInt(otpLength);
-                    piFormContext = new PIFormContext(defaultMessage, otpFieldHint, otpLengthToInt);
+                    piFormContext = new PIFormContext(defaultMessage, otpFieldHint, otpLengthToInt, pollingInterval);
                 }
                 catch (NumberFormatException e)
                 {
                     log.info("{} Config option \"otp_length\": Wrong format. Only digits allowed.", getLogPrefix());
-                    piFormContext = new PIFormContext(defaultMessage, otpFieldHint, null);
+                    piFormContext = new PIFormContext(defaultMessage, otpFieldHint, null, pollingInterval);
                 }
             }
             else
             {
-                piFormContext = new PIFormContext(defaultMessage, otpFieldHint, null);
+                piFormContext = new PIFormContext(defaultMessage, otpFieldHint, null, pollingInterval);
             }
             log.info("{} Create PIFormContext {}", this.getLogPrefix(), piFormContext);
             authenticationContext.addSubcontext(piFormContext);

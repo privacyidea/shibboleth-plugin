@@ -16,14 +16,14 @@ public class PIFormContext extends BaseContext
     private String pushMessage;
     @Nullable
     private final Integer otpLength;
-    private int pollingInterval;
+    private String pollingInterval;
 
-    public PIFormContext(@Nullable String defaultMessage, @Nullable String otpFieldHint, @Nullable Integer otpLength, int pollingInterval)
+    public PIFormContext(@Nullable String defaultMessage, @Nullable String otpFieldHint, @Nullable Integer otpLength, @Nullable String pollingInterval)
     {
         this.defaultMessage = Objects.requireNonNullElse(defaultMessage, "Please enter the OTP!");
         this.otpFieldHint = Objects.requireNonNullElse(otpFieldHint, "OTP");
         this.otpLength = otpLength;
-        this.pollingInterval = pollingInterval;
+        this.pollingInterval = Objects.requireNonNullElse(pollingInterval, "2");
     }
 
     public void setMessage(String message) {this.message = message;}
@@ -41,4 +41,6 @@ public class PIFormContext extends BaseContext
 
     @Nullable
     public Integer getOtpLength() {return otpLength;}
+
+    public String getPollingInterval() {return pollingInterval;}
 }
