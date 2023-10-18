@@ -67,8 +67,15 @@
                         <div class="content">
                             <p>Hello $piContext.getUsername()!</p>
                             <br>
-                            <p style="max-width: 700px">$piFormContext.getMessage()</p>
+                            #* MESSAGE *#
+                            #set ($pushMessage = $piFormContext.getPushMessage())
+                            #if ($piContext.getMode() == "push")
+                                <p style="max-width: 700px">$piFormContext.getPushMessage()</p>
+                            #else
+                                <p style="max-width: 700px">$piFormContext.getMessage()</p>
+                            #end
 
+                            #* ERROR MESSAGE *#
                             #set ($formErrorMsg = $piContext.getFormErrorMessage())
                             #if ($formErrorMsg)
                                 <br>
@@ -83,7 +90,7 @@
                             {
                                 if (otpLength != null && inputObject.value.length === otpLength)
                                 {
-                                    document.getElementById("pi-form-submit-button").click();
+                                    document.getElementById("pi-form-submit-button").click()
                                 }
                             }
                         </script>
@@ -98,29 +105,39 @@
                         <div class="form-options">
                             <input id="mode" name="mode" value="$piContext.getMode()" type="hidden">
                             <input id="errorMessage" name="errorMessage" value="" type="hidden">
-
+                            <input id="silentModeChange" name="silentModeChange" value="0" type="hidden">
                             <input id="webauthnSignRequest" name="webauthnSignRequest" value='$piContext.getWebauthnSignRequest()' type="hidden">
                             <input id="webauthnSignResponse" name="webauthnSignResponse" value="" type="hidden">
                             <input id="origin" name="origin" value="" type="hidden">
                         </div>
 
-                        #* ALTERNATE TOKENS SECTION *#
+                        #* ALTERNATE TOKENS *#
                         <div class="form-element-wrapper" id="alternateToken" style="padding-top: 20px">
                             <h3 id="alternateTokenHeader">Alternate Login Options</h3>
 
                             <script>
-                                'use strict';
+                                'use strict'
                                 function changeMode(newMode)
                                 {
                                     // Submit the form to pass the change to the authenticator
-                                    document.getElementById("mode").value = newMode;
-                                    document.getElementById("pi-form-submit-button").click();
+                                    document.getElementById("mode").value = newMode
+                                    document.getElementById("pi-form-submit-button").click()
+                                }
+                            </script>
+                            <script>
+                                'use strict'
+                                function otpButtonUsed()
+                                {
+                                    document.getElementById("silentModeChange").value = "1"
+                                    changeMode("otp")
                                 }
                             </script>
 
                             #* PUSH *#
                             #if ($piContext.getMode() == "push")
                                 <script>document.getElementById("pi-form-submit-button").style.display = "none"</script>
+                                <script>document.getElementById("pi_otp_input").style.display = "none"</script>
+                                <input class="form-element-button" id="useOtpButton" name="otpButton" onclick="otpButtonUsed()" type="button" value="OTP">
                                 <script>
                                     window.onload = () =>
                                     {
@@ -131,7 +148,7 @@
                                     }
                                 </script>
                             #end
-                            #if ($piContext.getIsPushAvailable())
+                            #if ($piContext.getIsPushAvailable() && $piContext.getMode() != "push")
                                 <input class="form-element-button" id="usePushButton" name="pushButton" onclick="changeMode('push')" type="button" value="Push">
                             #end
 
@@ -141,7 +158,7 @@
                                 <input class="form-element-button" id="useWebAuthnButton" name="useWebAuthnButton" onclick="doWebAuthn()" type="button" value="WebAuthn">
                                 <script src="$request.getContextPath()/js/pi-webauthn.js"></script>
                                 <script>
-                                    'use strict';
+                                    'use strict'
                                     if (document.getElementById("webauthnSignRequest").value === "")
                                     {
                                         document.getElementById("useWebAuthnButton").style.display = "none"
@@ -149,18 +166,17 @@
 
                                     if (document.getElementById("mode").value === "webauthn")
                                     {
-                                        document.getElementById("useOtpButton").style.display = "";
                                         window.onload = () =>
                                         {
-                                            doWebAuthn();
+                                            doWebAuthn()
                                         }
                                     }
 
                                     if (!window.location.origin)
                                     {
-                                        window.location.origin = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port : '');
+                                        window.location.origin = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port : '')
                                     }
-                                    document.getElementById("origin").value = window.origin;
+                                    document.getElementById("origin").value = window.origin
 
                                     function doWebAuthn()
                                     {
@@ -168,39 +184,42 @@
                                         // Afterward, webauthn is started directly
                                         if (document.getElementById("mode").value === "push")
                                         {
-                                            changeMode("webauthn");
+                                            changeMode("webauthn")
                                         }
                                         try
                                         {
-                                            const requestStr = document.getElementById("webauthnSignRequest").value;
-                                            const requestJSON = JSON.parse(requestStr);
+                                            const requestStr = document.getElementById("webauthnSignRequest").value
+                                            const requestJSON = JSON.parse(requestStr)
 
-                                            const webAuthnSignResponse = window.pi_webauthn.sign(requestJSON);
+                                            const webAuthnSignResponse = window.pi_webauthn.sign(requestJSON)
                                             webAuthnSignResponse.then((webauthnresponse) =>
                                             {
-                                                document.getElementById("webauthnSignResponse").value = JSON.stringify(webauthnresponse);
-                                                document.getElementById("pi-form-submit-button").click();
+                                                document.getElementById("webauthnSignResponse").value = JSON.stringify(webauthnresponse)
+                                                document.getElementById("pi-form-submit-button").click()
                                             });
                                         }
                                         catch (err)
                                         {
-                                            console.log("Error while trying WebAuthn: " + err);
-                                            document.getElementById("errorMessage").value = "Error while trying WebAuthn: " + err;
+                                            console.log("Error while trying WebAuthn: " + err)
+                                            document.getElementById("errorMessage").value = "Error while trying WebAuthn: " + err
                                         }
                                     }
                                 </script>
                                 <br><br>
                             #end
+
+                            #* NO ALTERNATE TOKENS *#
                             #if ($webauthnSignRequest == "" && !$piContext.getIsPushAvailable())
                                 <script>
-                                    document.getElementById("alternateToken").style.display = "none";
+                                    document.getElementById("alternateToken").style.display = "none"
                                 </script>
                             #end
-                            </div>
+                        </div>
                     </form>
                 </div>
             </div>
 
+            #* HELP & FOOTER *#
             <div class="column two">
                 <ul class="list list-help">
                     <li class="list-help-item"><a href="#springMessageText("idp.url.helpdesk", '#')"><span
