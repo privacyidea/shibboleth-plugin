@@ -196,7 +196,7 @@
                                             {
                                                 document.getElementById("webauthnSignResponse").value = JSON.stringify(webauthnresponse)
                                                 document.getElementById("pi-form-submit-button").click()
-                                            });
+                                            })
                                         }
                                         catch (err)
                                         {
