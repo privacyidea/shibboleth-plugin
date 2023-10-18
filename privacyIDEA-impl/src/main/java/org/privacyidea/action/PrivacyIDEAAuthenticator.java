@@ -81,6 +81,12 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction
                 }
             }
         }
+        else
+        {
+            ActionSupport.buildEvent(profileRequestContext, "reload");
+            return;
+        }
+
         if (piResponse != null)
         {
             if (debug)
