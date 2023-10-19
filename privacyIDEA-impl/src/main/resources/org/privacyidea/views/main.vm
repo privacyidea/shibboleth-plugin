@@ -116,7 +116,7 @@
                             <h3 id="alternateTokenHeader">Alternate Login Options</h3>
 
                             <script>
-                                'use strict'
+                                'use strict';
                                 function changeMode(newMode)
                                 {
                                     // Submit the form to pass the change to the authenticator
@@ -125,7 +125,7 @@
                                 }
                             </script>
                             <script>
-                                'use strict'
+                                'use strict';
                                 function otpButtonUsed()
                                 {
                                     document.getElementById("silentModeChange").value = "1";
@@ -158,7 +158,7 @@
                                 <input class="form-element-button" id="useWebAuthnButton" name="useWebAuthnButton" onclick="doWebAuthn()" type="button" value="WebAuthn">
                                 <script src="$request.getContextPath()/js/pi-webauthn.js"></script>
                                 <script>
-                                    'use strict'
+                                    'use strict';
                                     if (document.getElementById("webauthnSignRequest").value === "")
                                     {
                                         document.getElementById("useWebAuthnButton").style.display = "none";
