@@ -29,6 +29,7 @@
           p:serviceRealm="%{privacyidea.service_realm:#{null}}"
           p:forwardHeaders="%{privacyidea.forward_headers:#{null}}"
           p:otpLength="%{privacyidea.otp_length:#{null}}"
+          p:pollingInterval="%{privacyidea.polling_interval:#{null}}"
           p:pluginVersion="%{privacyidea.plugin_version:#{null}}"
           p:debug="%{privacyidea.debug:false}"/>
 
