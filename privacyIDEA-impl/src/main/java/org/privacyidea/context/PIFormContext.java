@@ -9,6 +9,7 @@ public class PIFormContext extends BaseContext
 {
     @Nonnull
     private String defaultMessage;
+    @Nonnull
     private String message = "";
     @Nonnull
     private String otpFieldHint;
@@ -16,13 +17,14 @@ public class PIFormContext extends BaseContext
     private String pushMessage;
     @Nullable
     private final Integer otpLength;
+    @Nonnull
     private String pollingInterval;
-    @Nullable
-    private String imageOtp;
-    @Nullable
-    private String imagePush;
-    @Nullable
-    private String imageWebauthn;
+    @Nonnull
+    private String imageOtp = "";
+    @Nonnull
+    private String imagePush = "";
+    @Nonnull
+    private String imageWebauthn = "";
 
     public PIFormContext(@Nullable String defaultMessage, @Nullable String otpFieldHint, @Nullable Integer otpLength, @Nullable String pollingInterval)
     {
@@ -48,20 +50,21 @@ public class PIFormContext extends BaseContext
     @Nullable
     public Integer getOtpLength() {return otpLength;}
 
+    @Nonnull
     public String getPollingInterval() {return pollingInterval;}
 
-    public void setImageOtp(@Nullable String imageOtp) {this.imageOtp = imageOtp;}
+    public void setImageOtp(@Nonnull String imageOtp) {this.imageOtp = imageOtp;}
 
-    @Nullable
+    @Nonnull
     public String getImageOtp() {return imageOtp;}
 
-    public void setImagePush(@Nullable String imagePush) {this.imagePush = imagePush;}
+    public void setImagePush(@Nonnull String imagePush) {this.imagePush = imagePush;}
 
-    @Nullable
+    @Nonnull
     public String getImagePush() {return imagePush;}
 
-    public void setImageWebauthn(@Nullable String imageWebauthn) {this.imageWebauthn = imageWebauthn;}
+    public void setImageWebauthn(@Nonnull String imageWebauthn) {this.imageWebauthn = imageWebauthn;}
 
-    @Nullable
+    @Nonnull
     public String getImageWebauthn() {return imageWebauthn;}
 }
