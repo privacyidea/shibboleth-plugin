@@ -90,7 +90,7 @@
                             {
                                 if (otpLength != null && inputObject.value.length === otpLength)
                                 {
-                                    document.getElementById("pi-form-submit-button").click()
+                                    document.getElementById("pi-form-submit-button").click();
                                 }
                             }
                         </script>
@@ -120,16 +120,16 @@
                                 function changeMode(newMode)
                                 {
                                     // Submit the form to pass the change to the authenticator
-                                    document.getElementById("mode").value = newMode
-                                    document.getElementById("pi-form-submit-button").click()
+                                    document.getElementById("mode").value = newMode;
+                                    document.getElementById("pi-form-submit-button").click();
                                 }
                             </script>
                             <script>
                                 'use strict'
                                 function otpButtonUsed()
                                 {
-                                    document.getElementById("silentModeChange").value = "1"
-                                    changeMode("otp")
+                                    document.getElementById("silentModeChange").value = "1";
+                                    changeMode("otp");
                                 }
                             </script>
 
@@ -143,8 +143,8 @@
                                     {
                                         window.setTimeout(() =>
                                         {
-                                            document.getElementById("pi-form-submit-button").click()
-                                        }, parseInt($piFormContext.getPollingInterval()) * 1000)
+                                            document.getElementById("pi-form-submit-button").click();
+                                        }, parseInt($piFormContext.getPollingInterval()) * 1000);
                                     }
                                 </script>
                             #end
@@ -161,22 +161,22 @@
                                     'use strict'
                                     if (document.getElementById("webauthnSignRequest").value === "")
                                     {
-                                        document.getElementById("useWebAuthnButton").style.display = "none"
+                                        document.getElementById("useWebAuthnButton").style.display = "none";
                                     }
 
                                     if (document.getElementById("mode").value === "webauthn")
                                     {
                                         window.onload = () =>
                                         {
-                                            doWebAuthn()
+                                            doWebAuthn();
                                         }
                                     }
 
                                     if (!window.location.origin)
                                     {
-                                        window.location.origin = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port : '')
+                                        window.location.origin = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port : '');
                                     }
-                                    document.getElementById("origin").value = window.origin
+                                    document.getElementById("origin").value = window.origin;
 
                                     function doWebAuthn()
                                     {
@@ -184,24 +184,24 @@
                                         // Afterward, webauthn is started directly
                                         if (document.getElementById("mode").value === "push")
                                         {
-                                            changeMode("webauthn")
+                                            changeMode("webauthn");
                                         }
                                         try
                                         {
-                                            const requestStr = document.getElementById("webauthnSignRequest").value
-                                            const requestJSON = JSON.parse(requestStr)
+                                            const requestStr = document.getElementById("webauthnSignRequest").value;
+                                            const requestJSON = JSON.parse(requestStr);
 
-                                            const webAuthnSignResponse = window.pi_webauthn.sign(requestJSON)
+                                            const webAuthnSignResponse = window.pi_webauthn.sign(requestJSON);
                                             webAuthnSignResponse.then((webauthnresponse) =>
                                             {
-                                                document.getElementById("webauthnSignResponse").value = JSON.stringify(webauthnresponse)
-                                                document.getElementById("pi-form-submit-button").click()
+                                                document.getElementById("webauthnSignResponse").value = JSON.stringify(webauthnresponse);
+                                                document.getElementById("pi-form-submit-button").click();
                                             })
                                         }
                                         catch (err)
                                         {
-                                            console.log("Error while trying WebAuthn: " + err)
-                                            document.getElementById("errorMessage").value = "Error while trying WebAuthn: " + err
+                                            console.log("Error while trying WebAuthn: " + err);
+                                            document.getElementById("errorMessage").value = "Error while trying WebAuthn: " + err;
                                         }
                                     }
                                 </script>
@@ -211,7 +211,7 @@
                             #* NO ALTERNATE TOKENS *#
                             #if ($webauthnSignRequest == "" && !$piContext.getIsPushAvailable())
                                 <script>
-                                    document.getElementById("alternateToken").style.display = "none"
+                                    document.getElementById("alternateToken").style.display = "none";
                                 </script>
                             #end
                         </div>
