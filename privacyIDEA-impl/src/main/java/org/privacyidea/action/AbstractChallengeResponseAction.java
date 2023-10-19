@@ -131,6 +131,10 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction imple
         {
             piContext.setWebauthnSignRequest(piResponse.mergedSignRequest());
         }
+        if (piResponse.preferredClientMode != null && !piResponse.preferredClientMode.isEmpty())
+        {
+            piContext.setMode(piResponse.preferredClientMode);
+        }
     }
 
     /**
