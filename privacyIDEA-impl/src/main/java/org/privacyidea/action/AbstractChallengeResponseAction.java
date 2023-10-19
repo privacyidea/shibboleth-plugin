@@ -128,6 +128,10 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction imple
         {
             piContext.setTransactionID(piResponse.transactionID);
         }
+        if (piResponse.preferredClientMode != null && !piResponse.preferredClientMode.isEmpty())
+        {
+            piContext.setMode(piResponse.preferredClientMode);
+        }
 
         // WebAuthn
         if (piResponse.triggeredTokenTypes().contains("webauthn"))
