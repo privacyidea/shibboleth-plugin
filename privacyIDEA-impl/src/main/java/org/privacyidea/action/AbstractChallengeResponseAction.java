@@ -15,6 +15,7 @@ import net.shibboleth.idp.Version;
 import org.opensaml.messaging.context.navigate.ChildContextLookup;
 import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.context.ProfileRequestContext;
+import org.privacyidea.Challenge;
 import org.privacyidea.IPILogger;
 import org.privacyidea.PIResponse;
 import org.privacyidea.PrivacyIDEA;
@@ -128,6 +129,10 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction imple
         {
             piContext.setTransactionID(piResponse.transactionID);
         }
+        if (piResponse.preferredClientMode != null && !piResponse.preferredClientMode.isEmpty())
+        {
+            piContext.setMode(piResponse.preferredClientMode);
+        }
 
         // WebAuthn
         if (piResponse.triggeredTokenTypes().contains("webauthn"))
@@ -140,6 +145,24 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction imple
         if (piContext.getIsPushAvailable())
         {
             piFormContext.setPushMessage(piResponse.pushMessage());
+        }
+
+        // Check for the images
+        List<Challenge> multiChallenge = piResponse.multichallenge;
+        for (Challenge c : multiChallenge)
+        {
+            if ("poll".equals(c.getClientMode()))
+            {
+                piFormContext.setImagePush(c.getImage());
+            }
+            else if ("interactive".equals(c.getClientMode()))
+            {
+                piFormContext.setImageOtp(c.getImage());
+            }
+            if ("webauthn".equals(c.getClientMode()))
+            {
+                piFormContext.setImageWebauthn(c.getImage());
+            }
         }
     }
 
