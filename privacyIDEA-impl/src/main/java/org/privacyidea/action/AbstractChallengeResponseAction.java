@@ -85,6 +85,7 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction imple
                             String shibbVersion = Version.getVersion();
                             String pluginVersion = piContext.getPluginVersion();
                             String userAgent = "privacyIDEA-Shibboleth/" + pluginVersion + ", Shibboleth IdP/" + shibbVersion;
+
                             privacyIDEA = PrivacyIDEA.newBuilder(piServerConfigContext.getConfigParams().getServerURL(), userAgent)
                                                      .sslVerify(piServerConfigContext.getConfigParams().getVerifySSL())
                                                      .realm(piServerConfigContext.getConfigParams().getRealm())
@@ -127,13 +128,22 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction imple
         {
             piContext.setTransactionID(piResponse.transactionID);
         }
+        if (piResponse.preferredClientMode != null && !piResponse.preferredClientMode.isEmpty())
+        {
+            piContext.setMode(piResponse.preferredClientMode);
+        }
+
+        // WebAuthn
         if (piResponse.triggeredTokenTypes().contains("webauthn"))
         {
             piContext.setWebauthnSignRequest(piResponse.mergedSignRequest());
         }
-        if (piResponse.preferredClientMode != null && !piResponse.preferredClientMode.isEmpty())
+
+        // Push
+        piContext.setIsPushAvailable(piResponse.pushAvailable());
+        if (piContext.getIsPushAvailable())
         {
-            piContext.setMode(piResponse.preferredClientMode);
+            piFormContext.setPushMessage(piResponse.pushMessage());
         }
     }
 

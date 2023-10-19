@@ -30,7 +30,27 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction
         piContext.setFormErrorMessage(request.getParameterValues("errorMessage")[0]);
 
         PIResponse piResponse = null;
-        if (piContext.getWebauthnSignResponse() != null && !piContext.getWebauthnSignResponse().isEmpty())
+        if (request.getParameterValues("silentModeChange")[0].equals("1"))
+        {
+            ActionSupport.buildEvent(profileRequestContext, "reload");
+            return;
+        }
+        else if (piContext.getMode().equals("push"))
+        {
+            // In push mode, poll for the transaction id to see if the challenge has been answered
+            if (privacyIDEA.pollTransaction(piContext.getTransactionID()))
+            {
+                // If the challenge has been answered, finalize with a call to validate check
+                piResponse = privacyIDEA.validateCheck(piContext.getUsername(), "", piContext.getTransactionID(), headers);
+            }
+            else
+            {
+                LOGGER.info("{} Push token isn't confirmed yet...", this.getLogPrefix());
+                ActionSupport.buildEvent(profileRequestContext, "reload");
+                return;
+            }
+        }
+        else if (piContext.getWebauthnSignResponse() != null && !piContext.getWebauthnSignResponse().isEmpty())
         {
             if (piContext.getOrigin() == null || piContext.getOrigin().isEmpty())
             {
@@ -61,8 +81,18 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction
                 }
             }
         }
+        else
+        {
+            ActionSupport.buildEvent(profileRequestContext, "reload");
+            return;
+        }
+
         if (piResponse != null)
         {
+            if (debug)
+            {
+                LOGGER.info("{} Extracting data from the response...", this.getLogPrefix());
+            }
             extractChallengeData(piResponse);
             if (piResponse.error != null)
             {
@@ -70,7 +100,7 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction
                 piContext.setFormErrorMessage(piResponse.error.message);
                 ActionSupport.buildEvent(profileRequestContext, "reload");
             }
-            if (!piResponse.multichallenge.isEmpty())
+            else if (!piResponse.multichallenge.isEmpty())
             {
                 if (debug)
                 {
@@ -94,6 +124,11 @@ public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction
                 }
                 ActionSupport.buildEvent(profileRequestContext, "reload");
             }
+        }
+        else
+        {
+            LOGGER.error("{} privacyIDEA response was null. Please check the config and try again.", this.getLogPrefix());
+            ActionSupport.buildEvent(profileRequestContext, "reload");
         }
     }
 }

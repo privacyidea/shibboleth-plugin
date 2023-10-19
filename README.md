@@ -19,19 +19,10 @@ Otherwise, re-run the command from step 5 with `--verbose`.
 
 ### Configuration:
 1. **Update the *privacyidea.properties* file (`$idp_install_path/config/authn/privacyidea.properties`) by adding your own configuration data.**<br>
-The config file should contain the following configuration variables:
+Updating following parameters is required to ensure at least the very basic functionality:
    - `privacyidea.plugin_version`
    - `privacyidea.server_url`
-   - `privacyidea.realm`
    - `privacyidea.verify_ssl`
-   - `privacyidea.default_message`
-   - `privacyidea.otp_field_hint`
-   - `privacyidea.triggerchallenge`
-   - `privacyidea.service_name`
-   - `privacyidea.service_pass`
-   - `privacyidea.service_realm`
-   - `privacyidea.forward_headers`
-   - `privacyidea.debug`
 
 2. **Add the privacyIDEA subflow to the MFA flow.**<br>
    - Path to the MFA flow configuration file: `$idp_install_path/conf/authn/mfa-authn-config.xml`.
@@ -57,6 +48,7 @@ The different configuration parameters are explained in the following table:
 | `privacyidea.service_realm`    | Specify a separate service account's realm if needed. <br/>Note: If the service account is located in the same realm as the users, it is sufficient to specify the realm in the `privacyidea.realm` parameter.                   |
 | `privacyidea.forward_headers`  | Set the headers that should be forwarded to the privacyIDEA. <br/>Note: If some header doesn't exist or has no value, will be ignored. <br/>Note: The header names should be separated by a comma (",").                         |
 | `privacyidea.otp_length`       | If you want to turn on the form-auto-submit function after x number of characters are entered into the OTP input field, set the expected OTP length here. <br/>Note: Only digits as the parameter's value allowed here.          |
+| `privacyidea.polling_interval` | Decide after how many seconds the form should be reloaded, to check if the push token was confirmed. Default is 2.                                                                                                               |
 | `privacyidea.debug`            | Set this parameter to true to see the debug messages in the `idp-process.log`.                                                                                                                                                   |
 
 ### Log check:
