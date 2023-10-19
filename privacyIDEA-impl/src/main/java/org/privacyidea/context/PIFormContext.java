@@ -9,6 +9,7 @@ public class PIFormContext extends BaseContext
 {
     @Nonnull
     private String defaultMessage;
+    @Nonnull
     private String message = "";
     @Nonnull
     private String otpFieldHint;
@@ -16,14 +17,21 @@ public class PIFormContext extends BaseContext
     private String pushMessage;
     @Nullable
     private final Integer otpLength;
+    @Nonnull
     private String pollingInterval;
+    @Nonnull
+    private String imageOtp = "";
+    @Nonnull
+    private String imagePush = "";
+    @Nonnull
+    private String imageWebauthn = "";
 
     public PIFormContext(@Nullable String defaultMessage, @Nullable String otpFieldHint, @Nullable Integer otpLength, @Nullable String pollingInterval)
     {
         this.defaultMessage = Objects.requireNonNullElse(defaultMessage, "Please enter the OTP!");
         this.otpFieldHint = Objects.requireNonNullElse(otpFieldHint, "OTP");
-        this.otpLength = otpLength;
         this.pollingInterval = Objects.requireNonNullElse(pollingInterval, "2");
+        this.otpLength = otpLength;
     }
 
     public void setMessage(String message) {this.message = message;}
@@ -42,5 +50,21 @@ public class PIFormContext extends BaseContext
     @Nullable
     public Integer getOtpLength() {return otpLength;}
 
+    @Nonnull
     public String getPollingInterval() {return pollingInterval;}
+
+    public void setImageOtp(@Nonnull String imageOtp) {this.imageOtp = imageOtp;}
+
+    @Nonnull
+    public String getImageOtp() {return imageOtp;}
+
+    public void setImagePush(@Nonnull String imagePush) {this.imagePush = imagePush;}
+
+    @Nonnull
+    public String getImagePush() {return imagePush;}
+
+    public void setImageWebauthn(@Nonnull String imageWebauthn) {this.imageWebauthn = imageWebauthn;}
+
+    @Nonnull
+    public String getImageWebauthn() {return imageWebauthn;}
 }

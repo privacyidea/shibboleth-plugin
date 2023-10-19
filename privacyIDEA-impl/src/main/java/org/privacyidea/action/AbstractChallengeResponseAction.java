@@ -15,6 +15,7 @@ import net.shibboleth.idp.Version;
 import org.opensaml.messaging.context.navigate.ChildContextLookup;
 import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.context.ProfileRequestContext;
+import org.privacyidea.Challenge;
 import org.privacyidea.IPILogger;
 import org.privacyidea.PIResponse;
 import org.privacyidea.PrivacyIDEA;
@@ -144,6 +145,23 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction imple
         if (piContext.getIsPushAvailable())
         {
             piFormContext.setPushMessage(piResponse.pushMessage());
+        }
+
+        // Check for the images
+        for (Challenge c : piResponse.multichallenge)
+        {
+            if ("poll".equals(c.getClientMode()))
+            {
+                piFormContext.setImagePush(c.getImage());
+            }
+            else if ("interactive".equals(c.getClientMode()))
+            {
+                piFormContext.setImageOtp(c.getImage());
+            }
+            if ("webauthn".equals(c.getClientMode()))
+            {
+                piFormContext.setImageWebauthn(c.getImage());
+            }
         }
     }
 
