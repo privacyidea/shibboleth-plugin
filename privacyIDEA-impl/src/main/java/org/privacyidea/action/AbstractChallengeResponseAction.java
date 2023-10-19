@@ -148,8 +148,7 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction imple
         }
 
         // Check for the images
-        List<Challenge> multiChallenge = piResponse.multichallenge;
-        for (Challenge c : multiChallenge)
+        for (Challenge c : piResponse.multichallenge)
         {
             if ("poll".equals(c.getClientMode()))
             {
