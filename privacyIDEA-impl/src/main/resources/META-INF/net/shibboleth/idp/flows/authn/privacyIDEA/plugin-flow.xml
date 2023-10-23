@@ -6,11 +6,11 @@
     <action-state id="initPIContext">
         <evaluate expression="initPIContext"/>
         <evaluate expression="'proceed'"/>
-        <transition on="proceed" to="tryTriggerChallenge"/>
+        <transition on="proceed" to="checkAuthenticationFlow"/>
     </action-state>
 
-    <action-state id="tryTriggerChallenge">
-        <evaluate expression="triggerChallenge"/>
+    <action-state id="checkAuthenticationFlow">
+        <evaluate expression="alternativeAuthenticationFlows"/>
         <evaluate expression="'proceed'"/>
         <transition on="proceed" to="displayPrivacyIDEAForm"/>
     </action-state>
