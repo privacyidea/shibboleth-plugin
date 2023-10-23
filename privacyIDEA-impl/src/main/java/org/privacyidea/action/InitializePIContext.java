@@ -28,13 +28,15 @@ public class InitializePIContext extends AbstractAuthenticationAction
     private boolean verifySSL;
     @Nullable
     private String defaultMessage;
-    private boolean authenticationFlow;
+    private String authenticationFlow;
     @Nullable
     private String serviceName;
     @Nullable
     private String servicePass;
     @Nullable
     private String serviceRealm;
+    @Nullable
+    private String staticPass;
     @Nullable
     private String forwardHeaders;
     @Nullable
@@ -65,8 +67,7 @@ public class InitializePIContext extends AbstractAuthenticationAction
         }
         else
         {
-            Config configParams = new Config(serverURL, realm, verifySSL, triggerChallenge, serviceName, servicePass, serviceRealm, forwardHeaders, otpLength, debug);
-            PIServerConfigContext piServerConfigContext = new PIServerConfigContext(configParams);
+            PIServerConfigContext piServerConfigContext = getConfigBaseContext();
             log.info("{} Create PIServerConfigContext {}", this.getLogPrefix(), piServerConfigContext);
             authenticationContext.addSubcontext(piServerConfigContext);
 
@@ -111,6 +112,31 @@ public class InitializePIContext extends AbstractAuthenticationAction
         }
     }
 
+    @NotNull
+    private PIServerConfigContext getConfigBaseContext()
+    {
+        String authenticationFlow;
+        String staticPass = null;
+        if (this.authenticationFlow.equals("triggerChallenge"))
+        {
+            authenticationFlow = "triggerChallenge";
+        }
+        else if (this.authenticationFlow.equals("sendStaticPass"))
+        {
+            authenticationFlow = "sendStaticPass";
+            if (this.staticPass != null)
+            {
+                staticPass = this.staticPass;
+            }
+        }
+        else
+        {
+            authenticationFlow = "default";
+        }
+        Config configParams = new Config(serverURL, realm, verifySSL, authenticationFlow, serviceName, servicePass, serviceRealm, staticPass, forwardHeaders, otpLength, debug);
+        return new PIServerConfigContext(configParams);
+    }
+
     // Spring bean property setters
     public void setServerURL(@Nonnull String serverURL) {this.serverURL = serverURL;}
 
@@ -122,13 +148,15 @@ public class InitializePIContext extends AbstractAuthenticationAction
 
     public void setOtpFieldHint(@Nullable String otpFieldHint) {this.otpFieldHint = otpFieldHint;}
 
-    public void setAuthenticationFlow(boolean authenticationFlow) {this.authenticationFlow = authenticationFlow;}
+    public void setAuthenticationFlow(@Nonnull String authenticationFlow) {this.authenticationFlow = authenticationFlow;}
 
     public void setServiceName(@Nullable String serviceName) {this.serviceName = serviceName;}
 
     public void setServicePass(@Nullable String servicePass) {this.servicePass = servicePass;}
 
     public void setServiceRealm(@Nullable String serviceRealm) {this.serviceRealm = serviceRealm;}
+
+    public void setStaticPass(@Nullable String staticPass) {this.staticPass = staticPass;}
 
     public void setForwardHeaders(@Nullable String forwardHeaders) {this.forwardHeaders = forwardHeaders;}
 
