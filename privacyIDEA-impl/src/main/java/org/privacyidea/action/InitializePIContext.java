@@ -28,7 +28,7 @@ public class InitializePIContext extends AbstractAuthenticationAction
     private boolean verifySSL;
     @Nullable
     private String defaultMessage;
-    private boolean triggerChallenge;
+    private boolean authenticationFlow;
     @Nullable
     private String serviceName;
     @Nullable
@@ -122,7 +122,7 @@ public class InitializePIContext extends AbstractAuthenticationAction
 
     public void setOtpFieldHint(@Nullable String otpFieldHint) {this.otpFieldHint = otpFieldHint;}
 
-    public void setTriggerChallenge(boolean triggerChallenge) {this.triggerChallenge = triggerChallenge;}
+    public void setAuthenticationFlow(boolean authenticationFlow) {this.authenticationFlow = authenticationFlow;}
 
     public void setServiceName(@Nullable String serviceName) {this.serviceName = serviceName;}
 
