@@ -25,7 +25,7 @@ public class AlternativeAuthenticationFlows extends AbstractChallengeResponseAct
         {
             if (debug)
             {
-                LOGGER.info("{} Authentication flow: triggerChallenge.", this.getLogPrefix());
+                LOGGER.info("{} Authentication flow - triggerChallenge.", this.getLogPrefix());
             }
 
             HttpServletRequest request = Objects.requireNonNull(this.getHttpServletRequestSupplier()).get();
@@ -59,7 +59,7 @@ public class AlternativeAuthenticationFlows extends AbstractChallengeResponseAct
         {
             if (debug)
             {
-                LOGGER.info("{} Authentication flow: sendStaticPass.", this.getLogPrefix());
+                LOGGER.info("{} Authentication flow - sendStaticPass.", this.getLogPrefix());
             }
 
             if (piServerConfigContext.getConfigParams().getStaticPass() == null)
@@ -84,20 +84,18 @@ public class AlternativeAuthenticationFlows extends AbstractChallengeResponseAct
                         return;
                     }
 
+                    if (piResponse.value)
+                    {
+                        if (debug)
+                        {
+                            LOGGER.info("{} Authentication succeeded!", this.getLogPrefix());
+                        }
+                        ActionSupport.buildEvent(profileRequestContext, "success");
+                    }
+
                     if (!piResponse.multichallenge.isEmpty())
                     {
-                        if (piResponse.value)
-                        {
-                            if (debug)
-                            {
-                                LOGGER.info("{} Authentication succeeded!", this.getLogPrefix());
-                            }
-                            ActionSupport.buildEvent(profileRequestContext, "success");
-                        }
-                        else
-                        {
-                            extractChallengeData(piResponse);
-                        }
+                        extractChallengeData(piResponse);
                     }
                 }
             }
