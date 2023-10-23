@@ -12,15 +12,17 @@ import org.privacyidea.context.PIServerConfigContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TriggerChallenge extends AbstractChallengeResponseAction
+public class AlternativeAuthenticationFlows extends AbstractChallengeResponseAction
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PrivacyIDEAAuthenticator.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AlternativeAuthenticationFlows.class);
 
-    public TriggerChallenge() {}
+    public AlternativeAuthenticationFlows() {}
 
     @Override
     protected final void doExecute(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext, @Nonnull PIServerConfigContext piServerConfigContext)
     {
+        //todo check the authentication flow and perform the choosed one
+
         if (piServerConfigContext.getConfigParams().getTriggerChallenge())
         {
             if (debug)
