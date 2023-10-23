@@ -21,35 +21,33 @@ public class AlternativeAuthenticationFlows extends AbstractChallengeResponseAct
     @Override
     protected final void doExecute(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext, @Nonnull PIServerConfigContext piServerConfigContext)
     {
-        //todo check the authentication flow and perform the choosed one
-
-        if (piServerConfigContext.getConfigParams().getTriggerChallenge())
+        if (piServerConfigContext.getConfigParams().getAuthenticationFlow().equals("triggerChallenge"))
         {
             if (debug)
             {
-                LOGGER.info("{} Triggering challenges...", this.getLogPrefix());
+                LOGGER.info("{} Authentication flow: triggerChallenge.", this.getLogPrefix());
             }
 
             HttpServletRequest request = Objects.requireNonNull(this.getHttpServletRequestSupplier()).get();
             Map<String, String> headers = this.getHeadersToForward(request);
-            PIResponse triggeredResponse = privacyIDEA.triggerChallenges(piContext.getUsername(), headers);
+            PIResponse piResponse = privacyIDEA.triggerChallenges(piContext.getUsername(), headers);
 
-            if (triggeredResponse != null)
+            if (piResponse != null)
             {
-                if (triggeredResponse.error != null)
+                if (piResponse.error != null)
                 {
-                    LOGGER.error("{} privacyIDEA server error: {}!", this.getLogPrefix(), triggeredResponse.error.message);
+                    LOGGER.error("{} privacyIDEA server error: {}!", this.getLogPrefix(), piResponse.error.message);
                     ActionSupport.buildEvent(profileRequestContext, "AuthenticationException");
                     return;
                 }
 
-                if (!triggeredResponse.multichallenge.isEmpty())
+                if (!piResponse.multichallenge.isEmpty())
                 {
                     if (debug)
                     {
                         LOGGER.info("{} Extracting the form data from triggered challenges...", this.getLogPrefix());
                     }
-                    extractChallengeData(triggeredResponse);
+                    extractChallengeData(piResponse);
                 }
             }
             else
@@ -57,11 +55,58 @@ public class AlternativeAuthenticationFlows extends AbstractChallengeResponseAct
                 LOGGER.error("{} triggerChallenge failed. Response was null. Fallback to standard procedure.", this.getLogPrefix());
             }
         }
+        else if (piServerConfigContext.getConfigParams().getAuthenticationFlow().equals("sendStaticPass"))
+        {
+            if (debug)
+            {
+                LOGGER.info("{} Authentication flow: sendStaticPass.", this.getLogPrefix());
+            }
+
+            if (piServerConfigContext.getConfigParams().getStaticPass() == null)
+            {
+                LOGGER.error("{} Static pass isn't set. Fallback to default authentication flow...", this.getLogPrefix());
+            }
+            else
+            {
+                // Call /validate/check with a static pass from the configuration
+                // This could already end up the authentication if the "passOnNoToken" policy is set.
+                // Otherwise, it triggers the challenges.
+                HttpServletRequest request = Objects.requireNonNull(this.getHttpServletRequestSupplier()).get();
+                Map<String, String> headers = this.getHeadersToForward(request);
+                PIResponse piResponse = privacyIDEA.validateCheck(piContext.getUsername(), piServerConfigContext.getConfigParams().getStaticPass(), headers);
+
+                if (piResponse != null)
+                {
+                    if (piResponse.error != null)
+                    {
+                        LOGGER.error("{} privacyIDEA server error: {}!", this.getLogPrefix(), piResponse.error.message);
+                        ActionSupport.buildEvent(profileRequestContext, "AuthenticationException");
+                        return;
+                    }
+
+                    if (!piResponse.multichallenge.isEmpty())
+                    {
+                        if (piResponse.value)
+                        {
+                            if (debug)
+                            {
+                                LOGGER.info("{} Authentication succeeded!", this.getLogPrefix());
+                            }
+                            ActionSupport.buildEvent(profileRequestContext, "success");
+                        }
+                        else
+                        {
+                            extractChallengeData(piResponse);
+                        }
+                    }
+                }
+            }
+        }
         else
         {
             if (debug)
             {
-                LOGGER.info("{} triggerchallenge not enabled.", this.getLogPrefix());
+                LOGGER.info("{} Authentication flow: default.", this.getLogPrefix());
             }
         }
     }
