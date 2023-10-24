@@ -69,8 +69,8 @@ public class AlternativeAuthenticationFlows extends AbstractChallengeResponseAct
             else
             {
                 // Call /validate/check with a static pass from the configuration
-                // This could already end up the authentication if the "passOnNoToken" policy is set.
-                // Otherwise, it triggers the challenges.
+                // This could already end the authentication if the "passOnNoToken" policy is set.
+                // Otherwise, it might trigger the challenges.
                 HttpServletRequest request = Objects.requireNonNull(this.getHttpServletRequestSupplier()).get();
                 Map<String, String> headers = this.getHeadersToForward(request);
                 PIResponse piResponse = privacyIDEA.validateCheck(piContext.getUsername(), piServerConfigContext.getConfigParams().getStaticPass(), headers);
