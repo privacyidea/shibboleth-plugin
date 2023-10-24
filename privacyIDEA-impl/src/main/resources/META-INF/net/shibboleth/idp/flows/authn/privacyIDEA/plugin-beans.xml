@@ -23,12 +23,13 @@
           p:verifySSL="%{privacyidea.verify_ssl:true}"
           p:defaultMessage="%{privacyidea.default_message:#{null}}"
           p:otpFieldHint="%{privacyidea.otp_field_hint:#{null}}"
-          p:triggerChallenge="%{privacyidea.triggerchallenge:false}"
+          p:otpLength="%{privacyidea.otp_length:#{null}}"
+          p:authenticationFlow="%{privacyidea.authentication_flow:#{'default'}}"
           p:serviceName="%{privacyidea.service_name:#{null}}"
           p:servicePass="%{privacyidea.service_pass:#{null}}"
           p:serviceRealm="%{privacyidea.service_realm:#{null}}"
+          p:staticPass="%{privacyidea.static_pass:#{null}}"
           p:forwardHeaders="%{privacyidea.forward_headers:#{null}}"
-          p:otpLength="%{privacyidea.otp_length:#{null}}"
           p:pollingInterval="%{privacyidea.polling_interval:#{null}}"
           p:pluginVersion="%{privacyidea.plugin_version:#{null}}"
           p:debug="%{privacyidea.debug:false}"/>
@@ -36,6 +37,6 @@
     <bean id="piAuthenticator" class="org.privacyidea.action.PrivacyIDEAAuthenticator" scope="prototype"
           p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier"/>
 
-    <bean id="triggerChallenge" class="org.privacyidea.action.TriggerChallenge" scope="prototype"
+    <bean id="alternativeAuthenticationFlows" class="org.privacyidea.action.AlternativeAuthenticationFlows" scope="prototype"
           p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier"/>
 </beans>
