@@ -18,12 +18,13 @@ public class Config
     private final String servicePass;
     @Nullable
     private final String serviceRealm;
+    private final boolean pollInBrowser;
     @Nullable
     private final String forwardHeaders;
     @Nullable
     private final String otpLength;
 
-    public Config(@Nonnull String serverURL, @Nullable String realm, boolean verifySSL, boolean triggerChallenge, @Nullable String serviceName, @Nullable String servicePass, @Nullable String serviceRealm, @Nullable String forwardHeaders, @Nullable String otpLength, boolean debug)
+    public Config(@Nonnull String serverURL, @Nullable String realm, boolean verifySSL, boolean triggerChallenge, @Nullable String serviceName, @Nullable String servicePass, @Nullable String serviceRealm, boolean pollInBrowser, @Nullable String forwardHeaders, @Nullable String otpLength, boolean debug)
     {
         this.serverURL = serverURL;
         this.realm = realm;
@@ -32,6 +33,7 @@ public class Config
         this.serviceName = serviceName;
         this.servicePass = servicePass;
         this.serviceRealm = serviceRealm;
+        this.pollInBrowser = pollInBrowser;
         this.forwardHeaders = forwardHeaders;
         this.otpLength = otpLength;
         this.debug = debug;
@@ -76,6 +78,11 @@ public class Config
     public String getServiceRealm()
     {
         return serviceRealm;
+    }
+
+    public boolean getPollInBrowser()
+    {
+        return pollInBrowser;
     }
 
     @Nullable

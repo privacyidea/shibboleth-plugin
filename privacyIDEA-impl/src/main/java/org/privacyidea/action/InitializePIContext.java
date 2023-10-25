@@ -45,6 +45,9 @@ public class InitializePIContext extends AbstractAuthenticationAction
     private String pluginVersion;
     @Nullable
     private String pollingInterval;
+    private boolean pollInBrowser;
+    @Nullable
+    private String pollInBrowserUrl;
     private boolean debug;
 
     public InitializePIContext()
@@ -65,7 +68,7 @@ public class InitializePIContext extends AbstractAuthenticationAction
         }
         else
         {
-            Config configParams = new Config(serverURL, realm, verifySSL, triggerChallenge, serviceName, servicePass, serviceRealm, forwardHeaders, otpLength, debug);
+            Config configParams = new Config(serverURL, realm, verifySSL, triggerChallenge, serviceName, servicePass, serviceRealm, pollInBrowser, forwardHeaders, otpLength, debug);
             PIServerConfigContext piServerConfigContext = new PIServerConfigContext(configParams);
             log.info("{} Create PIServerConfigContext {}", this.getLogPrefix(), piServerConfigContext);
             authenticationContext.addSubcontext(piServerConfigContext);
@@ -80,17 +83,17 @@ public class InitializePIContext extends AbstractAuthenticationAction
                 try
                 {
                     int otpLengthToInt = Integer.parseInt(otpLength);
-                    piFormContext = new PIFormContext(defaultMessage, otpFieldHint, otpLengthToInt, pollingInterval);
+                    piFormContext = new PIFormContext(defaultMessage, otpFieldHint, otpLengthToInt, pollingInterval, pollInBrowserUrl);
                 }
                 catch (NumberFormatException e)
                 {
                     log.info("{} Config option \"otp_length\": Wrong format. Only digits allowed.", getLogPrefix());
-                    piFormContext = new PIFormContext(defaultMessage, otpFieldHint, null, pollingInterval);
+                    piFormContext = new PIFormContext(defaultMessage, otpFieldHint, null, pollingInterval, pollInBrowserUrl);
                 }
             }
             else
             {
-                piFormContext = new PIFormContext(defaultMessage, otpFieldHint, null, pollingInterval);
+                piFormContext = new PIFormContext(defaultMessage, otpFieldHint, null, pollingInterval, pollInBrowserUrl);
             }
             log.info("{} Create PIFormContext {}", this.getLogPrefix(), piFormContext);
             authenticationContext.addSubcontext(piFormContext);
@@ -135,6 +138,10 @@ public class InitializePIContext extends AbstractAuthenticationAction
     public void setOtpLength(@Nullable String otpLength) {this.otpLength = otpLength;}
 
     public void setPollingInterval(@Nullable String pollingInterval) {this.pollingInterval = pollingInterval;}
+
+    public void setPollInBrowser(boolean pollInBrowser) {this.pollInBrowser = pollInBrowser;}
+
+    public void setPollInBrowserUrl(@Nullable String pollInBrowserUrl) {this.pollInBrowserUrl = pollInBrowserUrl;}
 
     public void setPluginVersion(@Nullable String pluginVersion) {this.pluginVersion = pluginVersion;}
 

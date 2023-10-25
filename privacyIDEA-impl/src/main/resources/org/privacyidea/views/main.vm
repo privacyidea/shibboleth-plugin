@@ -68,7 +68,7 @@
                             <p>Hello $piContext.getUsername()!</p>
                             <br>
 
-                            #* MESSAGES/IMAGES *#
+                            ## MESSAGES / IMAGES ##
                             #if ($piContext.getMode() == "push")
                                 <p style="max-width: 700px">$piFormContext.getPushMessage()</p>
                                 #if ($piFormContext.getImagePush() != "")
@@ -88,7 +88,7 @@
                                 #end
                             #end
 
-                            #* ERROR MESSAGE *#
+                            ## ERROR MESSAGE ##
                             #set ($formErrorMsg = $piContext.getFormErrorMessage())
                             #if ($formErrorMsg)
                                 <br>
@@ -97,7 +97,7 @@
                             <br>
                         </div>
 
-                        #* OTP *#
+                        ## OTP ##
                         <script>
                             function autoSubmit(inputObject, otpLength)
                             {
@@ -124,7 +124,7 @@
                             <input id="origin" name="origin" value="" type="hidden">
                         </div>
 
-                        #* ALTERNATE TOKENS *#
+                        ## ALTERNATE TOKENS ##
                         <div class="form-element-wrapper" id="alternateToken" style="padding-top: 20px">
                             <h3 id="alternateTokenHeader">Alternate Login Options</h3>
 
@@ -146,7 +146,11 @@
                                 }
                             </script>
 
-                            #* PUSH *#
+                            ## POLL IN BROWSER ##
+                            #if ($piContext.getTransactionId() && $piContext.getTransactionId() != "" && $piContext.getPollInBrowserUrl)
+
+                            #end
+                            ## PUSH ##
                             #if ($piContext.getMode() == "push")
                                 <script>document.getElementById("pi-form-submit-button").style.display = "none"</script>
                                 <script>document.getElementById("pi_otp_input").style.display = "none"</script>
@@ -165,7 +169,7 @@
                                 <input class="form-element-button" id="usePushButton" name="pushButton" onclick="changeMode('push')" type="button" value="Push">
                             #end
 
-                            #* WEBAUTHN *#
+                            ## WEBAUTHN ##
                             #set ($webauthnSignRequest = $piContext.getWebauthnSignRequest())
                             #if ($webauthnSignRequest != "")
                                 <input class="form-element-button" id="useWebAuthnButton" name="useWebAuthnButton" onclick="doWebAuthn()" type="button" value="WebAuthn">
@@ -221,7 +225,7 @@
                                 <br><br>
                             #end
 
-                            #* NO ALTERNATE TOKENS *#
+                            ## NO ALTERNATE TOKENS ##
                             #if ($webauthnSignRequest == "" && !$piContext.getIsPushAvailable())
                                 <script>
                                     document.getElementById("alternateToken").style.display = "none";
@@ -232,7 +236,7 @@
                 </div>
             </div>
 
-            #* HELP & FOOTER *#
+            ## HELP & FOOTER ##
             <div class="column two">
                 <ul class="list list-help">
                     <li class="list-help-item"><a href="#springMessageText("idp.url.helpdesk", '#')"><span

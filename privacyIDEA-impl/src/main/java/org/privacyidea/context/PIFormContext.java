@@ -19,6 +19,8 @@ public class PIFormContext extends BaseContext
     private final Integer otpLength;
     @Nonnull
     private String pollingInterval;
+    @Nullable
+    private String pollInBrowserUrl;
     @Nonnull
     private String imageOtp = "";
     @Nonnull
@@ -26,11 +28,12 @@ public class PIFormContext extends BaseContext
     @Nonnull
     private String imageWebauthn = "";
 
-    public PIFormContext(@Nullable String defaultMessage, @Nullable String otpFieldHint, @Nullable Integer otpLength, @Nullable String pollingInterval)
+    public PIFormContext(@Nullable String defaultMessage, @Nullable String otpFieldHint, @Nullable Integer otpLength, @Nullable String pollingInterval, @Nullable String pollInBrowserUrl)
     {
         this.defaultMessage = Objects.requireNonNullElse(defaultMessage, "Please enter the OTP!");
         this.otpFieldHint = Objects.requireNonNullElse(otpFieldHint, "OTP");
         this.pollingInterval = Objects.requireNonNullElse(pollingInterval, "2");
+        this.pollInBrowserUrl = pollInBrowserUrl;
         this.otpLength = otpLength;
     }
 
@@ -52,6 +55,9 @@ public class PIFormContext extends BaseContext
 
     @Nonnull
     public String getPollingInterval() {return pollingInterval;}
+
+    @Nullable
+    public String getPollInBrowserUrl() {return pollInBrowserUrl;}
 
     public void setImageOtp(@Nonnull String imageOtp) {this.imageOtp = imageOtp;}
 
