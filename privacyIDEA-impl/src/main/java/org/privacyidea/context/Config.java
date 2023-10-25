@@ -11,28 +11,34 @@ public class Config
     private final String realm;
     private final boolean verifySSL;
     private final boolean debug;
-    private final boolean triggerChallenge;
+    @Nonnull
+    private final String authenticationFlow;
     @Nullable
     private final String serviceName;
     @Nullable
     private final String servicePass;
     @Nullable
     private final String serviceRealm;
+    @Nullable
+    private final String staticPass;
     private final boolean pollInBrowser;
     @Nullable
     private final String forwardHeaders;
     @Nullable
     private final String otpLength;
 
-    public Config(@Nonnull String serverURL, @Nullable String realm, boolean verifySSL, boolean triggerChallenge, @Nullable String serviceName, @Nullable String servicePass, @Nullable String serviceRealm, boolean pollInBrowser, @Nullable String forwardHeaders, @Nullable String otpLength, boolean debug)
+    public Config(@Nonnull String serverURL, @Nullable String realm, boolean verifySSL, @Nonnull String authenticationFlow,
+                  @Nullable String serviceName, @Nullable String servicePass, @Nullable String serviceRealm, @Nullable String staticPass,
+                  boolean pollInBrowser, @Nullable String forwardHeaders, @Nullable String otpLength, boolean debug)
     {
         this.serverURL = serverURL;
         this.realm = realm;
         this.verifySSL = verifySSL;
-        this.triggerChallenge = triggerChallenge;
+        this.authenticationFlow = authenticationFlow;
         this.serviceName = serviceName;
         this.servicePass = servicePass;
         this.serviceRealm = serviceRealm;
+        this.staticPass = staticPass;
         this.pollInBrowser = pollInBrowser;
         this.forwardHeaders = forwardHeaders;
         this.otpLength = otpLength;
@@ -57,9 +63,10 @@ public class Config
         return verifySSL;
     }
 
-    public boolean getTriggerChallenge()
+    @Nonnull
+    public String getAuthenticationFlow()
     {
-        return triggerChallenge;
+        return authenticationFlow;
     }
 
     @Nullable
@@ -83,6 +90,12 @@ public class Config
     public boolean getPollInBrowser()
     {
         return pollInBrowser;
+    }
+
+    @Nullable
+    public String getStaticPass()
+    {
+        return staticPass;
     }
 
     @Nullable
