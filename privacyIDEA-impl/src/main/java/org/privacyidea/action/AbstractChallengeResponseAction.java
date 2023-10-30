@@ -86,7 +86,7 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction imple
                         {
                             String shibbVersion = Version.getVersion();
                             String pluginVersion = piContext.getPluginVersion();
-                            String userAgent = "privacyIDEA-Shibboleth/" + pluginVersion + " Shibboleth IdP/" + shibbVersion;
+                            String userAgent = "privacyIDEA-Shibboleth/" + pluginVersion + " ShibbolethIdP/" + shibbVersion;
 
                             privacyIDEA = PrivacyIDEA.newBuilder(piServerConfigContext.getConfigParams().getServerURL(), userAgent)
                                                      .sslVerify(piServerConfigContext.getConfigParams().getVerifySSL())
