@@ -12,7 +12,7 @@ import org.privacyidea.context.PIServerConfigContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PrivacyIDEAAuthenticator extends AbstractChallengeResponseAction
+public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(PrivacyIDEAAuthenticator.class);
 
