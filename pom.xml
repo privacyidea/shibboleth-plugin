@@ -66,6 +66,10 @@
                 <enabled>false</enabled>
             </releases>
         </repository>
+        <repository>
+            <id>gluu</id>
+            <url>https://ox.gluu.org/maven/</url>
+        </repository>
     </repositories>
 
     <dependencies>
