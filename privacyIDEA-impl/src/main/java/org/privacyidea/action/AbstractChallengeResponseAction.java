@@ -78,7 +78,6 @@ public class AbstractChallengeResponseAction extends AbstractProfileAction imple
                     {
                         if (piServerConfigContext.getConfigParams().getDebug())
                         {
-                        {
                             debug = piServerConfigContext.getConfigParams().getDebug();
                         }
 
