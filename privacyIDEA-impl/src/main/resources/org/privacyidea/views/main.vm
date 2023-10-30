@@ -23,7 +23,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>#springMessageText("$titleMessageTextProperty", "Token Login Service")</title>
+    <title>#springMessageText("$titleMessageTextProperty", "privacyIDEA Authentication")</title>
     <link rel="stylesheet" type="text/css" href="$request.getContextPath()#springMessageText("idp.css", "/css/placeholder.css")">
 </head>
 
