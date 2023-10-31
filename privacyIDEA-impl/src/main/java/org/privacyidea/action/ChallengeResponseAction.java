@@ -113,16 +113,25 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
     protected void doExecute(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext, @Nonnull PIServerConfigContext piServerConfigContext) {}
 
     /**
+     * Extract message from server response, and save it in form context.
+     *
+     * @param piResponse server response
+     */
+    protected void extractMessage(@Nonnull PIResponse piResponse)
+    {
+        if (piResponse.message != null && !piResponse.message.isEmpty())
+        {
+            piFormContext.setMessage(piResponse.message);
+        }
+    }
+
+    /**
      * Extract challenge data from server response, and save it in context.
      *
      * @param piResponse server response
      */
     protected void extractChallengeData(@Nonnull PIResponse piResponse)
     {
-        if (piResponse.message != null && !piResponse.message.isEmpty())
-        {
-            piFormContext.setMessage(piResponse.message);
-        }
         if (piResponse.transactionID != null && !piResponse.transactionID.isEmpty())
         {
             piContext.setTransactionID(piResponse.transactionID);
