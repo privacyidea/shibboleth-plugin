@@ -199,22 +199,25 @@
                                         {
                                             changeMode("webauthn");
                                         }
-                                        try
+                                        else
                                         {
-                                            const requestStr = document.getElementById("webauthnSignRequest").value;
-                                            const requestJSON = JSON.parse(requestStr);
-
-                                            const webAuthnSignResponse = window.pi_webauthn.sign(requestJSON);
-                                            webAuthnSignResponse.then((webauthnresponse) =>
+                                            try
                                             {
-                                                document.getElementById("webauthnSignResponse").value = JSON.stringify(webauthnresponse);
-                                                document.getElementById("pi-form-submit-button").click();
-                                            })
-                                        }
-                                        catch (err)
-                                        {
-                                            console.log("Error while trying WebAuthn: " + err);
-                                            document.getElementById("errorMessage").value = "Error while trying WebAuthn: " + err;
+                                                const requestStr = document.getElementById("webauthnSignRequest").value;
+                                                const requestJSON = JSON.parse(requestStr);
+
+                                                const webAuthnSignResponse = window.pi_webauthn.sign(requestJSON);
+                                                webAuthnSignResponse.then((webauthnresponse) =>
+                                                {
+                                                    document.getElementById("webauthnSignResponse").value = JSON.stringify(webauthnresponse);
+                                                    document.getElementById("pi-form-submit-button").click();
+                                                })
+                                            }
+                                            catch (err)
+                                            {
+                                                console.log("Error while trying WebAuthn: " + err);
+                                                document.getElementById("errorMessage").value = "Error while trying WebAuthn: " + err;
+                                            }
                                         }
                                     }
                                 </script>
