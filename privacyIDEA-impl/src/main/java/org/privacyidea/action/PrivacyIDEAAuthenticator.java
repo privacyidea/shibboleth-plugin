@@ -93,7 +93,8 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             {
                 LOGGER.info("{} Extracting data from the response...", this.getLogPrefix());
             }
-            extractChallengeData(piResponse);
+            extractMessage(piResponse);
+
             if (piResponse.error != null)
             {
                 LOGGER.error("{} privacyIDEA server error: {}!", this.getLogPrefix(), piResponse.error.message);
@@ -106,6 +107,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                 {
                     LOGGER.info("{} Challenge triggered, building form...", this.getLogPrefix());
                 }
+                extractChallengeData(piResponse);
                 ActionSupport.buildEvent(profileRequestContext, "reload");
             }
             else if (piResponse.value)
