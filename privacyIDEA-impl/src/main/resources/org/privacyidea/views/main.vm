@@ -72,19 +72,19 @@
                             #if ($piContext.getMode() == "push")
                                 <p style="max-width: 700px">$piFormContext.getPushMessage()</p>
                                 #if ($piFormContext.getImagePush() != "")
-                                    <br><img alt="chal_img" style="max-width: 300px" src="$piFormContext.getImagePush()"><br><br>
+                                    <br><img style="max-width: 300px" src="$piFormContext.getImagePush()"><br><br>
                                 #end
                             #else
                                 <p style="max-width: 700px">$piFormContext.getMessage()</p>
                             #end
                             #if ($piContext.getMode() == "otp")
                                 #if ($piFormContext.getImageOtp() != "")
-                                    <br><img alt="chal_img" style="max-width: 300px" src="$piFormContext.getImageOtp()"><br><br>
+                                    <br><img style="max-width: 300px" src="$piFormContext.getImageOtp()"><br><br>
                                 #end
                             #end
                             #if ($piContext.getMode() == "webauthn")
                                 #if ($piFormContext.getImageWebauthn() != "")
-                                    <br><img alt="chal_img" style="max-width: 300px" src="$piFormContext.getImageWebauthn()"><br><br>
+                                    <br><img style="max-width: 300px" src="$piFormContext.getImageWebauthn()"><br><br>
                                 #end
                             #end
 
