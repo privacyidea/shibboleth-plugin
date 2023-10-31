@@ -83,7 +83,8 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
                         ActionSupport.buildEvent(profileRequestContext, "AuthenticationException");
                         return;
                     }
-
+                    extractMessage(piResponse);
+                    
                     if (piResponse.value)
                     {
                         if (debug)
