@@ -31,7 +31,7 @@ Updating following parameters is required to ensure at least the very basic func
    - Remember to activate the MFA flow.
 
 3. **Turn on the MFA Module by updating following file: `$idp_install_path/conf/authn/authn.properties`.**<br>
-Note: Example of this configuration contains the *privacyidea.properties* file (`$idp_install_path/config/authn/privacyidea.properties`).
+Note: Example of this configuration contains the *privacyidea.properties* file (`$idp_install_path/conf/authn/privacyidea.properties`).
 
 The different configuration parameters are explained in the following table:
 
