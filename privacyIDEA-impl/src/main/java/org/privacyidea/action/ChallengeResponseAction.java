@@ -83,7 +83,7 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
                         {
                             String shibbVersion = Version.getVersion();
                             String pluginVersion = piContext.getPluginVersion();
-                            String userAgent = "privacyIDEA-Shibboleth/" + pluginVersion + ", Shibboleth IdP/" + shibbVersion;
+                            String userAgent = "privacyIDEA-Shibboleth/" + pluginVersion + " ShibbolethIdP/" + shibbVersion;
 
                             privacyIDEA = PrivacyIDEA.newBuilder(piServerConfigContext.getConfigParams().getServerURL(), userAgent)
                                                      .sslVerify(piServerConfigContext.getConfigParams().getVerifySSL())
@@ -113,16 +113,25 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
     protected void doExecute(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext, @Nonnull PIServerConfigContext piServerConfigContext) {}
 
     /**
-     * Extract challenge data from server response, and save it in context.
+     * Extract message from server response, and save it in form context.
      *
      * @param piResponse server response
      */
-    protected void extractChallengeData(@Nonnull PIResponse piResponse)
+    protected void extractMessage(@Nonnull PIResponse piResponse)
     {
         if (piResponse.message != null && !piResponse.message.isEmpty())
         {
             piFormContext.setMessage(piResponse.message);
         }
+    }
+
+    /**
+     * Extract challenge data from server response, and save it in form context.
+     *
+     * @param piResponse server response
+     */
+    protected void extractChallengeData(@Nonnull PIResponse piResponse)
+    {
         if (piResponse.transactionID != null && !piResponse.transactionID.isEmpty())
         {
             piContext.setTransactionID(piResponse.transactionID);
