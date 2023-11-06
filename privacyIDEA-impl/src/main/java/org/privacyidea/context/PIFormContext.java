@@ -37,7 +37,7 @@ public class PIFormContext extends BaseContext
         this.otpLength = otpLength;
     }
 
-    public void setMessage(String message) {this.message = message;}
+    public void setMessage(@Nonnull String message) {this.message = message;}
 
     @Nonnull
     public String getMessage() {return (!message.isEmpty()) ? message : defaultMessage;}
