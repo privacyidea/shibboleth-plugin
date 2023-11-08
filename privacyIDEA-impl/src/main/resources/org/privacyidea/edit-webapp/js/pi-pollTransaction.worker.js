@@ -3,6 +3,7 @@ let params;
 self.addEventListener('message', function (e)
 {
     let data = e.data;
+
     switch (data.cmd)
     {
         case 'url':
@@ -23,7 +24,9 @@ self.addEventListener('message', function (e)
 function pollTransactionInBrowser()
 {
     const request = new XMLHttpRequest();
+
     request.open("GET", url + "?" + params, false);
+
     request.onload = (e) =>
     {
         try
@@ -52,10 +55,12 @@ function pollTransactionInBrowser()
             self.close();
         }
     };
+
     request.onerror = (e) =>
     {
         self.postMessage({'message': request.statusText, 'status': 'error'});
         self.close();
     };
+
     request.send();
 }

@@ -1,305 +1,334 @@
-## Velocity Template for with main template
-##
-## Velocity context will contain the following properties
-## flowExecutionUrl - the form action location
-## flowRequestContext - the Spring Web Flow RequestContext
-## flowExecutionKey - the SWF execution key (this is built into the flowExecutionUrl)
-## profileRequestContext - root of context tree
-## authenticationContext - context with authentication request information
-## authenticationErrorContext - context with login error state
-## authenticationWarningContext - context with login warning state
-## rpUIContext - the context with SP UI information from the metadata
-## rpContext - RelyingPartyContext
-## encoder - HTMLEncoder class
-## request - HttpServletRequest
-## response - HttpServletResponse
-## environment - Spring Environment object for property resolution
-## custom - arbitrary object injected by deployer
-## piContext - privacyIDEA Context
-## piFormContext - privacyIDEA Form Context
-##
+#*
+ Velocity Template.
+
+ Velocity context will contain the following properties:
+   - flowExecutionUrl - the form action location
+   - flowRequestContext - the Spring Web Flow RequestContext
+   - flowExecutionKey - the SWF execution key (this is built into the flowExecutionUrl)
+   - profileRequestContext - root of context tree
+   - authenticationContext - context with authentication request information
+   - authenticationErrorContext - context with login error state
+   - authenticationWarningContext - context with login warning state
+   - rpUIContext - the context with SP UI information from the metadata
+   - rpContext - RelyingPartyContext
+   - encoder - HTMLEncoder class
+   - request - HttpServletRequest
+   - response - HttpServletResponse
+   - environment - Spring Environment object for property resolution
+   - custom - arbitrary object injected by deployer
+   - piContext - privacyIDEA Context
+   - piFormContext - privacyIDEA Form Context.
+*#
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>#springMessageText("$titleMessageTextProperty", "privacyIDEA Authentication")</title>
-    <link rel="stylesheet" type="text/css" href="$request.getContextPath()#springMessageText("idp.css", "/css/placeholder.css")">
+    <title>#springMessageText('$titleMessageTextProperty', 'privacyIDEA Authentication')</title>
+    <link rel="stylesheet" type="text/css" href="$request.getContextPath()#springMessageText('idp.css', '/css/placeholder.css')">
 </head>
 
 <body>
-<div class="wrapper">
-    <div class="container">
-        <header>
-            <img class="main-logo" src="$request.getContextPath()#springMessageText("idp.logo", "/images/placeholder-logo.png")"
-                 alt="#springMessageText("idp.logo.alt-text", "logo")">
-            #set ($serviceName = $rpUIContext.serviceName)
-            #if ($serviceName && !$rpContext.getRelyingPartyId().contains($serviceName))
-                <h1>#springMessageText("idp.login.loginTo", "Login to ") $encoder.encodeForHTML($serviceName)</h1>
-            #end
-        </header>
-
-        <div class="content">
-            <div class="column one">
-                #*
-                //
-                //    SP Description & Logo (optional)
-                //    These idpui lines will display added information (if available
-                //    in the metadata) about the Service Provider (SP) that requested
-                //    authentication. These idpui lines are "active" in this example
-                //    (not commented out) - this extra SP info will be displayed.
-                //    Remove or comment out these lines to stop the display of the
-                //    added SP information.
-                //
-                *#
-                #set ($logo = $rpUIContext.getLogo())
-                #if ($logo)
-                    <img class="service-logo" src="$encoder.encodeForHTMLAttribute($logo)" alt="$encoder.encodeForHTMLAttribute($serviceName)">
+    <div class="wrapper">
+        <div class="container">
+            <header>
+                <img class="main-logo" src="$request.getContextPath()#springMessageText('idp.logo', '/images/placeholder-logo.png')"
+                     alt="#springMessageText('idp.logo.alt-text', 'logo')">
+                #set ($serviceName = $rpUIContext.serviceName)
+                #if ($serviceName && !$rpContext.getRelyingPartyId().contains($serviceName))
+                    <h1>#springMessageText('idp.login.loginTo', 'Login to ') $encoder.encodeForHTML($serviceName)</h1>
                 #end
-                #set ($desc = $rpUIContext.getServiceDescription())
-                #if ($desc)
-                    <p>$encoder.encodeForHTML($desc)</p>
-                #end
+            </header>
 
-                <div id="privacyidea">
-                    <form id="privacyidea-form" action="$flowExecutionUrl" method="post" autocomplete="off">
-                        #parse("csrf/csrf.vm")
-                        <div class="content">
-                            <p>Hello $piContext.getUsername()!</p>
-                            <br>
+            <div class="content">
+                <div class="column one">
+                    <div id="description and logo">
+                        #*
+                         SP Description & Logo (optional)
+                         These idpui lines will display added information (if available
+                         in the metadata) about the Service Provider (SP) that requested
+                         authentication. These idpui lines are "active" in this example
+                         (not commented out) - this extra SP info will be displayed.
+                         Remove or comment out these lines to stop the display of the
+                         added SP information.
+                        *#
+                        #set ($logo = $rpUIContext.getLogo())
+                        #if ($logo)
+                            <img class="service-logo" src="$encoder.encodeForHTMLAttribute($logo)" alt="$encoder.encodeForHTMLAttribute($serviceName)">
+                        #end
+                        #set ($desc = $rpUIContext.getServiceDescription())
+                        #if ($desc)
+                            <p>$encoder.encodeForHTML($desc)</p>
+                        #end
+                    </div>
 
-                            ## MESSAGES / IMAGES ##
-                            #if ($piContext.getMode() == "push")
-                                <p style="max-width: 700px">$piFormContext.getPushMessage()</p>
-                                #if ($piFormContext.getImagePush() != "")
-                                    <br><img style="max-width: 300px" src="$piFormContext.getImagePush()"><br><br>
-                                #end
-                            #else
-                                <p style="max-width: 700px">$piFormContext.getMessage()</p>
-                            #end
-                            #if ($piContext.getMode() == "otp")
-                                #if ($piFormContext.getImageOtp() != "")
-                                    <br><img style="max-width: 300px" src="$piFormContext.getImageOtp()"><br><br>
-                                #end
-                            #end
-                            #if ($piContext.getMode() == "webauthn")
-                                #if ($piFormContext.getImageWebauthn() != "")
-                                    <br><img style="max-width: 300px" src="$piFormContext.getImageWebauthn()"><br><br>
-                                #end
-                            #end
+                    <div id="privacyidea">
+                        <form id="privacyidea-form" action="$flowExecutionUrl" method="post" autocomplete="off">
+                            #parse('csrf/csrf.vm')
+                            <div class="content">
+                                <div class="form-element-wrapper" id="greeting">
+                                    <p>Hello $piContext.getUsername()!</p>
+                                    <br>
+                                </div>
 
-                            ## ERROR MESSAGE ##
-                            #set ($formErrorMsg = $piContext.getFormErrorMessage())
-                            #if ($formErrorMsg)
-                                <br>
-                                <p>$formErrorMsg</p>
-                            #end
-                            <br>
-                        </div>
+                                <div class="form-element-wrapper" id="messages-and-images">
+                                    #if ($piContext.getMode() == "push")
+                                        <p style="max-width: 700px">$piFormContext.getPushMessage()</p>
+                                        #if ($piFormContext.getImagePush() != "")
+                                            <br>
+                                            <img style="max-width: 300px" src="$piFormContext.getImagePush()" alt="[Push Image]">
+                                            <br><br>
+                                        #end
+                                    #else
+                                        <p style="max-width: 700px">$piFormContext.getMessage()</p>
+                                    #end
 
-                        ## OTP ##
-                        <script>
-                            function autoSubmit(inputObject, otpLength)
-                            {
-                                if (otpLength != null && inputObject.value.length === otpLength)
-                                {
-                                    document.getElementById("pi-form-submit-button").click();
-                                }
-                            }
-                        </script>
+                                    #if ($piContext.getMode() == "otp")
+                                        #if ($piFormContext.getImageOtp() != "")
+                                            <br>
+                                            <img style="max-width: 300px" src="$piFormContext.getImageOtp()" alt="[OTP Image]">
+                                            <br><br>
+                                        #end
+                                    #end
 
-                        <div class="form-element-wrapper">
-                            <input id="pi_otp_input" class="form-element form-field" style="max-width: 260px" name="pi_otp_input" type="password" onKeyUp="autoSubmit(this, $piFormContext.getOtpLength())" autofocus placeholder=$piFormContext.getOtpFieldHint() value="">
-                            <br>
-                            <button class="form-element-button" id="pi-form-submit-button" type="submit" name="_eventId_proceed">Submit</button>
-                            <br><br>
-                        </div>
+                                    #if ($piContext.getMode() == "webauthn")
+                                        #if ($piFormContext.getImageWebauthn() != "")
+                                            <br>
+                                            <img style="max-width: 300px" src="$piFormContext.getImageWebauthn()" alt="[WebAuthn Image]">
+                                            <br><br>
+                                        #end
+                                    #end
 
-                        <div class="form-options">
-                            <input id="mode" name="mode" value="$piContext.getMode()" type="hidden">
-                            <input id="errorMessage" name="errorMessage" value="" type="hidden">
-                            <input id="silentModeChange" name="silentModeChange" value="0" type="hidden">
-                            <input id="webauthnSignRequest" name="webauthnSignRequest" value='$piContext.getWebauthnSignRequest()' type="hidden">
-                            <input id="webauthnSignResponse" name="webauthnSignResponse" value="" type="hidden">
-                            <input id="origin" name="origin" value="" type="hidden">
-                        </div>
+                                    #set ($formErrorMsg = $piContext.getFormErrorMessage())
+                                    #if ($formErrorMsg)
+                                        <br>
+                                        <p>$formErrorMsg</p>
+                                    #end
+                                    <br>
+                                </div>
 
-                        ## ALTERNATE TOKENS ##
-                        <div class="form-element-wrapper" id="alternateToken" style="padding-top: 20px">
-                            <h3 id="alternateTokenHeader">Alternate Login Options</h3>
+                                <div class="form-element-wrapper" id="one-time-password">
+                                    <input id="pi_otp_input" class="form-element form-field" style="max-width: 260px" name="pi_otp_input"
+                                           type="password" onKeyUp="autoSubmit(this, $piFormContext.getOtpLength())" autofocus
+                                           placeholder=$piFormContext.getOtpFieldHint() value="">
+                                    <br>
+                                    <button class="form-element-button" id="pi-form-submit-button" type="submit" name="_eventId_proceed">Submit</button>
+                                    <br><br>
 
-                            <script>
-                                'use strict';
-                                function changeMode(newMode)
-                                {
-                                    // Submit the form to pass the change to the authenticator
-                                    document.getElementById("mode").value = newMode;
-                                    document.getElementById("pi-form-submit-button").click();
-                                }
-                            </script>
-                            <script>
-                                'use strict';
-                                function otpButtonUsed()
-                                {
-                                    document.getElementById("silentModeChange").value = "1";
-                                    changeMode("otp");
-                                }
-                            </script>
-
-                            ## POLL IN BROWSER ##
-                            #if ($piContext.getPollInBrowser() && $piContext.getTransactionId() && $piContext.getTransactionId() != "" && $piFormContext.getPollInBrowserUrl())
-                                <script>
-                                    window.onload = () =>
-                                    {
-                                        document.getElementById("usePushButton").style.display = "none";
-                                        let worker;
-                                        if (typeof (Worker) !== "undefined")
+                                    <script>
+                                        'use strict';
+                                        function autoSubmit(inputObject, otpLength)
                                         {
-                                            if (typeof (worker) == "undefined")
+                                            if (otpLength != null && inputObject.value.length === otpLength)
                                             {
-                                                worker = new Worker("$request.getContextPath()/js/pi-pollTransaction.worker.js");
-                                                document.getElementById("pi-form-submit-button").addEventListener('click', function (e)
+                                                document.getElementById("pi-form-submit-button").click();
+                                            }
+                                        }
+                                    </script>
+                                </div>
+
+                                <div class="form-options">
+                                    <input id="mode" name="mode" value='$piContext.getMode()' type="hidden">
+                                    <input id="errorMessage" name="errorMessage" value="" type="hidden">
+                                    <input id="silentModeChange" name="silentModeChange" value="0" type="hidden">
+                                    <input id="webauthnSignRequest" name="webauthnSignRequest" value='$piContext.getWebauthnSignRequest()' type="hidden">
+                                    <input id="webauthnSignResponse" name="webauthnSignResponse" value="" type="hidden">
+                                    <input id="origin" name="origin" value="" type="hidden">
+                                    <input id="pollInBrowserFailed" name="pollInBrowserFailed" value="$piFormContext.getPollInBrowserFailed()" type="hidden">
+                                </div>
+
+                                <div class="form-element-wrapper" id="alternateToken" style="padding-top: 20px">
+                                    <div id="banner-and-helping-scripts">
+                                        <h3 id="alternateTokenHeader">Alternate Login Options</h3>
+                                        <script>
+                                            'use strict';
+                                            function changeMode(newMode)
+                                            {
+                                                document.getElementById("mode").value = newMode;
+                                                // Submit the form to pass the change to the authenticator
+                                                document.getElementById("pi-form-submit-button").click();
+                                            }
+                                        </script>
+                                        <script>
+                                            'use strict';
+                                            function otpButtonUsed()
+                                            {
+                                                document.getElementById("silentModeChange").value = "1";
+                                                changeMode("otp");
+                                            }
+                                        </script>
+                                    </div>
+
+                                    <div id="poll-in-browser">
+                                        #if ($piContext.getPollInBrowser() && $piFormContext.getPollInBrowserUrl()
+                                        && $piContext.getTransactionId() && $piContext.getTransactionId() != "")
+                                            <script>
+                                                window.onload = () =>
                                                 {
-                                                    worker.terminate();
-                                                    worker = undefined;
-                                                })
-                                                worker.postMessage({'cmd': 'url', 'msg': '$piFormContext.getPollInBrowserUrl()'});
-                                                worker.postMessage({'cmd': 'transactionID', 'msg': '$piContext.getTransactionId()'});
-                                                worker.postMessage({'cmd': 'start'});
-                                                worker.addEventListener('message', function (e)
-                                                {
-                                                    let data = e.data;
-                                                    switch (data.status)
+                                                    document.getElementById("pushButton").style.display = "none";
+                                                    let worker;
+                                                    if (typeof (Worker) !== "undefined")
                                                     {
-                                                        case 'success':
-                                                            document.getElementById("pi-form-submit-button").click();
-                                                            break;
-                                                        case 'error':
-                                                            console.log("Poll in browser error: " + data.message);
-                                                            document.getElementById("errorMsg").value = "Poll in browser error: " + data.message;
-                                                            document.getElementById("pollInBrowserFailed").value = true;
-                                                            document.getElementById("usePushButton").style.display = "initial";
-                                                            worker = undefined;
+                                                        if (typeof (worker) == "undefined")
+                                                        {
+                                                            worker = new Worker('$request.getContextPath()/js/pi-pollTransaction.worker.js');
+
+                                                            document.getElementById("pi-form-submit-button").addEventListener('click', function (e)
+                                                            {
+                                                                worker.terminate();
+                                                                worker = undefined;
+                                                            });
+
+                                                            worker.postMessage({'cmd': 'url', 'msg': '$piFormContext.getPollInBrowserUrl()'});
+                                                            worker.postMessage({'cmd': 'transactionID', 'msg': '$piContext.getTransactionId()'});
+                                                            worker.postMessage({'cmd': 'start'});
+                                                            worker.addEventListener('message', function (e)
+                                                            {
+                                                                let data = e.data;
+                                                                switch (data.status)
+                                                                {
+                                                                    case 'success':
+                                                                        document.getElementById("pi-form-submit-button").click();
+                                                                        break;
+                                                                    case 'error':
+                                                                        console.log("Poll in browser error: " + data.message);
+                                                                        document.getElementById("errorMessage").value = "Poll in browser error: " + data.message;
+                                                                        document.getElementById("pollInBrowserFailed").value = true;
+                                                                        document.getElementById("pushButton").style.display = "initial";
+                                                                        worker = undefined;
+                                                                }
+                                                            });
+                                                        }
                                                     }
-                                                })
-                                            }
-                                        }
-                                        else
-                                        {
-                                            console.log("Sorry! No Web Worker support.");
-                                            worker.terminate();
-                                            document.getElementById("errorMessage").value = "Poll in browser error: The browser doesn't support the Web Worker.";
-                                            document.getElementById("pollInBrowserFailed").value = true;
-                                            document.getElementById("usePushButton").style.display = "initial";
-                                        }
-                                    };
-                                </script>
-                            #end
-                            ## PUSH ##
-                            #if ($piContext.getMode() == "push")
-                                <script>document.getElementById("pi-form-submit-button").style.display = "none"</script>
-                                <script>document.getElementById("pi_otp_input").style.display = "none"</script>
-                                <input class="form-element-button" id="useOtpButton" name="otpButton" onclick="otpButtonUsed()" type="button" value="OTP">
-                                <script>
-                                    window.onload = () =>
-                                    {
-                                        window.setTimeout(() =>
-                                        {
-                                            document.getElementById("pi-form-submit-button").click();
-                                        }, parseInt($piFormContext.getPollingInterval()) * 1000);
-                                    }
-                                </script>
-                            #end
-                            #if ($piContext.getIsPushAvailable() && $piContext.getMode() != "push")
-                                <input class="form-element-button" id="usePushButton" name="pushButton" onclick="changeMode('push')" type="button" value="Push">
-                            #end
+                                                    else
+                                                    {
+                                                        console.log("Sorry! No Web Worker support.");
+                                                        worker.terminate();
+                                                        document.getElementById("errorMessage").value = "Poll in browser error: The browser doesn't support the Web Worker.";
+                                                        document.getElementById("pollInBrowserFailed").value = true;
+                                                        document.getElementById("pushButton").style.display = "initial";
+                                                    }
+                                                }
+                                            </script>
+                                        #end
+                                    </div>
 
-                            ## WEBAUTHN ##
-                            #set ($webauthnSignRequest = $piContext.getWebauthnSignRequest())
-                            #if ($webauthnSignRequest != "")
-                                <input class="form-element-button" id="useWebAuthnButton" name="useWebAuthnButton" onclick="doWebAuthn()" type="button" value="WebAuthn">
-                                <script src="$request.getContextPath()/js/pi-webauthn.js"></script>
-                                <script>
-                                    'use strict';
-                                    if (document.getElementById("webauthnSignRequest").value === "")
-                                    {
-                                        document.getElementById("useWebAuthnButton").style.display = "none";
-                                    }
+                                    <div id="push">
+                                        #if ($piContext.getMode() == "push")
+                                            <script>document.getElementById("pi-form-submit-button").style.display = "none"</script>
+                                            <script>document.getElementById("pi_otp_input").style.display = "none"</script>
 
-                                    if (document.getElementById("mode").value === "webauthn")
-                                    {
-                                        window.onload = () =>
-                                        {
-                                            doWebAuthn();
-                                        }
-                                    }
+                                            <input class="form-element-button" id="otpButton" name="otpButton" onclick="otpButtonUsed()" type="button" value="OTP">
 
-                                    if (!window.location.origin)
-                                    {
-                                        window.location.origin = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port : '');
-                                    }
-                                    document.getElementById("origin").value = window.origin;
-
-                                    function doWebAuthn()
-                                    {
-                                        // If we are in push mode, reload the page because in push mode the page refreshes every x seconds which could interrupt webauthn
-                                        // Afterward, webauthn is started directly
-                                        if (document.getElementById("mode").value === "push")
-                                        {
-                                            changeMode("webauthn");
-                                        }
-                                        else
-                                        {
-                                            try
-                                            {
-                                                const requestStr = document.getElementById("webauthnSignRequest").value;
-                                                const requestJSON = JSON.parse(requestStr);
-
-                                                const webAuthnSignResponse = window.pi_webauthn.sign(requestJSON);
-                                                webAuthnSignResponse.then((webauthnresponse) =>
+                                            <script>
+                                                window.onload = () =>
                                                 {
-                                                    document.getElementById("webauthnSignResponse").value = JSON.stringify(webauthnresponse);
-                                                    document.getElementById("pi-form-submit-button").click();
-                                                })
-                                            }
-                                            catch (err)
-                                            {
-                                                console.log("Error while trying WebAuthn: " + err);
-                                                document.getElementById("errorMessage").value = "Error while trying WebAuthn: " + err;
-                                            }
-                                        }
-                                    }
-                                </script>
-                                <br><br>
-                            #end
+                                                    window.setTimeout(() =>
+                                                    {
+                                                        document.getElementById("pi-form-submit-button").click();
+                                                    }, parseInt($piFormContext.getPollingInterval()) * 1000);
+                                                }
+                                            </script>
+                                        #end
 
-                            ## NO ALTERNATE TOKENS ##
-                            #if ($webauthnSignRequest == "" && !$piContext.getIsPushAvailable())
-                                <script>
-                                    document.getElementById("alternateToken").style.display = "none";
-                                </script>
-                            #end
-                        </div>
-                    </form>
+                                        #if ($piContext.getIsPushAvailable() && $piContext.getMode() != "push")
+                                            <input class="form-element-button" id="pushButton" name="pushButton" onclick="changeMode('push')" type="button" value="Push">
+                                        #end
+                                    </div>
+
+                                    <div id="webauthn">
+                                        #set ($webauthnSignRequest = $piContext.getWebauthnSignRequest())
+                                        #if ($webauthnSignRequest != "")
+                                            <input class="form-element-button" id="webauthnButton" name="webauthnButton" onclick="doWebAuthn()" type="button" value="WebAuthn">
+
+                                            <script src='$request.getContextPath()/js/pi-webauthn.js'></script>
+                                            <script>
+                                                'use strict';
+                                                if (document.getElementById("webauthnSignRequest").value === "")
+                                                {
+                                                    document.getElementById("webauthnButton").style.display = "none";
+                                                }
+
+                                                if (document.getElementById("mode").value === "webauthn")
+                                                {
+                                                    window.onload = () =>
+                                                    {
+                                                        doWebAuthn();
+                                                    }
+                                                }
+
+                                                if (!window.location.origin)
+                                                {
+                                                    window.location.origin = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port : '');
+                                                }
+
+                                                document.getElementById("origin").value = window.origin;
+
+                                                function doWebAuthn()
+                                                {
+                                                    // If we are in push mode, reload the page because in push mode the page refreshes every x seconds which could interrupt webauthn
+                                                    // Afterward, webauthn is started directly
+                                                    if (document.getElementById("mode").value === "push")
+                                                    {
+                                                        changeMode("webauthn");
+                                                    }
+                                                    else
+                                                    {
+                                                        try
+                                                        {
+                                                            const requestStr = document.getElementById("webauthnSignRequest").value;
+                                                            const requestJSON = JSON.parse(requestStr);
+                                                            const webAuthnSignResponse = window.pi_webauthn.sign(requestJSON);
+
+                                                            webAuthnSignResponse.then((webauthnresponse) =>
+                                                            {
+                                                                document.getElementById("webauthnSignResponse").value = JSON.stringify(webauthnresponse);
+                                                                document.getElementById("pi-form-submit-button").click();
+                                                            });
+                                                        }
+                                                        catch (err)
+                                                        {
+                                                            console.log("Error while trying WebAuthn: " + err);
+                                                            document.getElementById("errorMessage").value = "Error while trying WebAuthn: " + err;
+                                                        }
+                                                    }
+                                                }
+                                            </script>
+                                            <br><br>
+                                        #end
+                                    </div>
+
+                                    <div id="no-alternate-tokens">
+                                        #if ($webauthnSignRequest == "" && !$piContext.getIsPushAvailable())
+                                            <script>
+                                                document.getElementById("alternateToken").style.display = "none";
+                                            </script>
+                                        #end
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="column two" id="help">
+                    <ul class="list list-help">
+                        <li class="list-help-item">
+                            <a href="#springMessageText('idp.url.helpdesk', '#')">
+                                <span class="item-marker">&rsaquo;</span>
+                                #springMessageText('idp.login.needHelp', 'Need Help?')
+                            </a>
+                        </li>
+                    </ul>
                 </div>
             </div>
+        </div>
 
-            ## HELP & FOOTER ##
-            <div class="column two">
-                <ul class="list list-help">
-                    <li class="list-help-item"><a href="#springMessageText("idp.url.helpdesk", '#')"><span
-                            class="item-marker">&rsaquo;</span> #springMessageText("idp.login.needHelp", "Need Help?")
-                    </a></li>
-                </ul>
+        <footer>
+            <div class="container container-footer">
+                <p class="footer-text">#springMessageText('idp.footer', 'Insert your footer text here.')</p>
             </div>
-        </div>
+        </footer>
     </div>
-
-    <footer>
-        <div class="container container-footer">
-            <p class="footer-text">#springMessageText("idp.footer", "Insert your footer text here.")</p>
-        </div>
-    </footer>
-</div>
 </body>
 </html>
