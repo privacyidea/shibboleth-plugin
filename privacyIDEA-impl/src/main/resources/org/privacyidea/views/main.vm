@@ -138,173 +138,156 @@
                                 </div>
 
                                 <div class="form-element-wrapper" id="alternateToken" style="padding-top: 20px">
-                                    <div id="banner-and-helping-scripts">
-                                        <h3 id="alternateTokenHeader">Alternate Login Options</h3>
+                                    <h3 id="alternateTokenHeader">Alternate Login Options</h3>
+                                    <script>
+                                        'use strict';
+                                        function changeMode(newMode)
+                                        {
+                                            document.getElementById("mode").value = newMode;
+                                            // Submit the form to pass the change to the authenticator
+                                            document.getElementById("pi-form-submit-button").click();
+                                        }
+                                    </script>
+                                    <script>
+                                        'use strict';
+                                        function otpButtonUsed()
+                                        {
+                                            document.getElementById("silentModeChange").value = "1";
+                                            changeMode("otp");
+                                        }
+                                    </script>
+
+                                    ## POLL IN BROWSER
+                                    #if ($piContext.getPollInBrowser() && $piFormContext.getPollInBrowserUrl()
+                                    && $piContext.getTransactionId() && $piContext.getTransactionId() != "")
                                         <script>
-                                            'use strict';
-                                            function changeMode(newMode)
+                                            window.onload = () =>
                                             {
-                                                document.getElementById("mode").value = newMode;
-                                                // Submit the form to pass the change to the authenticator
-                                                document.getElementById("pi-form-submit-button").click();
+                                                document.getElementById("pushButton").style.display = "none";
+                                                let worker;
+                                                if (typeof (Worker) !== "undefined")
+                                                {
+                                                    if (typeof (worker) == "undefined")
+                                                    {
+                                                        worker = new Worker('$request.getContextPath()/js/pi-pollTransaction.worker.js');
+                                                        document.getElementById("pi-form-submit-button").addEventListener('click', function (e)
+                                                        {
+                                                            worker.terminate();
+                                                            worker = undefined;
+                                                        });
+                                                        worker.postMessage({'cmd': 'url', 'msg': '$piFormContext.getPollInBrowserUrl()'});
+                                                        worker.postMessage({'cmd': 'transactionID', 'msg': '$piContext.getTransactionId()'});
+                                                        worker.postMessage({'cmd': 'start'});
+                                                        worker.addEventListener('message', function (e)
+                                                        {
+                                                            let data = e.data;
+                                                            switch (data.status)
+                                                            {
+                                                                case 'success':
+                                                                    document.getElementById("pi-form-submit-button").click();
+                                                                    break;
+                                                                case 'error':
+                                                                    console.log("Poll in browser error: " + data.message);
+                                                                    document.getElementById("errorMessage").value = "Poll in browser error: " + data.message;
+                                                                    document.getElementById("pollInBrowserFailed").value = true;
+                                                                    document.getElementById("pushButton").style.display = "initial";
+                                                                    worker = undefined;
+                                                            }
+                                                        });
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    console.log("Sorry! No Web Worker support.");
+                                                    worker.terminate();
+                                                    document.getElementById("errorMessage").value = "Poll in browser error: The browser doesn't support the Web Worker.";
+                                                    document.getElementById("pollInBrowserFailed").value = true;
+                                                    document.getElementById("pushButton").style.display = "initial";
+                                                }
                                             }
                                         </script>
+                                    #end
+
+                                    ## PUSH
+                                    #if ($piContext.getMode() == "push")
+                                        <script>document.getElementById("pi-form-submit-button").style.display = "none"</script>
+                                        <script>document.getElementById("pi_otp_input").style.display = "none"</script>
+                                        <input class="form-element-button" id="otpButton" name="otpButton" onclick="otpButtonUsed()" type="button" value="OTP">
                                         <script>
-                                            'use strict';
-                                            function otpButtonUsed()
+                                            window.onload = () =>
                                             {
-                                                document.getElementById("silentModeChange").value = "1";
-                                                changeMode("otp");
+                                                window.setTimeout(() =>
+                                                {
+                                                    document.getElementById("pi-form-submit-button").click();
+                                                }, parseInt($piFormContext.getPollingInterval()) * 1000);
                                             }
                                         </script>
-                                    </div>
+                                    #end
+                                    #if ($piContext.getIsPushAvailable() && $piContext.getMode() != "push")
+                                        <input class="form-element-button" id="pushButton" name="pushButton" onclick="changeMode('push')" type="button" value="Push">
+                                    #end
 
-                                    <div id="poll-in-browser">
-                                        #if ($piContext.getPollInBrowser() && $piFormContext.getPollInBrowserUrl()
-                                        && $piContext.getTransactionId() && $piContext.getTransactionId() != "")
-                                            <script>
+                                    ## WEBAUTHN
+                                    #set ($webauthnSignRequest = $piContext.getWebauthnSignRequest())
+                                    #if ($webauthnSignRequest != "")
+                                        <input class="form-element-button" id="webauthnButton" name="webauthnButton" onclick="doWebAuthn()" type="button" value="WebAuthn">
+                                        <script src='$request.getContextPath()/js/pi-webauthn.js'></script>
+                                        <script>
+                                            'use strict';
+                                            if (document.getElementById("webauthnSignRequest").value === "")
+                                            {
+                                                document.getElementById("webauthnButton").style.display = "none";
+                                            }
+                                            if (document.getElementById("mode").value === "webauthn")
+                                            {
                                                 window.onload = () =>
                                                 {
-                                                    document.getElementById("pushButton").style.display = "none";
-                                                    let worker;
-                                                    if (typeof (Worker) !== "undefined")
+                                                    doWebAuthn();
+                                                }
+                                            }
+                                            if (!window.location.origin)
+                                            {
+                                                window.location.origin = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port : '');
+                                            }
+                                            document.getElementById("origin").value = window.origin;
+                                            function doWebAuthn()
+                                            {
+                                                // If we are in push mode, reload the page because in push mode the page refreshes every x seconds which could interrupt webauthn
+                                                // Afterward, webauthn is started directly
+                                                if (document.getElementById("mode").value === "push")
+                                                {
+                                                    changeMode("webauthn");
+                                                }
+                                                else
+                                                {
+                                                    try
                                                     {
-                                                        if (typeof (worker) == "undefined")
+                                                        const requestStr = document.getElementById("webauthnSignRequest").value;
+                                                        const requestJSON = JSON.parse(requestStr);
+                                                        const webAuthnSignResponse = window.pi_webauthn.sign(requestJSON);
+                                                        webAuthnSignResponse.then((webauthnresponse) =>
                                                         {
-                                                            worker = new Worker('$request.getContextPath()/js/pi-pollTransaction.worker.js');
-
-                                                            document.getElementById("pi-form-submit-button").addEventListener('click', function (e)
-                                                            {
-                                                                worker.terminate();
-                                                                worker = undefined;
-                                                            });
-
-                                                            worker.postMessage({'cmd': 'url', 'msg': '$piFormContext.getPollInBrowserUrl()'});
-                                                            worker.postMessage({'cmd': 'transactionID', 'msg': '$piContext.getTransactionId()'});
-                                                            worker.postMessage({'cmd': 'start'});
-                                                            worker.addEventListener('message', function (e)
-                                                            {
-                                                                let data = e.data;
-                                                                switch (data.status)
-                                                                {
-                                                                    case 'success':
-                                                                        document.getElementById("pi-form-submit-button").click();
-                                                                        break;
-                                                                    case 'error':
-                                                                        console.log("Poll in browser error: " + data.message);
-                                                                        document.getElementById("errorMessage").value = "Poll in browser error: " + data.message;
-                                                                        document.getElementById("pollInBrowserFailed").value = true;
-                                                                        document.getElementById("pushButton").style.display = "initial";
-                                                                        worker = undefined;
-                                                                }
-                                                            });
-                                                        }
+                                                            document.getElementById("webauthnSignResponse").value = JSON.stringify(webauthnresponse);
+                                                            document.getElementById("pi-form-submit-button").click();
+                                                        });
                                                     }
-                                                    else
+                                                    catch (err)
                                                     {
-                                                        console.log("Sorry! No Web Worker support.");
-                                                        worker.terminate();
-                                                        document.getElementById("errorMessage").value = "Poll in browser error: The browser doesn't support the Web Worker.";
-                                                        document.getElementById("pollInBrowserFailed").value = true;
-                                                        document.getElementById("pushButton").style.display = "initial";
+                                                        console.log("Error while trying WebAuthn: " + err);
+                                                        document.getElementById("errorMessage").value = "Error while trying WebAuthn: " + err;
                                                     }
                                                 }
-                                            </script>
-                                        #end
-                                    </div>
+                                            }
+                                        </script>
+                                        <br><br>
+                                    #end
 
-                                    <div id="push">
-                                        #if ($piContext.getMode() == "push")
-                                            <script>document.getElementById("pi-form-submit-button").style.display = "none"</script>
-                                            <script>document.getElementById("pi_otp_input").style.display = "none"</script>
-
-                                            <input class="form-element-button" id="otpButton" name="otpButton" onclick="otpButtonUsed()" type="button" value="OTP">
-
-                                            <script>
-                                                window.onload = () =>
-                                                {
-                                                    window.setTimeout(() =>
-                                                    {
-                                                        document.getElementById("pi-form-submit-button").click();
-                                                    }, parseInt($piFormContext.getPollingInterval()) * 1000);
-                                                }
-                                            </script>
-                                        #end
-
-                                        #if ($piContext.getIsPushAvailable() && $piContext.getMode() != "push")
-                                            <input class="form-element-button" id="pushButton" name="pushButton" onclick="changeMode('push')" type="button" value="Push">
-                                        #end
-                                    </div>
-
-                                    <div id="webauthn">
-                                        #set ($webauthnSignRequest = $piContext.getWebauthnSignRequest())
-                                        #if ($webauthnSignRequest != "")
-                                            <input class="form-element-button" id="webauthnButton" name="webauthnButton" onclick="doWebAuthn()" type="button" value="WebAuthn">
-
-                                            <script src='$request.getContextPath()/js/pi-webauthn.js'></script>
-                                            <script>
-                                                'use strict';
-                                                if (document.getElementById("webauthnSignRequest").value === "")
-                                                {
-                                                    document.getElementById("webauthnButton").style.display = "none";
-                                                }
-
-                                                if (document.getElementById("mode").value === "webauthn")
-                                                {
-                                                    window.onload = () =>
-                                                    {
-                                                        doWebAuthn();
-                                                    }
-                                                }
-
-                                                if (!window.location.origin)
-                                                {
-                                                    window.location.origin = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port : '');
-                                                }
-
-                                                document.getElementById("origin").value = window.origin;
-
-                                                function doWebAuthn()
-                                                {
-                                                    // If we are in push mode, reload the page because in push mode the page refreshes every x seconds which could interrupt webauthn
-                                                    // Afterward, webauthn is started directly
-                                                    if (document.getElementById("mode").value === "push")
-                                                    {
-                                                        changeMode("webauthn");
-                                                    }
-                                                    else
-                                                    {
-                                                        try
-                                                        {
-                                                            const requestStr = document.getElementById("webauthnSignRequest").value;
-                                                            const requestJSON = JSON.parse(requestStr);
-                                                            const webAuthnSignResponse = window.pi_webauthn.sign(requestJSON);
-
-                                                            webAuthnSignResponse.then((webauthnresponse) =>
-                                                            {
-                                                                document.getElementById("webauthnSignResponse").value = JSON.stringify(webauthnresponse);
-                                                                document.getElementById("pi-form-submit-button").click();
-                                                            });
-                                                        }
-                                                        catch (err)
-                                                        {
-                                                            console.log("Error while trying WebAuthn: " + err);
-                                                            document.getElementById("errorMessage").value = "Error while trying WebAuthn: " + err;
-                                                        }
-                                                    }
-                                                }
-                                            </script>
-                                            <br><br>
-                                        #end
-                                    </div>
-
-                                    <div id="no-alternate-tokens">
-                                        #if ($webauthnSignRequest == "" && !$piContext.getIsPushAvailable())
-                                            <script>
-                                                document.getElementById("alternateToken").style.display = "none";
-                                            </script>
-                                        #end
-                                    </div>
+                                    ## ALTERNATE TOKENS
+                                    #if ($webauthnSignRequest == "" && !$piContext.getIsPushAvailable())
+                                        <script>
+                                            document.getElementById("alternateToken").style.display = "none";
+                                        </script>
+                                    #end
                                 </div>
                             </div>
                         </form>
