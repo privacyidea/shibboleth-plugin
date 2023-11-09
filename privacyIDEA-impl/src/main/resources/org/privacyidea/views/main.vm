@@ -158,8 +158,8 @@
                                     </script>
 
                                     ## POLL IN BROWSER
-                                    #if ($piContext.getPollInBrowser() && $piFormContext.getPollInBrowserUrl()
-                                    && $piContext.getTransactionId() && $piContext.getTransactionId() != "")
+                                    #if ($piFormContext.getPollInBrowser() == true && $piFormContext.getPollInBrowserUrl()
+                                    && $piContext.getTransactionID() && $piContext.getTransactionID() != "")
                                         <script>
                                             window.onload = () =>
                                             {
@@ -176,7 +176,7 @@
                                                             worker = undefined;
                                                         });
                                                         worker.postMessage({'cmd': 'url', 'msg': '$piFormContext.getPollInBrowserUrl()'});
-                                                        worker.postMessage({'cmd': 'transactionID', 'msg': '$piContext.getTransactionId()'});
+                                                        worker.postMessage({'cmd': 'transactionID', 'msg': '$piContext.getTransactionID()'});
                                                         worker.postMessage({'cmd': 'start'});
                                                         worker.addEventListener('message', function (e)
                                                         {
