@@ -84,17 +84,17 @@ public class InitializePIContext extends AbstractAuthenticationAction
                 try
                 {
                     int otpLengthToInt = Integer.parseInt(otpLength);
-                    piFormContext = new PIFormContext(defaultMessage, otpFieldHint, otpLengthToInt, pollingInterval, pollInBrowserUrl);
+                    piFormContext = new PIFormContext(defaultMessage, otpFieldHint, otpLengthToInt, pollingInterval, pollInBrowser, pollInBrowserUrl);
                 }
                 catch (NumberFormatException e)
                 {
                     log.info("{} Config option \"otp_length\": Wrong format. Only digits allowed.", getLogPrefix());
-                    piFormContext = new PIFormContext(defaultMessage, otpFieldHint, null, pollingInterval, pollInBrowserUrl);
+                    piFormContext = new PIFormContext(defaultMessage, otpFieldHint, null, pollingInterval, pollInBrowser, pollInBrowserUrl);
                 }
             }
             else
             {
-                piFormContext = new PIFormContext(defaultMessage, otpFieldHint, null, pollingInterval, pollInBrowserUrl);
+                piFormContext = new PIFormContext(defaultMessage, otpFieldHint, null, pollingInterval, pollInBrowser, pollInBrowserUrl);
             }
             log.info("{} Create PIFormContext {}", this.getLogPrefix(), piFormContext);
             authenticationContext.addSubcontext(piFormContext);
