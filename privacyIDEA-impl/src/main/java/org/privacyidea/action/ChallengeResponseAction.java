@@ -9,9 +9,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
+import net.shibboleth.idp.Version;
 import net.shibboleth.idp.authn.context.AuthenticationContext;
 import net.shibboleth.idp.profile.AbstractProfileAction;
-import net.shibboleth.idp.Version;
 import org.opensaml.messaging.context.navigate.ChildContextLookup;
 import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.context.ProfileRequestContext;
@@ -82,7 +82,7 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
                         if (privacyIDEA == null)
                         {
                             String shibbVersion = Version.getVersion();
-                            String pluginVersion = piContext.getPluginVersion();
+                            String pluginVersion = org.privacyidea.Version.getVersion();
                             String userAgent = "privacyIDEA-Shibboleth/" + pluginVersion + " ShibbolethIdP/" + shibbVersion;
 
                             privacyIDEA = PrivacyIDEA.newBuilder(piServerConfigContext.getConfigParams().getServerURL(), userAgent)
