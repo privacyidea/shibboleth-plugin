@@ -45,7 +45,10 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             }
             else
             {
-                LOGGER.info("{} Push token isn't confirmed yet...", this.getLogPrefix());
+                if (debug)
+                {
+                    LOGGER.info("{} Push token isn't confirmed yet...", this.getLogPrefix());
+                }
                 ActionSupport.buildEvent(profileRequestContext, "reload");
                 return;
             }

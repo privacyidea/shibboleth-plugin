@@ -21,14 +21,15 @@ public class Config
     private final String serviceRealm;
     @Nullable
     private final String staticPass;
+    private final boolean pollInBrowser;
     @Nullable
     private final String forwardHeaders;
     @Nullable
     private final String otpLength;
 
     public Config(@Nonnull String serverURL, @Nullable String realm, boolean verifySSL, @Nonnull String authenticationFlow,
-                  @Nullable String serviceName, @Nullable String servicePass, @Nullable String serviceRealm,
-                  @Nullable String staticPass, @Nullable String forwardHeaders, @Nullable String otpLength, boolean debug)
+                  @Nullable String serviceName, @Nullable String servicePass, @Nullable String serviceRealm, @Nullable String staticPass,
+                  boolean pollInBrowser, @Nullable String forwardHeaders, @Nullable String otpLength, boolean debug)
     {
         this.serverURL = serverURL;
         this.realm = realm;
@@ -38,6 +39,7 @@ public class Config
         this.servicePass = servicePass;
         this.serviceRealm = serviceRealm;
         this.staticPass = staticPass;
+        this.pollInBrowser = pollInBrowser;
         this.forwardHeaders = forwardHeaders;
         this.otpLength = otpLength;
         this.debug = debug;
@@ -83,6 +85,11 @@ public class Config
     public String getServiceRealm()
     {
         return serviceRealm;
+    }
+
+    public boolean getPollInBrowser()
+    {
+        return pollInBrowser;
     }
 
     @Nullable

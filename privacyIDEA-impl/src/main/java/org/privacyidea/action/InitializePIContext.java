@@ -47,6 +47,9 @@ public class InitializePIContext extends AbstractAuthenticationAction
     private String pluginVersion;
     @Nullable
     private String pollingInterval;
+    private boolean pollInBrowser;
+    @Nullable
+    private String pollInBrowserUrl;
     private boolean debug;
 
     public InitializePIContext()
@@ -75,24 +78,7 @@ public class InitializePIContext extends AbstractAuthenticationAction
             log.info("{} Create PIContext {}", this.getLogPrefix(), piContext);
             authenticationContext.addSubcontext(piContext);
 
-            PIFormContext piFormContext;
-            if (otpLength != null)
-            {
-                try
-                {
-                    int otpLengthToInt = Integer.parseInt(otpLength);
-                    piFormContext = new PIFormContext(defaultMessage, otpFieldHint, otpLengthToInt, pollingInterval);
-                }
-                catch (NumberFormatException e)
-                {
-                    log.info("{} Config option \"otp_length\": Wrong format. Only digits allowed.", getLogPrefix());
-                    piFormContext = new PIFormContext(defaultMessage, otpFieldHint, null, pollingInterval);
-                }
-            }
-            else
-            {
-                piFormContext = new PIFormContext(defaultMessage, otpFieldHint, null, pollingInterval);
-            }
+            PIFormContext piFormContext = new PIFormContext(defaultMessage, otpFieldHint, getOtpLength(), pollingInterval, pollInBrowser, pollInBrowserUrl);
             log.info("{} Create PIFormContext {}", this.getLogPrefix(), piFormContext);
             authenticationContext.addSubcontext(piFormContext);
         }
@@ -133,8 +119,25 @@ public class InitializePIContext extends AbstractAuthenticationAction
         {
             authenticationFlow = "default";
         }
-        Config configParams = new Config(serverURL, realm, verifySSL, authenticationFlow, serviceName, servicePass, serviceRealm, staticPass, forwardHeaders, otpLength, debug);
+        Config configParams = new Config(serverURL, realm, verifySSL, authenticationFlow, serviceName, servicePass, serviceRealm, staticPass, pollInBrowser, forwardHeaders, otpLength, debug);
         return new PIServerConfigContext(configParams);
+    }
+
+    @Nullable
+    private Integer getOtpLength()
+    {
+        if (otpLength != null)
+        {
+            try
+            {
+                return Integer.parseInt(otpLength);
+            }
+            catch (NumberFormatException e)
+            {
+                log.info("{} Config option \"otp_length\": Wrong format. Only digits allowed.", getLogPrefix());
+            }
+        }
+        return null;
     }
 
     // Spring bean property setters
@@ -163,6 +166,10 @@ public class InitializePIContext extends AbstractAuthenticationAction
     public void setOtpLength(@Nullable String otpLength) {this.otpLength = otpLength;}
 
     public void setPollingInterval(@Nullable String pollingInterval) {this.pollingInterval = pollingInterval;}
+
+    public void setPollInBrowser(boolean pollInBrowser) {this.pollInBrowser = pollInBrowser;}
+
+    public void setPollInBrowserUrl(@Nullable String pollInBrowserUrl) {this.pollInBrowserUrl = pollInBrowserUrl;}
 
     public void setPluginVersion(@Nullable String pluginVersion) {this.pluginVersion = pluginVersion;}
 

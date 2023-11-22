@@ -126,7 +126,7 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
     }
 
     /**
-     * Extract challenge data from server response, and save it in context.
+     * Extract challenge data from server response, and save it in form context.
      *
      * @param piResponse server response
      */

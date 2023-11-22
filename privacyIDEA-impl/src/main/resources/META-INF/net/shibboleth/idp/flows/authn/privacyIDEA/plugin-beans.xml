@@ -31,6 +31,8 @@
           p:staticPass="%{privacyidea.static_pass:#{null}}"
           p:forwardHeaders="%{privacyidea.forward_headers:#{null}}"
           p:pollingInterval="%{privacyidea.polling_interval:#{null}}"
+          p:pollInBrowser="%{privacyidea.poll_in_browser:false}"
+          p:pollInBrowserUrl="%{privacyidea.poll_in_browser_url:#{null}}"
           p:pluginVersion="%{privacyidea.plugin_version:#{null}}"
           p:debug="%{privacyidea.debug:false}"/>
 
