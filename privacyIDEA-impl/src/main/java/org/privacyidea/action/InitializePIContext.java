@@ -78,24 +78,7 @@ public class InitializePIContext extends AbstractAuthenticationAction
             log.info("{} Create PIContext {}", this.getLogPrefix(), piContext);
             authenticationContext.addSubcontext(piContext);
 
-            PIFormContext piFormContext;
-            if (otpLength != null)
-            {
-                try
-                {
-                    int otpLengthToInt = Integer.parseInt(otpLength);
-                    piFormContext = new PIFormContext(defaultMessage, otpFieldHint, otpLengthToInt, pollingInterval, pollInBrowser, pollInBrowserUrl);
-                }
-                catch (NumberFormatException e)
-                {
-                    log.info("{} Config option \"otp_length\": Wrong format. Only digits allowed.", getLogPrefix());
-                    piFormContext = new PIFormContext(defaultMessage, otpFieldHint, null, pollingInterval, pollInBrowser, pollInBrowserUrl);
-                }
-            }
-            else
-            {
-                piFormContext = new PIFormContext(defaultMessage, otpFieldHint, null, pollingInterval, pollInBrowser, pollInBrowserUrl);
-            }
+            PIFormContext piFormContext = new PIFormContext(defaultMessage, otpFieldHint, getOtpLength(), pollingInterval, pollInBrowser, pollInBrowserUrl);
             log.info("{} Create PIFormContext {}", this.getLogPrefix(), piFormContext);
             authenticationContext.addSubcontext(piFormContext);
         }
@@ -138,6 +121,23 @@ public class InitializePIContext extends AbstractAuthenticationAction
         }
         Config configParams = new Config(serverURL, realm, verifySSL, authenticationFlow, serviceName, servicePass, serviceRealm, staticPass, pollInBrowser, forwardHeaders, otpLength, debug);
         return new PIServerConfigContext(configParams);
+    }
+
+    @Nullable
+    private Integer getOtpLength()
+    {
+        if (otpLength != null)
+        {
+            try
+            {
+                return Integer.parseInt(otpLength);
+            }
+            catch (NumberFormatException e)
+            {
+                log.info("{} Config option \"otp_length\": Wrong format. Only digits allowed.", getLogPrefix());
+            }
+        }
+        return null;
     }
 
     // Spring bean property setters
