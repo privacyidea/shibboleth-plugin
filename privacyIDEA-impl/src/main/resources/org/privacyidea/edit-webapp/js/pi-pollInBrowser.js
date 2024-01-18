@@ -21,14 +21,14 @@ window.onload = () =>
     {
         if (typeof (worker) == "undefined")
         {
-            worker = new Worker('$request.getContextPath()/js/pi-pollTransaction.worker.js');
+            worker = new Worker('../../../js/pi-pollTransaction.worker.js');
             document.getElementById("pi-form-submit-button").addEventListener('click', function (e)
             {
                 worker.terminate();
                 worker = undefined;
             });
-            worker.postMessage({'cmd': 'url', 'msg': '$piFormContext.getPollInBrowserUrl()'});
-            worker.postMessage({'cmd': 'transactionID', 'msg': '$piContext.getTransactionID()'});
+            worker.postMessage({'cmd': 'url', 'msg': piGetValue("pollInBrowserUrl")});
+            worker.postMessage({'cmd': 'transactionID', 'msg': piGetValue("transactionID")});
             worker.postMessage({'cmd': 'start'});
             worker.addEventListener('message', function (e)
             {
