@@ -26,10 +26,13 @@ function piEventListeners()
     document.getElementById("otp").addEventListener("keyup", autoSubmitByLength);
 
     // Button listeners
-    document.getElementById("otpButton").addEventListener("click", () => {
-        document.getElementById("silentModeChange").value = "1";
-        piChangeMode("otp");
-    });
+    if (piGetValue("mode") === "push")
+    {
+        document.getElementById("otpButton").addEventListener("click", () => {
+            document.getElementById("silentModeChange").value = "1";
+            piChangeMode("otp");
+        });
+    }
     document.getElementById("pushButton").addEventListener("click", () => {
         piChangeMode("push");
     });
