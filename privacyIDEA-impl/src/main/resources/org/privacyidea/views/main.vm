@@ -133,6 +133,7 @@
                                     <input id="pollInBrowserUrl" name="pollInBrowserUrl" value='$piFormContext.getPollInBrowserUrl()' type="hidden">
                                     <input id="transactionID" name="transactionID" value='$piContext.getTransactionID()' type="hidden">
                                     <input id="pollInBrowserFailed" name="pollInBrowserFailed" value='$piFormContext.getPollInBrowserFailed()' type="hidden">
+                                    <input id="otpLength" name="otpLength" value='$piFormContext.getOtpLength()' type="hidden">
                                 </div>
 
                                 <div class="form-element-wrapper" id="alternateToken">

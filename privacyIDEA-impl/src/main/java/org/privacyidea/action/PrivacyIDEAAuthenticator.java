@@ -82,9 +82,9 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         }
         else if (piContext.getMode().equals("otp"))
         {
-            if (request.getParameterValues("pi_otp_input") != null)
+            if (request.getParameterValues("otp") != null)
             {
-                String otp = request.getParameterValues("pi_otp_input")[0];
+                String otp = request.getParameterValues("otp")[0];
                 if (otp != null)
                 {
                     piResponse = privacyIDEA.validateCheck(piContext.getUsername(), otp, piContext.getTransactionID(), headers);

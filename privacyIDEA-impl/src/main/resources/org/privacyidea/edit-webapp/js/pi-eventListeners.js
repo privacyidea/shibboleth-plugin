@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 function autoSubmitByLength()
 {
-    if (piGetValue('otp').length === parseInt(piGetValue("autoSubmitOtpLength")))
+    if (piGetValue('otp').length === parseInt(piGetValue("otpLength")))
     {
-        document.forms["piLoginForm"].submit();
+        document.getElementById("pi-form-submit-button").click();
     }
 }
 

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 function piMain()
 {
     // ALTERNATE TOKEN SECTION VISIBILITY
@@ -20,7 +21,6 @@ function piMain()
     {
         document.getElementById("alternateToken").style.display = "none";
     }
-
     // PUSH
     if (piGetValue("mode") === "push")
     {
@@ -34,7 +34,6 @@ function piMain()
             }, parseInt(piGetValue("pollingInterval")) * 1000);
         }
     }
-
     // WEBAUTHN
     if (document.getElementById("mode").value === "webauthn")
     {
