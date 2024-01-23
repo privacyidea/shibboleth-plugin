@@ -63,6 +63,7 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
                         LOGGER.info("{} Extracting the form data from triggered challenges...", this.getLogPrefix());
                     }
                     extractChallengeData(piResponse);
+                    extractMessage(piResponse);
                 }
             }
             else
