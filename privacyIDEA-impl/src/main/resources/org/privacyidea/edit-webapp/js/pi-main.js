@@ -19,23 +19,23 @@ function piMain()
     // ALTERNATE TOKEN SECTION VISIBILITY
     if (piGetValue("webauthnSignRequest") === "" && !piGetValue("isPushAvailable"))
     {
-        document.getElementById("alternateToken").style.display = "none";
+        piDisableElement("alternateToken");
     }
     // PUSH
     if (piGetValue("mode") === "push")
     {
-        document.getElementById("pi-form-submit-button").style.display = "none";
-        document.getElementById("pi_otp_input").style.display = "none";
+        piDisableElement("pi-form-submit-button");
+        piDisableElement("otp");
         window.onload = () =>
         {
             window.setTimeout(() =>
             {
-                document.getElementById("pi-form-submit-button").click();
+                piSubmit();
             }, parseInt(piGetValue("pollingInterval")) * 1000);
         }
     }
     // WEBAUTHN
-    if (document.getElementById("mode").value === "webauthn")
+    if (piGetValue("mode") === "webauthn")
     {
         window.onload = () =>
         {
@@ -46,14 +46,14 @@ function piMain()
     {
         window.location.origin = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port : '');
     }
-    document.getElementById("origin").value = window.origin;
+    piSetValue("origin", window.origin);
 }
 
 function doWebAuthn()
 {
     // If we are in push mode, reload the page because in push mode the page refreshes every x seconds which could interrupt WebAuthn
     // Afterward, WebAuthn is started directly
-    if (document.getElementById("mode").value === "push")
+    if (piGetValue("mode") === "push")
     {
         piChangeMode("webauthn");
     }
@@ -61,20 +61,20 @@ function doWebAuthn()
     {
         try
         {
-            const requestStr = document.getElementById("webauthnSignRequest").value;
+            const requestStr = piGetValue("webauthnSignRequest");
             const requestJSON = JSON.parse(requestStr);
             const webAuthnSignResponse = window.pi_webauthn.sign(requestJSON);
 
             webAuthnSignResponse.then((webauthnresponse) =>
             {
-                document.getElementById("webauthnSignResponse").value = JSON.stringify(webauthnresponse);
-                document.getElementById("pi-form-submit-button").click();
+                piSetValue("webauthnSignResponse", JSON.stringify(webauthnresponse));
+                piSubmit();
             });
         }
         catch (err)
         {
             console.log("Error while trying WebAuthn: " + err);
-            document.getElementById("errorMessage").value = "Error while trying WebAuthn: " + err;
+            piSetValue("errorMessage", "Error while trying WebAuthn: " + err);
         }
     }
 }

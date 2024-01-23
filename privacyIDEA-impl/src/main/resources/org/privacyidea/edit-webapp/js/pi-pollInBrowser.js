@@ -16,7 +16,7 @@
 
 window.onload = () =>
 {
-    document.getElementById("pushButton").style.display = "none";
+    piDisableElement("pushButton");
     let worker;
     if (typeof (Worker) !== "undefined")
     {
@@ -37,13 +37,14 @@ window.onload = () =>
                 switch (data.status)
                 {
                     case 'success':
-                        document.getElementById("pi-form-submit-button").click();
+                        piSubmit();
                         break;
                     case 'error':
-                        console.log("Poll in browser error: " + data.message);
-                        document.getElementById("errorMessage").value = "Poll in browser error: " + data.message;
-                        document.getElementById("pollInBrowserFailed").value = true;
-                        document.getElementById("pushButton").style.display = "initial";
+                        let errorMessage = "Poll in browser error: " + data.message;
+                        console.log(errorMessage);
+                        piSetValue("errorMessage", errorMessage);
+                        piSetValue("pollInBrowserFailed", true);
+                        piEnableElement("pushButton");
                         worker = undefined;
                 }
             });
@@ -53,8 +54,8 @@ window.onload = () =>
     {
         console.log("Sorry! No Web Worker support.");
         worker.terminate();
-        document.getElementById("errorMessage").value = "Poll in browser error: The browser doesn't support the Web Worker.";
-        document.getElementById("pollInBrowserFailed").value = true;
-        document.getElementById("pushButton").style.display = "initial";
+        piSetValue("errorMessage", "Poll in browser error: No Web Worker support.");
+        piSetValue("pollInBrowserFailed", true);
+        piEnableElement("pushButton");
     }
 }

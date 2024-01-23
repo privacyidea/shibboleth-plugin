@@ -18,7 +18,7 @@ function autoSubmitByLength()
 {
     if (piGetValue('otp').length === parseInt(piGetValue("otpLength")))
     {
-        document.getElementById("pi-form-submit-button").click();
+        piSubmit();
     }
 }
 
@@ -30,7 +30,7 @@ function piEventListeners()
     if (piGetValue("mode") === "push")
     {
         document.getElementById("otpButton").addEventListener("click", () => {
-            document.getElementById("silentModeChange").value = "1";
+            piSetValue("silentModeChange", "1");
             piChangeMode("otp");
         });
     }

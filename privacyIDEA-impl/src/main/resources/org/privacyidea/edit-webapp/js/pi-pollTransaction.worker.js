@@ -77,6 +77,5 @@ function pollTransactionInBrowser()
         self.postMessage({'message': request.statusText, 'status': 'error'});
         self.close();
     };
-
     request.send();
 }

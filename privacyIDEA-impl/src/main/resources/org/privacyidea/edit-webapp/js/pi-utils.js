@@ -73,9 +73,7 @@ window.piChangeMode = function changeMode(newMode)
     document.getElementById("pi-form-submit-button").click();
 }
 
-//todo change to event listener
-window.piOtpButtonUsed = function otpButtonUsed()
+window.piSubmit = function clickSubmitButton()
 {
-    piSetValue("silentModeChange", "1");
-    piChangeMode("otp");
+    document.getElementById("pi-form-submit-button").click();
 }
