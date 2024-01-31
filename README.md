@@ -3,6 +3,9 @@
 ### Min. shibboleth-idp version:
 4.3.x
 
+### For now, not compatible with version:
+5.0.0
+
 ### Installation:
 1. **Copy the package to the server:**
     - Chose the archive type for your system from the release page (.zip, .tar.gz, .tar.bz2).
