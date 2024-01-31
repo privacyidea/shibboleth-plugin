@@ -17,7 +17,6 @@ package org.privacyidea.context;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import net.shibboleth.utilities.java.support.logic.Constraint;
 import org.opensaml.messaging.context.BaseContext;
 
 public class PIContext extends BaseContext
@@ -42,7 +41,7 @@ public class PIContext extends BaseContext
 
     public PIContext(@Nonnull User user, @Nullable String pluginVersion)
     {
-        this.user = Constraint.isNotNull(user, "User cannot be null.");
+        this.user = user;
         this.pluginVersion = pluginVersion;
     }
 
