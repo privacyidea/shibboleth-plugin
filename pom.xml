@@ -139,7 +139,7 @@
                             <Automatic-Module-Name>${automatic.module.name}</Automatic-Module-Name>
                             <Implementation-Title>${project.artifactId}</Implementation-Title>
                             <Implementation-Version>${project.version}</Implementation-Version>
-                            <Sealed>true</Sealed>
+                            <Sealed>false</Sealed>
                         </manifestEntries>
                     </archive>
                 </configuration>
