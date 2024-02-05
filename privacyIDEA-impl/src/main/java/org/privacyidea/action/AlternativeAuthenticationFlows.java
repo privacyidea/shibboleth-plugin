@@ -18,7 +18,7 @@ package org.privacyidea.action;
 import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nonnull;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.context.ProfileRequestContext;
 import org.privacyidea.PIResponse;
@@ -43,7 +43,7 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
                 LOGGER.info("{} Authentication flow - triggerChallenge.", this.getLogPrefix());
             }
 
-            HttpServletRequest request = Objects.requireNonNull(this.getHttpServletRequestSupplier()).get();
+            HttpServletRequest request = Objects.requireNonNull(getHttpServletRequestSupplier()).get();
             Map<String, String> headers = this.getHeadersToForward(request);
             PIResponse piResponse = privacyIDEA.triggerChallenges(piContext.getUsername(), headers);
 

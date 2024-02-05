@@ -41,20 +41,22 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>6.0.0</version>
             <scope>provided</scope>
-        </dependency>
-        <!-- privacyIDEA java-client dependencies -->
-        <dependency>
-            <groupId>org.privacyidea</groupId>
-            <artifactId>privacyidea-java-client</artifactId>
-            <version>1.2.0</version>
         </dependency>
         <dependency>
             <groupId>net.shibboleth.utilities</groupId>
             <artifactId>java-support</artifactId>
             <version>8.4.0</version>
+        </dependency>
+
+        <!-- privacyIDEA java-client dependencies -->
+        <dependency>
+            <groupId>org.privacyidea</groupId>
+            <artifactId>privacyidea-java-client</artifactId>
+            <version>1.2.0</version>
         </dependency>
     </dependencies>
 

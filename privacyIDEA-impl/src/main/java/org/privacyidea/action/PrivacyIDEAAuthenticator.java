@@ -15,10 +15,10 @@
  */
 package org.privacyidea.action;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nonnull;
-import javax.servlet.http.HttpServletRequest;
 import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.context.ProfileRequestContext;
 import org.privacyidea.PIResponse;
@@ -36,7 +36,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
     @Override
     protected final void doExecute(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext, @Nonnull PIServerConfigContext piServerConfigContext)
     {
-        HttpServletRequest request = Objects.requireNonNull(this.getHttpServletRequestSupplier()).get();
+        HttpServletRequest request = Objects.requireNonNull(getHttpServletRequestSupplier()).get();
         Map<String, String> headers = this.getHeadersToForward(request);
 
         piContext.setMode(request.getParameterValues("mode")[0]);
