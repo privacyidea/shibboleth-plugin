@@ -32,9 +32,9 @@
 
     <properties>
         <idp.groupId>net.shibboleth.idp</idp.groupId>
-        <idp.version>4.3.0</idp.version>
+        <idp.version>5.0.0-SNAPSHOT</idp.version>
         <opensaml.groupId>org.opensaml</opensaml.groupId>
-        <opensaml.version>4.3.0</opensaml.version>
+        <opensaml.version>5.0.0</opensaml.version>
         <checkstyle.configLocation>${project.basedir}/checkstyle.xml</checkstyle.configLocation>
     </properties>
 
