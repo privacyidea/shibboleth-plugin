@@ -2,7 +2,7 @@
       xsi:schemaLocation="http://www.springframework.org/schema/webflow http://www.springframework.org/schema/webflow/spring-webflow.xsd"
       parent="authn.abstract, authn/conditions">
 
-    <!-- This is a login flow for multi-factor authentication against the privacyIDEA -->
+    <!-- This is a login flow for multi factor authentication against the privacyIDEA -->
     <action-state id="initPIContext">
         <evaluate expression="initPIContext"/>
         <evaluate expression="'proceed'"/>
@@ -24,7 +24,9 @@
             <evaluate expression="opensamlProfileRequestContext" result="viewScope.profileRequestContext"/>
             <evaluate expression="opensamlProfileRequestContext.getSubcontext(T(net.shibboleth.idp.authn.context.AuthenticationContext))"
                       result="viewScope.authenticationContext"/>
-            <evaluate expression="opensamlProfileRequestContext.getSubcontext(T(net.shibboleth.idp.profile.context.RelyingPartyContext))"
+            <evaluate expression="opensamlProfileRequestContext.getSubcontext(T(net.shibboleth.idp.profile.context.ProfileInterceptorContext))"
+                      result="viewScope.interceptorContext"/>
+            <evaluate expression="opensamlProfileRequestContext.containsSubcontext(T(net.shibboleth.profile.context.RelyingPartyContext)) ? opensamlProfileRequestContext.getSubcontext(T(net.shibboleth.profile.context.RelyingPartyContext)) : opensamlProfileRequestContext.getSubcontext(T(net.shibboleth.idp.profile.context.RelyingPartyContext))"
                       result="viewScope.rpContext"/>
             <evaluate expression="authenticationContext.getSubcontext(T(net.shibboleth.idp.ui.context.RelyingPartyUIContext))"
                       result="viewScope.rpUIContext"/>
