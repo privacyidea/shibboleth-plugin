@@ -1,7 +1,7 @@
 # shibboleth-plugin
 
 ### Min. shibboleth-idp version:
-4.3.x
+4.3.0
 
 ### Installation:
 1. **Copy the package to the server:**
