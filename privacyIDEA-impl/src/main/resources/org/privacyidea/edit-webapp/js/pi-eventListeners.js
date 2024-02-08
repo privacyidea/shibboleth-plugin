@@ -34,12 +34,21 @@ function piEventListeners()
             piChangeMode("otp");
         });
     }
-    document.getElementById("pushButton").addEventListener("click", () => {
-        piChangeMode("push");
-    });
+    let pushButton = document.getElementById('pushButton');
+    if (typeof (pushButton) != 'undefined' && pushButton != null)
+    {
+        document.getElementById("pushButton").addEventListener("click", () =>
+        {
+            piChangeMode("push");
+        });
+    }
+    let webauthnButton = document.getElementById('webauthnButton');
+    if (typeof (webauthnButton) != 'undefined' && webauthnButton != null)
+    {
     document.getElementById("webauthnButton").addEventListener("click", () => {
        doWebAuthn();
     });
+    }
 }
 
 // Wait until the document is ready
