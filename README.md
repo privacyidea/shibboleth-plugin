@@ -2,7 +2,7 @@
 
 ### Shibboleth Version
 The main branch is compatible with IdP Version >=5.0.0.
-There will always be a separate release for IdP Version 4.x.x in the release section
+There will always be a separate release for IdP Version 4.x.x in the release section.
 
 ### Installation:
 1. **Copy the package to the server:**
