@@ -15,7 +15,7 @@
  */
 package org.privacyidea.action;
 
-import jakarta.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;

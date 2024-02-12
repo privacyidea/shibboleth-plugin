@@ -15,7 +15,7 @@
  */
 package org.privacyidea.action;
 
-import jakarta.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nonnull;

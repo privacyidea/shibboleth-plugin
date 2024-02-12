@@ -18,7 +18,7 @@ package org.privacyidea.action;
 import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nonnull;
-import jakarta.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequest;
 import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.context.ProfileRequestContext;
 import org.privacyidea.PIResponse;
