@@ -6,7 +6,7 @@
 ### Fixes
 * Separate the css and js from the view file
 * Fix the sealing violation issue occurred on jetty
-* Compatibility with the IdP 5.0.0 and higher
+* Compatibility with the IdP 5.0.0 and higher, but no longer compatible with 4.x.x. There will be separate releases for IdP 5 and 4, check the file names when downloading.
 
 ## 1.0.0 10/2023
 
