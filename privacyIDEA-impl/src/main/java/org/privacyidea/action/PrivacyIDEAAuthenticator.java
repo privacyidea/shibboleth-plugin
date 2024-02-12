@@ -82,7 +82,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         }
         else if (piContext.getMode().equals("otp"))
         {
-            if (request.getParameterValues("otp") != null)
+            if (request.getParameterValues("otp") != null && request.getParameterValues("otp").length > 0)
             {
                 String otp = request.getParameterValues("otp")[0];
                 if (otp != null)
