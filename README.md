@@ -4,9 +4,6 @@
 The main branch is compatible with IdP Version >5.0.0.
 There will always be a separate release for IdP Version 4.x.x in the release section
 
-### For now, not compatible with version:
-5.0.0
-
 ### Installation:
 1. **Copy the package to the server:**
     - Chose the archive type for your system from the release page (.zip, .tar.gz, .tar.bz2).
