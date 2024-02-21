@@ -59,4 +59,6 @@ The different configuration parameters are explained in the following table:
 - **Warn and error log: `$idp_install_path/logs/idp-warn.log`.**
 
 ### Plugin update:
-**To update the plugin, repeat the installation process with the new archive data.**
+**To update the plugin, repeat the installation process with the new archive data.<br>
+If something goes wrong, check if some of the changed files have their .idpnew copies,<br>
+remove the .idpnew copies, and re-run the install process.**
