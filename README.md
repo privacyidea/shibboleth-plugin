@@ -11,7 +11,7 @@ There will always be a separate release for IdP Version 4.x.x in the release sec
     - Place both files somewhere in your shibboleth server.
 2. **Open the terminal and run: `sudo -i` for the admin rights.**
 3. **Enable the MFA Module: `$idp_install_path/bin/module.sh -t idp.authn.MFA || $idp_install_path/bin/module.sh -e idp.authn.MFA`.**
-4. **Check if the MFA Module is activated: `$idp_install_path/bin/module.sh -l`.**
+4. **Check if the MFA Module is activated: `$idp_install_path/bin/module.sh -l`. If not, turn it on by running  `$idp_install_path/bin/module.sh -e idp.authn.privacyIDEA`.**
 5. **Install the privacyIDEA Plugin: `$idp_install_path/bin/plugin.sh -i path/to/zip/from/step/1 --noCheck`**<br>
 Note: The installer will automatically install and enable the privacyIDEA Module. You can check it state by repeating the step 4.
 6. **Check if the privacyIDEA Plugin is installed correctly: `$idp_install_path/bin/plugin.sh -l`**<br>
