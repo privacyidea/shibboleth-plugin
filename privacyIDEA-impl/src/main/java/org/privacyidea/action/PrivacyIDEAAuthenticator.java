@@ -16,16 +16,18 @@
 package org.privacyidea.action;
 
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.Map;
-import java.util.Objects;
-import javax.annotation.Nonnull;
 import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.context.ProfileRequestContext;
+import org.privacyidea.ChallengeStatus;
 import org.privacyidea.PIResponse;
 import org.privacyidea.context.PIContext;
 import org.privacyidea.context.PIServerConfigContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import java.util.Map;
+import java.util.Objects;
 
 public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
 {
@@ -34,7 +36,8 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
     public PrivacyIDEAAuthenticator() {}
 
     @Override
-    protected final void doExecute(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext, @Nonnull PIServerConfigContext piServerConfigContext)
+    protected final void doExecute(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext,
+                                   @Nonnull PIServerConfigContext piServerConfigContext)
     {
         HttpServletRequest request = Objects.requireNonNull(getHttpServletRequestSupplier()).get();
         Map<String, String> headers = this.getHeadersToForward(request);
@@ -53,17 +56,38 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         else if (piContext.getMode().equals("push"))
         {
             // In push mode, poll for the transaction id to see if the challenge has been answered
-            if (privacyIDEA.pollTransaction(piContext.getTransactionID()))
+            ChallengeStatus pollTransStatus = privacyIDEA.pollTransaction(piContext.getTransactionID());
+            if (pollTransStatus == ChallengeStatus.accept)
             {
                 // If the challenge has been answered, finalize with a call to validate check
                 piResponse = privacyIDEA.validateCheck(piContext.getUsername(), "", piContext.getTransactionID(), headers);
             }
-            else
+            else if (pollTransStatus == ChallengeStatus.pending)
             {
                 if (debug)
                 {
                     LOGGER.info("{} Push token isn't confirmed yet...", this.getLogPrefix());
                 }
+                ActionSupport.buildEvent(profileRequestContext, "reload");
+                return;
+            }
+            else if (pollTransStatus == ChallengeStatus.declined)
+            {
+                if (debug)
+                {
+                    LOGGER.info("{} Push token was declined...", this.getLogPrefix());
+                }
+                piContext.setFormErrorMessage("Authentication declined!");
+                ActionSupport.buildEvent(profileRequestContext, "abort");
+                return;
+            }
+            else
+            {
+                if (debug)
+                {
+                    LOGGER.info("{} Push token failed...", this.getLogPrefix());
+                }
+                piContext.setFormErrorMessage("Push token failed!");
                 ActionSupport.buildEvent(profileRequestContext, "reload");
                 return;
             }
@@ -76,8 +100,12 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             }
             else
             {
-                piResponse = privacyIDEA.validateCheckWebAuthn(piContext.getUsername(), piContext.getTransactionID(), piContext.getWebauthnSignResponse(),
-                                                               piContext.getOrigin(), headers);
+                piResponse =
+                        privacyIDEA.validateCheckWebAuthn(piContext.getUsername(),
+                                                          piContext.getTransactionID(),
+                                                          piContext.getWebauthnSignResponse(),
+                                                          piContext.getOrigin(),
+                                                          headers);
             }
         }
         else if (piContext.getMode().equals("otp"))
@@ -119,7 +147,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                 piContext.setFormErrorMessage(piResponse.error.message);
                 ActionSupport.buildEvent(profileRequestContext, "reload");
             }
-            else if (!piResponse.multichallenge.isEmpty())
+            else if (!piResponse.multiChallenge.isEmpty())
             {
                 if (debug)
                 {
