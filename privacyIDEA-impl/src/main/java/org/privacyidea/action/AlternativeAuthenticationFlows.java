@@ -56,7 +56,7 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
                     return;
                 }
 
-                if (!piResponse.multichallenge.isEmpty())
+                if (!piResponse.multiChallenge.isEmpty())
                 {
                     if (debug)
                     {
@@ -110,7 +110,7 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
                         ActionSupport.buildEvent(profileRequestContext, "success");
                     }
 
-                    if (!piResponse.multichallenge.isEmpty())
+                    if (!piResponse.multiChallenge.isEmpty())
                     {
                         extractChallengeData(piResponse);
                     }

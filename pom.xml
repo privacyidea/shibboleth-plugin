@@ -7,7 +7,7 @@
     <parent>
         <groupId>net.shibboleth</groupId>
         <artifactId>parent</artifactId>
-        <version>11.3.5</version>
+        <version>17.1.3</version>
     </parent>
 
     <name>Shibboleth IdP :: Plugins :: privacyIDEA</name>
@@ -32,7 +32,7 @@
 
     <properties>
         <idp.groupId>net.shibboleth.idp</idp.groupId>
-        <idp.version>5.0.0-SNAPSHOT</idp.version>
+        <idp.version>5.1.3</idp.version>
         <opensaml.groupId>org.opensaml</opensaml.groupId>
         <opensaml.version>5.0.0</opensaml.version>
         <checkstyle.configLocation>${project.basedir}/checkstyle.xml</checkstyle.configLocation>
@@ -116,13 +116,13 @@
                 <scope>provided</scope>
             </dependency>
             <!-- Test bom dependencies -->
-            <dependency>
+            <!--<dependency>
                 <groupId>${idp.groupId}</groupId>
                 <artifactId>idp-tests-bom</artifactId>
                 <version>${idp.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
-            </dependency>
+            </dependency>-->
         </dependencies>
     </dependencyManagement>
 
