@@ -26,7 +26,11 @@
 {
     max-width: 260px;
 }
-#alternateToken
+#otherLoginOptions
 {
     padding-top: 20px;
+}
+#resetButton
+{
+    background-color: #7b3737;
 }
