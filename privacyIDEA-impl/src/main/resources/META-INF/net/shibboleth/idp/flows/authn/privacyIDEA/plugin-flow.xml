@@ -46,6 +46,7 @@
         </on-render>
 
         <transition on="proceed" to="piAuthenticator"/>
+        <transition on="reset" to="RestartAuthentication"/>
     </view-state>
 
     <action-state id="piAuthenticator">
