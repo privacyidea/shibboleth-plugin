@@ -35,154 +35,194 @@
 </head>
 
 <body>
-    <div class="wrapper">
-        <div class="container">
-            <header>
-                <img class="main-logo" src="$request.getContextPath()#springMessageText('idp.logo', '/images/placeholder-logo.png')"
-                     alt="#springMessageText('idp.logo.alt-text', 'logo')">
-                #set ($serviceName = $rpUIContext.serviceName)
-                #if ($serviceName && !$rpContext.getRelyingPartyId().contains($serviceName))
-                    <h1>#springMessageText('idp.login.loginTo', 'Login to ') $encoder.encodeForHTML($serviceName)</h1>
-                #end
-            </header>
+<div class="wrapper">
+    <div class="container">
+        <header>
+            <img class="main-logo" src="$request.getContextPath()#springMessageText('idp.logo', '/images/placeholder-logo.png')" alt="#springMessageText('idp.logo.alt-text', 'logo')">
+            #set ($serviceName = $rpUIContext.serviceName)
+            #if ($serviceName && !$rpContext.getRelyingPartyId().contains($serviceName))
+                <h1>#springMessageText('idp.login.loginTo', 'Login to ') $encoder.encodeForHTML($serviceName)</h1>
+            #end
+        </header>
 
-            <div class="content">
-                <div class="column one">
-                    <div id="description and logo">
-                        #*
-                         SP Description & Logo (optional)
-                         These idpui lines will display added information (if available
-                         in the metadata) about the Service Provider (SP) that requested
-                         authentication. These idpui lines are "active" in this example
-                         (not commented out) - this extra SP info will be displayed.
-                         Remove or comment out these lines to stop the display of the
-                         added SP information.
-                        *#
-                        #set ($logo = $rpUIContext.getLogo())
-                        #if ($logo)
-                            <img class="service-logo" src="$encoder.encodeForHTMLAttribute($logo)" alt="$encoder.encodeForHTMLAttribute($serviceName)">
-                        #end
-                        #set ($desc = $rpUIContext.getServiceDescription())
-                        #if ($desc)
-                            <p>$encoder.encodeForHTML($desc)</p>
-                        #end
-                    </div>
+        <div class="content">
+            <div class="column one">
+                <div id="description and logo">
+                    #*
+                     SP Description & Logo (optional)
+                     These idpui lines will display added information (if available
+                     in the metadata) about the Service Provider (SP) that requested
+                     authentication. These idpui lines are "active" in this example
+                     (not commented out) - this extra SP info will be displayed.
+                     Remove or comment out these lines to stop the display of the
+                     added SP information.
+                    *#
+                    #set ($logo = $rpUIContext.getLogo())
+                    #if ($logo)
+                        <img class="service-logo" src="$encoder.encodeForHTMLAttribute($logo)" alt="$encoder.encodeForHTMLAttribute($serviceName)">
+                    #end
+                    #set ($desc = $rpUIContext.getServiceDescription())
+                    #if ($desc)
+                        <p>$encoder.encodeForHTML($desc)</p>
+                    #end
+                </div>
+## todo test form in column two and help in column three
+                <div id="privacyidea">
+                    <form id="privacyidea-form" action="$flowExecutionUrl" method="post" autocomplete="off">
+                        #parse('csrf/csrf.vm')
+                        <div class="content">
+                            <div class="form-element-wrapper" id="greeting">
+                                <p>Hello $piContext.getUsername()!</p>
+                                <br>
+                            </div>
 
-                    <div id="privacyidea">
-                        <form id="privacyidea-form" action="$flowExecutionUrl" method="post" autocomplete="off">
-                            #parse('csrf/csrf.vm')
-                            <div class="content">
-                                <div class="form-element-wrapper" id="greeting">
-                                    <p>Hello $piContext.getUsername()!</p>
-                                    <br>
-                                </div>
-
-                                <div class="form-element-wrapper" id="messages-and-images">
-                                    #if ($piContext.getMode() == "push")
-                                        <p class="pi-message">$piFormContext.getPushMessage()</p>
-                                        #if ($piFormContext.getImagePush() != "")
-                                            <br>
-                                            <img class="pi-tokenImage" src="$piFormContext.getImagePush()" alt="[Push Image]">
-                                            <br><br>
-                                        #end
-                                    #else
-                                        <p class="pi-message">$piFormContext.getMessage()</p>
-                                    #end
-
-                                    #if ($piContext.getMode() == "otp")
-                                        #if ($piFormContext.getImageOtp() != "")
-                                            <br>
-                                            <img class="pi-tokenImage" src="$piFormContext.getImageOtp()" alt="[OTP Image]">
-                                            <br><br>
-                                        #end
-                                    #end
-
-                                    #if ($piContext.getMode() == "webauthn")
-                                        #if ($piFormContext.getImageWebauthn() != "")
-                                            <br>
-                                            <img class="pi-tokenImage" src="$piFormContext.getImageWebauthn()" alt="[WebAuthn Image]">
-                                            <br><br>
-                                        #end
-                                    #end
-
-                                    #set ($formErrorMsg = $piContext.getFormErrorMessage())
-                                    #if ($formErrorMsg)
+                            <div class="form-element-wrapper" id="messages-and-images">
+                                ## MESSAGES ##
+                                #if ($piContext.getMode() == "push")
+                                    <p class="pi-message">$piFormContext.getPushMessage()</p>
+                                    #if ($piFormContext.getImagePush() != "")
                                         <br>
-                                        <p>$formErrorMsg</p>
+                                        <img class="pi-tokenImage" src="$piFormContext.getImagePush()" alt="[Push Image]">
+                                        <br><br>
                                     #end
-                                    <br>
-                                </div>
+                                #else
+                                    <p class="pi-message">$piFormContext.getMessage()</p>
+                                #end
 
-                                <div class="form-element-wrapper" id="one-time-password">
-                                    <label for="otp">$piFormContext.getOtpFieldHint()</label>
-                                    <input id="otp" class="form-element form-field" name="otp" type="password" autofocus value="">
+                                ## IMAGES ##
+                                #if ($piContext.getMode() == "otp")
+                                    #if ($piFormContext.getImageOtp() != "")
+                                        <br>
+                                        <img class="pi-tokenImage" src="$piFormContext.getImageOtp()" alt="[OTP Image]">
+                                        <br><br>
+                                    #end
+                                #end
+                                #if ($piContext.getMode() == "webauthn")
+                                    #if ($piFormContext.getImageWebauthn() != "")
+                                        <br>
+                                        <img class="pi-tokenImage" src="$piFormContext.getImageWebauthn()" alt="[WebAuthn Image]">
+                                        <br><br>
+                                    #end
+                                #end
+                                #set ($formErrorMsg = $piContext.getFormErrorMessage())
+                                #if ($formErrorMsg)
+                                    <br>
+                                    <p>$formErrorMsg</p>
+                                #end
+                                <br>
+                            </div>
+
+                            ## OTP & SUBMIT ##
+                            <div class="form-element-wrapper" id="one-time-password">
+                                <label for="otp">$piFormContext.getOtpFieldHint()</label>
+                                <input id="otp" class="form-element form-field" name="otp" type="password" autofocus value="">
+                                #if (($piContext.getMode() != "push" && $piContext.getMode() != "passkey")
+                                && (!$piContext.getPasskeyRegistration() || $piContext.getPasskeyRegistration() != ""))
                                     <br>
                                     <button class="form-element-button" id="pi-form-submit-button" type="submit" name="_eventId_proceed">Submit</button>
-                                    <br><br>
-                                </div>
-
-                                <div class="form-options">
-                                    <input id="mode" name="mode" value='$piContext.getMode()' type="hidden">
-                                    <input id="errorMessage" name="errorMessage" value="" type="hidden">
-                                    <input id="silentModeChange" name="silentModeChange" value="0" type="hidden">
-                                    <input id="webauthnSignRequest" name="webauthnSignRequest" value='$piContext.getWebauthnSignRequest()' type="hidden">
-                                    <input id="webauthnSignResponse" name="webauthnSignResponse" value="" type="hidden">
-                                    <input id="origin" name="origin" value="" type="hidden">
-                                    <input id="isPushAvailable" name="isPushAvailable" value='$piContext.getIsPushAvailable()' type="hidden">
-                                    <input id="pollingInterval" name="pollingInterval" value='$piFormContext.getPollingInterval()' type="hidden">
-                                    <input id="pollInBrowserUrl" name="pollInBrowserUrl" value='$piFormContext.getPollInBrowserUrl()' type="hidden">
-                                    <input id="transactionID" name="transactionID" value='$piContext.getTransactionID()' type="hidden">
-                                    <input id="pollInBrowserFailed" name="pollInBrowserFailed" value='$piFormContext.getPollInBrowserFailed()' type="hidden">
-                                    <input id="otpLength" name="otpLength" value='$piFormContext.getOtpLength()' type="hidden">
-                                </div>
-
-                                <div class="form-element-wrapper" id="alternateToken">
-                                    <h3 id="alternateTokenHeader">Alternate Login Options</h3>
-
-                                    ## POLL IN BROWSER
-                                    #if ($piFormContext.getPollInBrowser() == true && $piFormContext.getPollInBrowserUrl()
-                                    && $piContext.getTransactionID() && $piContext.getTransactionID() != "")
-                                        <script src='$request.getContextPath()/js/pi-pollInBrowser.js'></script>
-                                    #end
-
-                                    ## PUSH
-                                    #if ($piContext.getMode() == "push")
-                                        <input class="form-element-button" id="otpButton" name="otpButton" type="button" value="OTP">
-                                    #end
-                                    #if ($piContext.getIsPushAvailable() && $piContext.getMode() != "push")
-                                        <input class="form-element-button" id="pushButton" name="pushButton" type="button" value="Push">
-                                    #end
-
-                                    ## WEBAUTHN
-                                    #set ($webauthnSignRequest = $piContext.getWebauthnSignRequest())
-                                    #if ($webauthnSignRequest != "")
-                                        <input class="form-element-button" id="webauthnButton" name="webauthnButton" type="button" value="WebAuthn">
-                                    #end
-                                    <br><br>
-                                </div>
+                                #end
+                                <br><br>
                             </div>
-                        </form>
-                    </div>
-                </div>
 
-                <div class="column two" id="help">
-                    <ul class="list list-help">
-                        <li class="list-help-item">
-                            <a href="#springMessageText('idp.url.helpdesk', '#')">
-                                <span class="item-marker">&rsaquo;</span>
-                                #springMessageText('idp.login.needHelp', 'Need Help?')
-                            </a>
-                        </li>
-                    </ul>
+                            ## FORM OPTIONS ##
+                            <div class="form-options">
+                                <input id="mode" name="mode" value='$piContext.getMode()' type="hidden">
+                                <input id="errorMessage" name="errorMessage" value="" type="hidden">
+                                <input id="silentModeChange" name="silentModeChange" value="0" type="hidden">
+                                <input id="webauthnSignRequest" name="webauthnSignRequest" value='$piContext.getWebauthnSignRequest()' type="hidden">
+                                <input id="webauthnSignResponse" name="webauthnSignResponse" value="" type="hidden">
+                                <input id="origin" name="origin" value="" type="hidden">
+                                <input id="isPushAvailable" name="isPushAvailable" value='$piContext.getIsPushAvailable()' type="hidden">
+                                <input id="pollingInterval" name="pollingInterval" value='$piFormContext.getPollingInterval()' type="hidden">
+                                <input id="pollInBrowserUrl" name="pollInBrowserUrl" value='$piFormContext.getPollInBrowserUrl()' type="hidden">
+                                <input id="transactionID" name="transactionID" value='$piContext.getTransactionID()' type="hidden">
+                                <input id="pollInBrowserFailed" name="pollInBrowserFailed" value='$piFormContext.getPollInBrowserFailed()' type="hidden">
+                                <input id="passkeyRegistration" name="passkeyRegistration" value='$piContext.getPasskeyRegistration()' type="hidden">
+                                <input id="passkeyRegistrationResponse" name="passkeyRegistrationResponse" value="" type="hidden">
+                                <input id="passkeyChallenge" name="passkeyChallenge" value='$piContext.getPasskeyChallenge()' type="hidden">
+                                <input id="passkeyLoginCancelled" name="passkeyLoginCancelled" value="0" type="hidden">
+                                <input id="passkeySignResponse" name="passkeySignResponse" value="" type="hidden">
+                                <input id="passkeyLoginRequested" name="passkeyLoginRequested" value="0" type="hidden">
+                                <input id="otpLength" name="otpLength" value='$piFormContext.getOtpLength()' type="hidden">
+                            </div>
+
+                            ## PASSKEY ##
+                            <div class="form-element-wrapper" id="passkey">
+                                ## PASSKEY AUTHENTICATION ##
+                                #if ((!$piContext.getPasskeyRegistration() || $piContext.getPasskeyRegistration() == "")
+                                    && $piContext.getMode() != "passkey")
+                                    <button class="form-element-button" id="passkeyButton" type="button" name="passkeyButton">Sign in with Passkey</button>
+                                    <br><br>
+                                #end
+                                #if ($piContext.getPasskeyChallenge() && $piContext.getPasskeyChallenge() != "")
+                                    <script>passkeyAuthentication()</script>
+                                    <button class="form-element-button" id="passkeyRetryButton" type="button" name="passkeyRetryButton"
+                                            onclick="passkeyAuthentication()">Retry Passkey Login</button>
+                                    <br><br>
+                                #end
+
+                                ## PASSKEY REGISTRATION ##
+                                #if ((!$piContext.getPasskeyRegistration() || $piContext.getPasskeyRegistration() != ""))
+                                    <script>registerPasskey()</script>
+                                    <button class="form-element-button" id="retryPasskeyRegistrationButton" type="button" name="retryPasskeyRegistrationButton"
+                                            onclick="registerPasskey()">Retry Passkey Registration</button>
+                                    <br><br>
+                                #end
+                            </div>
+
+                            ## OTHER LOGIN OPTIONS ##
+                            <div class="form-element-wrapper" id="otherLoginOptions">
+                                <h3 id="otherLoginOptionsHeader">Other Login Options</h3>
+                                ## POLL IN BROWSER ##
+                                #if ($piFormContext.getPollInBrowser() == true && $piFormContext.getPollInBrowserUrl()
+                                && $piContext.getTransactionID() && $piContext.getTransactionID() != "")
+                                    <script src='$request.getContextPath()/js/pi-pollInBrowser.js'></script>
+                                #end
+
+                                ## PUSH TOKEN ##
+                                #if ($piContext.getMode() == "push")
+                                    <input class="form-element-button" id="otpButton" name="otpButton" type="button" value="OTP">
+                                #end
+                                #if ($piContext.getIsPushAvailable() && $piContext.getMode() != "push")
+                                    <input class="form-element-button" id="pushButton" name="pushButton" type="button" value="Push">
+                                #end
+
+                                ## WEBAUTHN TOKEN ##
+                                #set ($webauthnSignRequest = $piContext.getWebauthnSignRequest()) ##todo check if set can be skipped here
+                                #if ($webauthnSignRequest != "")
+                                    <input class="form-element-button" id="webauthnButton" name="webauthnButton" type="button"
+                                           value="WebAuthn">
+                                #end
+                                <br><br>
+                            </div>
+
+                            ## RESET THE LOGIN PROCESS ##
+                            <div class="form-element-wrapper" id="resetLogin">
+                                <button class="form-element-button" id="resetButton" type="submit" name="_eventId_reset">Reset Login</button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
+            </div>
+
+            <div class="column two" id="help">
+                <ul class="list list-help">
+                    <li class="list-help-item">
+                        <a href="#springMessageText('idp.url.helpdesk', '#')">
+                            <span class="item-marker">&rsaquo;</span>
+                            #springMessageText('idp.login.needHelp', 'Need Help?')
+                        </a>
+                    </li>
+                </ul>
             </div>
         </div>
-
-        <footer>
-            <div class="container container-footer">
-                <p class="footer-text">#springMessageText('idp.footer', 'Insert your footer text here.')</p>
-            </div>
-        </footer>
     </div>
+
+    <footer>
+        <div class="container container-footer">
+            <p class="footer-text">#springMessageText('idp.footer', 'Insert your footer text here.')</p>
+        </div>
+    </footer>
+</div>
 </body>
 </html>
