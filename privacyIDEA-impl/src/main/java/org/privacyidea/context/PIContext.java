@@ -30,6 +30,18 @@ public class PIContext extends BaseContext
     @Nullable
     private String webauthnSignResponse = null;
     @Nullable
+    private String passkeyRegistration = null;
+    @Nullable
+    private String passkeyRegistrationResponse = null;
+    @Nullable
+    private String passkeyRegistrationSerial = null;
+    @Nullable
+    private String passkeyChallenge = null;
+    @Nullable
+    private String passkeySignResponse = null;
+    @Nullable
+    private String passkeyTransactionID = null;
+    @Nullable
     private String formErrorMessage = null;
     @Nullable
     private String origin = null;
@@ -62,6 +74,36 @@ public class PIContext extends BaseContext
     public String getWebauthnSignResponse() {return webauthnSignResponse;}
 
     public void setWebauthnSignResponse(@Nullable String webauthnSignResponse) {this.webauthnSignResponse = webauthnSignResponse;}
+
+    @Nullable
+    public String getPasskeyRegistration() {return passkeyRegistration;}
+
+    public void setPasskeyRegistration(@Nullable String passkeyRegistration) {this.passkeyRegistration = passkeyRegistration;}
+
+    @Nullable
+    public String getPasskeyRegistrationResponse() {return passkeyRegistrationResponse;}
+
+    public void setPasskeyRegistrationResponse(@Nullable String passkeyRegistrationResponse) {this.passkeyRegistrationResponse = passkeyRegistrationResponse;}
+
+    @Nullable
+    public String getPasskeyRegistrationSerial() {return passkeyRegistrationSerial;}
+
+    public void setPasskeyRegistrationSerial(@Nullable String passkeyRegistrationSerial) {this.passkeyRegistrationSerial = passkeyRegistrationSerial;}
+
+    @Nullable
+    public String getPasskeyChallenge() {return passkeyChallenge;}
+
+    public void setPasskeyChallenge(@Nullable String passkeyChallenge) {this.passkeyChallenge = passkeyChallenge;}
+
+    @Nullable
+    public String getPasskeySignResponse() {return passkeySignResponse;}
+
+    public void setPasskeySignResponse(@Nullable String passkeySignResponse) {this.passkeySignResponse = passkeySignResponse;}
+
+    public void setPasskeyTransactionID(@Nullable String passkeyTransactionID) {this.passkeyTransactionID = passkeyTransactionID;}
+
+    @Nullable
+    public String getPasskeyTransactionID() {return passkeyTransactionID;}
 
     @Nullable
     public String getOrigin() {return origin;}
