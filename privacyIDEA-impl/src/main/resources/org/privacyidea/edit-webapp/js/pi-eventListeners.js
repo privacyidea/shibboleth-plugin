@@ -14,19 +14,20 @@
  * limitations under the License.
  */
 
-function autoSubmitByLength()
+function fieldCheck(field)
 {
-    if (piGetValue('otp').length === parseInt(piGetValue("otpLength")))
-    {
-        piSubmit();
-    }
+    return typeof (field) != 'undefined' && field != null;
 }
 
 function piEventListeners()
 {
-    document.getElementById("otp").addEventListener("keyup", autoSubmitByLength);
+    document.getElementById("otp").addEventListener("keyup", () => {
+        if (piGetValue('otp').length === parseInt(piGetValue("otpLength")))
+        {
+            piSubmit();
+        }
+    });
 
-    // Button listeners
     if (piGetValue("mode") === "push")
     {
         document.getElementById("otpButton").addEventListener("click", () => {
@@ -34,19 +35,23 @@ function piEventListeners()
             piChangeMode("otp");
         });
     }
-    let pushButton = document.getElementById('pushButton');
-    if (typeof (pushButton) != 'undefined' && pushButton != null)
+    if (fieldCheck(document.getElementById('pushButton')))
     {
         document.getElementById("pushButton").addEventListener("click", () =>
         {
             piChangeMode("push");
         });
     }
-    let webauthnButton = document.getElementById('webauthnButton');
-    if (typeof (webauthnButton) != 'undefined' && webauthnButton != null)
+    if (fieldCheck(document.getElementById('webauthnButton')))
     {
     document.getElementById("webauthnButton").addEventListener("click", () => {
        doWebAuthn();
+    });
+    }
+    if (fieldCheck(document.getElementById('passkeyButton')))
+    {
+    document.getElementById("passkeyButton").addEventListener("click", () => {
+       requestPasskeyLogin();
     });
     }
 }
