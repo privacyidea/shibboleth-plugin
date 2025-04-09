@@ -15,7 +15,7 @@
  */
 package org.privacyidea.action;
 
-import jakarta.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequest;
 import net.shibboleth.idp.authn.context.SubjectCanonicalizationContext;
 import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.context.ProfileRequestContext;

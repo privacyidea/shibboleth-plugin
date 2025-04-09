@@ -21,8 +21,8 @@ import org.opensaml.messaging.context.BaseContext;
 
 public class PIContext extends BaseContext
 {
-    @Nonnull
-    private final User user;
+    @Nullable
+    private User user;
     @Nullable
     private String transactionID = null;
     @Nonnull
@@ -51,7 +51,7 @@ public class PIContext extends BaseContext
     @Nullable
     private final String pluginVersion;
 
-    public PIContext(@Nonnull User user, @Nullable String pluginVersion)
+    public PIContext(@Nullable User user, @Nullable String pluginVersion)
     {
         this.user = user;
         this.pluginVersion = pluginVersion;

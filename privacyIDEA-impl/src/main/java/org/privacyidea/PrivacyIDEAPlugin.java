@@ -16,7 +16,7 @@
 package org.privacyidea;
 
 import java.io.IOException;
-import net.shibboleth.profile.plugin.PluginException;
+import net.shibboleth.idp.plugin.PluginException;
 import net.shibboleth.idp.plugin.PropertyDrivenIdPPlugin;
 
 /**
