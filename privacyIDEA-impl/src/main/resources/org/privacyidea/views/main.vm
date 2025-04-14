@@ -70,6 +70,10 @@
                 <div id="privacyidea">
                     <form id="privacyidea-form" action="$flowExecutionUrl" method="post" autocomplete="off">
                         #parse('csrf/csrf.vm')
+                        #set ($passkeyRegistrationEmpty = false)
+                        #if (!$piContext.getPasskeyRegistration() || $piContext.getPasskeyRegistration() == "")
+                            #set ($passkeyRegistrationEmpty = true)
+                        #end
                         <div class="content">
                             <div class="form-element-wrapper" id="greeting">
                                 <p>Hello $piContext.getUsername()!</p>
@@ -78,7 +82,7 @@
 
                             <div class="form-element-wrapper" id="messages-and-images">
                                 ## MESSAGES ##
-                                #if ($piContext.getMode() == "push")
+                                #if ($piContext.getMode() == "push" && $passkeyRegistrationEmpty)
                                     <p class="pi-message">$piFormContext.getPushMessage()</p>
                                     #if ($piFormContext.getImagePush() != "")
                                         <br>
@@ -90,14 +94,14 @@
                                 #end
 
                                 ## IMAGES ##
-                                #if ($piContext.getMode() == "otp")
+                                #if ($piContext.getMode() == "otp" && $passkeyRegistrationEmpty)
                                     #if ($piFormContext.getImageOtp() != "")
                                         <br>
                                         <img class="pi-tokenImage" src="$piFormContext.getImageOtp()" alt="[OTP Image]">
                                         <br><br>
                                     #end
                                 #end
-                                #if ($piContext.getMode() == "webauthn")
+                                #if ($piContext.getMode() == "webauthn" && $passkeyRegistrationEmpty)
                                     #if ($piFormContext.getImageWebauthn() != "")
                                         <br>
                                         <img class="pi-tokenImage" src="$piFormContext.getImageWebauthn()" alt="[WebAuthn Image]">
@@ -114,10 +118,9 @@
 
                             ## OTP & SUBMIT ##
                             <div class="form-element-wrapper" id="one-time-password">
-                                <label for="otp">$piFormContext.getOtpFieldHint()</label>
-                                <input id="otp" class="form-element form-field" name="otp" type="password" autofocus value="">
-                                #if (($piContext.getMode() != "push" && $piContext.getMode() != "passkey")
-                                && (!$piContext.getPasskeyRegistration() || $piContext.getPasskeyRegistration() != ""))
+                                #if ($piContext.getMode() != "push" && $piContext.getMode() != "passkey" && $passkeyRegistrationEmpty)
+                                    <label for="otp">$piFormContext.getOtpFieldHint()</label>
+                                    <input id="otp" class="form-element form-field" name="otp" type="password" autofocus value="">
                                     <br>
                                     <button class="form-element-button" id="pi-form-submit-button" type="submit" name="_eventId_proceed">Submit</button>
                                 #end
@@ -149,8 +152,7 @@
                             ## PASSKEY ##
                             <div class="form-element-wrapper" id="passkey">
                                 ## PASSKEY AUTHENTICATION ##
-                                #if ((!$piContext.getPasskeyRegistration() || $piContext.getPasskeyRegistration() == "")
-                                    && $piContext.getMode() != "passkey")
+                                #if ($passkeyRegistrationEmpty && $piContext.getMode() != "passkey")
                                     <button class="form-element-button" id="passkeyButton" type="button" name="passkeyButton">Sign in with Passkey</button>
                                     <br><br>
                                 #end
@@ -162,7 +164,8 @@
                                 #end
 
                                 ## PASSKEY REGISTRATION ##
-                                #if ((!$piContext.getPasskeyRegistration() || $piContext.getPasskeyRegistration() != ""))
+                                ## (enroll_via_multichallenge) with retry button ##
+                                #if ($passkeyRegistrationEmpty)
                                     <script>registerPasskey()</script>
                                     <button class="form-element-button" id="retryPasskeyRegistrationButton" type="button" name="retryPasskeyRegistrationButton"
                                             onclick="registerPasskey()">Retry Passkey Registration</button>
