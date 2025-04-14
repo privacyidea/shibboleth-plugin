@@ -75,10 +75,12 @@
                             #set ($passkeyRegistrationEmpty = true)
                         #end
                         <div class="content">
+                            #if ($piContext.getUsername())
                             <div class="form-element-wrapper" id="greeting">
                                 <p>Hello $piContext.getUsername()!</p>
                                 <br>
                             </div>
+                            #end
 
                             <div class="form-element-wrapper" id="messages-and-images">
                                 ## MESSAGES ##
@@ -164,7 +166,7 @@
                                 #end
 
                                 ## PASSKEY REGISTRATION ##
-                                ## (enroll_via_multichallenge) with retry button ##
+                                ## (enroll_via_multichallenge) using retry button ##
                                 #if ($passkeyRegistrationEmpty)
                                     <script>registerPasskey()</script>
                                     <button class="form-element-button" id="retryPasskeyRegistrationButton" type="button" name="retryPasskeyRegistrationButton"
