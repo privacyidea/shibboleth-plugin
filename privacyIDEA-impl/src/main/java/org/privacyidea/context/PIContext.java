@@ -58,8 +58,8 @@ public class PIContext extends BaseContext
     }
 
     // Getters and Setters
-    @Nonnull
-    public String getUsername() {return user.getUsername();}
+    @Nullable
+    public String getUsername() {return user != null ? user.getUsername() : null;}
 
     public void setTransactionID(@Nonnull String transactionID) {this.transactionID = transactionID;}
 
