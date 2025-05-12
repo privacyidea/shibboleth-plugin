@@ -30,6 +30,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.function.Function;
 
+import static org.privacyidea.context.StringUtil.isBlank;
+
 public class InitializePIContext extends AbstractAuthenticationAction
 {
     private static final Logger log = LoggerFactory.getLogger(InitializePIContext.class);
@@ -91,11 +93,8 @@ public class InitializePIContext extends AbstractAuthenticationAction
         authenticationContext.addSubcontext(piFormContext);
         if (user == null)
         {
-            log.info("{} No principal name available.", getLogPrefix());
+            log.info("{} No principal name available. Displaying username-password-form.", getLogPrefix());
             ActionSupport.buildEvent(profileRequestContext, "displayUsernamePasswordForm");
-            //todo
-            // offer passkey
-            // if passkey is used, use username returned from pi (piResponse) to log in the user without password (? if possible ?)
         }
     }
 
