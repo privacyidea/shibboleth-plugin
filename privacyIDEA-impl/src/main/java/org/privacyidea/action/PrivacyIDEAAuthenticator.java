@@ -15,8 +15,7 @@
  */
 package org.privacyidea.action;
 
-import javax.servlet.http.HttpServletRequest;
-import net.shibboleth.idp.authn.context.SubjectCanonicalizationContext;
+import net.shibboleth.idp.authn.context.UsernameContext;
 import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.context.ProfileRequestContext;
 import org.privacyidea.ChallengeStatus;
@@ -28,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 import java.util.Objects;
 
@@ -74,8 +74,8 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                     {
                         if (StringUtil.isNotBlank(piResponse.username))
                         {
-                            SubjectCanonicalizationContext c14nContext =
-                                    profileRequestContext.getSubcontext(SubjectCanonicalizationContext.class);
+                            /*SubjectCanonicalizationContext c14nContext =
+                                    profileRequestContext.getSubcontext(SubjectCanonicalizationContext.class, true);
                             if (c14nContext != null)
                             {
                                 c14nContext.setPrincipalName(piResponse.username);
@@ -87,8 +87,28 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                                              + "Cannot set the username collected from Passkey response. "
                                              + "Restarting the authentication process.");
                                 ActionSupport.buildEvent(profileRequestContext, "abort");
-                            }
+                            }*/
+
+                            UsernameContext userCtx = profileRequestContext.getSubcontext(UsernameContext.class, true);
+                            LOGGER.error("{} setting username to {}", this.getLogPrefix(), piResponse.username);
+                            userCtx.setUsername(piResponse.username);
+                            String username = userCtx.getUsername();
+                            LOGGER.error("{} user name from context {}", this.getLogPrefix(), username);
+                            ActionSupport.buildEvent(profileRequestContext, "validatePasskeyResp");
                             return;
+
+//                            if (StringUtil.isNotBlank(Objects.requireNonNull(profileRequestContext.getSubcontext(UsernameContext.class)).getUsername()))
+//                            {
+//                                ActionSupport.buildEvent(profileRequestContext, "CheckUsername");
+//                            }
+//                            else
+//                            {
+//                                LOGGER.error("UsernameContext is null! "
+//                                             + "Cannot set the username collected from Passkey response. "
+//                                             + "Restarting the authentication process.");
+//                                ActionSupport.buildEvent(profileRequestContext, "abort");
+//                            }
+//                            return;
                         }
                     }
                 }
