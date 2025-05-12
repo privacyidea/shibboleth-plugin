@@ -11,7 +11,7 @@
         <transition on="proceed" to="checkAuthenticationFlow"/>
     </action-state>
 
-    <view-state id="displayUsernamePasswordForm" view="privacyIDEA/main">
+    <view-state id="displayUsernamePasswordForm" view="privacyIDEA/usernamePasswordForm">
         <on-render>
             <evaluate expression="environment" result="viewScope.environment"/>
             <evaluate expression="opensamlProfileRequestContext" result="viewScope.profileRequestContext"/>
@@ -38,7 +38,8 @@
             <evaluate expression="authenticationContext.getSubcontext(T(org.privacyidea.context.PIFormContext))" result="viewScope.piFormContext"/>
         </on-render>
 
-        <transition on="proceed" to="checkAuthenticationFlow"/>
+        <!-- Save collected username and password in shibb, or initialize the passkey authentication -->
+        <transition on="proceed" to="piAuthenticator"/>
     </view-state>
 
     <action-state id="checkAuthenticationFlow">
@@ -85,7 +86,15 @@
 
         <transition on="reload" to="displayPrivacyIDEAForm"/>
         <transition on="abort" to="RestartAuthentication"/>
+        <transition on="validatePasskeyResp" to="ValidatePasskeyResponse"/>
         <transition on="success" to="proceed"/>
+    </action-state>
+
+    <action-state id="ValidatePasskeyResponse">
+        <evaluate expression="validatePasskeyResponse" />
+
+        <transition on="UnknownPasskeys" to="RestartAuthentication" />
+        <transition on="success" to="proceed" />
     </action-state>
 
     <bean-import resource="plugin-beans.xml"/>
