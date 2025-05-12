@@ -39,6 +39,8 @@
     <bean id="piAuthenticator" class="org.privacyidea.action.PrivacyIDEAAuthenticator" scope="prototype"
           p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier"/>
 
+    <bean id="validatePasskeyResponse" scope="prototype" class="org.privacyidea.action.ValidatePasskeyResponse"/>
+
     <bean id="alternativeAuthenticationFlows" class="org.privacyidea.action.AlternativeAuthenticationFlows" scope="prototype"
           p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier"/>
 </beans>
