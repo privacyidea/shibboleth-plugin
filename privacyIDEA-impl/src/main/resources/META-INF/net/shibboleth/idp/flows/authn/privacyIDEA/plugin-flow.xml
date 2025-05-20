@@ -93,7 +93,7 @@
     <action-state id="ValidatePasskeyResponse">
         <evaluate expression="validatePasskeyResponse" />
 
-        <transition on="UnknownUser" to="RestartAuthentication" />
+        <transition on="unknownUser" to="RestartAuthentication" />
         <transition on="success" to="proceed" />
     </action-state>
 
