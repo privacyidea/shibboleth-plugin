@@ -24,11 +24,11 @@
 }
 .form-element-button
 {
-    max-width: 260px;
+    width: 280px;
 }
 #otp, #username, #password
 {
-    max-width: 260px;
+    max-width: 310px;
 }
 #otherLoginOptions
 {
