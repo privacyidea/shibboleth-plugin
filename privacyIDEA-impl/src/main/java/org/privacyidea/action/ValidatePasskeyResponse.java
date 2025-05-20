@@ -1,6 +1,5 @@
 package org.privacyidea.action;
 
-
 import net.shibboleth.idp.authn.AbstractValidationAction;
 import net.shibboleth.idp.authn.context.AuthenticationContext;
 import net.shibboleth.idp.authn.context.UsernameContext;
@@ -35,8 +34,8 @@ public class ValidatePasskeyResponse extends AbstractValidationAction
         }
         else
         {
-            //todo error + action fix
-            ActionSupport.buildEvent(profileRequestContext, "error");
+            LOGGER.error("{} Unknown passkey user. Restarting the authentication process.", this.getLogPrefix());
+            ActionSupport.buildEvent(profileRequestContext, "unknownUser");
         }
     }
 
