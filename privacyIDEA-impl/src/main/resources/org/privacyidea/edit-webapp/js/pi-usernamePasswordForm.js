@@ -11,7 +11,6 @@ function passkeyButtonListener()
     }
 }
 
-
 // Wait until the document is ready
 document.addEventListener("DOMContentLoaded", function ()
 {
