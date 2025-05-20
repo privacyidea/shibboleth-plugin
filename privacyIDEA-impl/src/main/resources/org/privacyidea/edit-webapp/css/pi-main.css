@@ -22,7 +22,11 @@
 {
     max-width: 300px;
 }
-#otp
+.form-element-button
+{
+    max-width: 260px;
+}
+#otp, #username, #password
 {
     max-width: 260px;
 }
