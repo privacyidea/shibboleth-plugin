@@ -8,6 +8,7 @@
         <evaluate expression="'proceed'"/>
 
         <transition on="displayUsernamePasswordForm" to="displayUsernamePasswordForm"/>
+        <transition on="reset" to="RestartAuthentication"/>
         <transition on="proceed" to="checkAuthenticationFlow"/>
     </action-state>
 
