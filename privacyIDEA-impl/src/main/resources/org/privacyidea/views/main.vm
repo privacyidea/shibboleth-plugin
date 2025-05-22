@@ -47,7 +47,7 @@
 
         <div class="content">
             <div class="column one">
-                <div id="description and logo">
+                <div id="description-and-logo">
                     #*
                      SP Description & Logo (optional)
                      These idpui lines will display added information (if available
@@ -120,7 +120,7 @@
 
                             ## OTP & SUBMIT ##
                             <div class="form-element-wrapper" id="one-time-password">
-                                #if ($piContext.getMode() != "push" && $piContext.getMode() != "passkey" && $passkeyRegistrationEmpty)
+                                #if ($piContext.getMode() != "push" && $piContext.getMode() != "passkey" && $passkeyRegistrationEmpty != true)
                                     <label for="otp">$piFormContext.getOtpFieldHint()</label>
                                     <input id="otp" class="form-element form-field" name="otp" type="password" autofocus value="">
                                     <br>
@@ -155,13 +155,13 @@
                             <div class="form-element-wrapper" id="passkey">
                                 ## PASSKEY AUTHENTICATION ##
                                 #if ($passkeyRegistrationEmpty && $piContext.getMode() != "passkey")
-                                    <button class="form-element-button" id="passkeyButton" type="button" name="passkeyButton">Sign in with Passkey</button>
+                                    <input class="form-element-button" id="passkeyButton" type="button" name="passkeyButton" value="Sign in with Passkey">
                                     <br><br>
                                 #end
                                 #if ($piContext.getPasskeyChallenge() && $piContext.getPasskeyChallenge() != "")
                                     <script>passkeyAuthentication()</script>
-                                    <button class="form-element-button" id="passkeyRetryButton" type="button" name="passkeyRetryButton"
-                                            onclick="passkeyAuthentication()">Retry Passkey Login</button>
+                                    <input class="form-element-button" id="passkeyRetryButton" type="button" name="passkeyRetryButton"
+                                            onclick="passkeyAuthentication()" value="Retry Passkey Login">
                                     <br><br>
                                 #end
 
@@ -169,8 +169,8 @@
                                 ## (enroll_via_multichallenge) using retry button ##
                                 #if ($passkeyRegistrationEmpty)
                                     <script>registerPasskey()</script>
-                                    <button class="form-element-button" id="retryPasskeyRegistrationButton" type="button" name="retryPasskeyRegistrationButton"
-                                            onclick="registerPasskey()">Retry Passkey Registration</button>
+                                    <input class="form-element-button" id="retryPasskeyRegistrationButton" type="button" name="retryPasskeyRegistrationButton"
+                                            onclick="registerPasskey()" value="Retry Passkey Registration">
                                     <br><br>
                                 #end
                             </div>
@@ -193,8 +193,7 @@
                                 #end
 
                                 ## WEBAUTHN TOKEN ##
-                                #set ($webauthnSignRequest = $piContext.getWebauthnSignRequest()) ##todo check if set can be skipped here
-                                #if ($webauthnSignRequest != "")
+                                #if ($piContext.getWebauthnSignRequest() && $piContext.getWebauthnSignRequest() != "")
                                     <input class="form-element-button" id="webauthnButton" name="webauthnButton" type="button"
                                            value="WebAuthn">
                                 #end
