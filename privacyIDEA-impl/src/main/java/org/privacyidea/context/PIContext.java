@@ -36,7 +36,7 @@ public class PIContext extends BaseContext
     @Nullable
     private String passkeyRegistrationSerial = null;
     @Nullable
-    private String passkeyChallenge = null;
+    private String passkeyChallenge = "";
     @Nullable
     private String passkeySignResponse = null;
     @Nullable
@@ -92,7 +92,7 @@ public class PIContext extends BaseContext
 
     public void setPasskeyRegistrationSerial(@Nullable String passkeyRegistrationSerial) {this.passkeyRegistrationSerial = passkeyRegistrationSerial;}
 
-    @Nullable
+    @Nonnull
     public String getPasskeyChallenge() {return passkeyChallenge;}
 
     public void setPasskeyChallenge(@Nullable String passkeyChallenge) {this.passkeyChallenge = passkeyChallenge;}
