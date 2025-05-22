@@ -44,13 +44,6 @@ function doWebAuthn()
     }
 }
 
-// Request a passkey login. This is activated by the passkey button.
-function requestPasskeyLogin()
-{
-    piSetValue("passkeyLoginRequested", 1);
-    piSubmit();
-}
-
 // Convert a byte array to a base64 string
 // Used for passkey registration
 function base64URLToBytes (base64URLString)
