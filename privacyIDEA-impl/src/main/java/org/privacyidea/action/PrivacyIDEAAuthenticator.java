@@ -52,7 +52,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         piContext.setOrigin(request.getParameterValues("origin")[0]);
         piContext.setFormErrorMessage(request.getParameterValues("errorMessage")[0]);
 
-        if (StringUtil.isNotBlank(request.getParameterValues("username")[0]))
+        if (request.getParameterValues("username") != null && StringUtil.isNotBlank(request.getParameterValues("username")[0]))
         {
             piContext.setUsername(request.getParameterValues("username")[0]);
         }
@@ -108,7 +108,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         // Passkey login cancelled: Remove the challenge and passkey transaction ID
         if (request.getParameterValues("passkeyLoginCancelled")[0].equals("1"))
         {
-            piContext.setPasskeyChallenge(null);
+            piContext.setPasskeyChallenge("");
             piContext.setPasskeyTransactionID(null);
         }
 
