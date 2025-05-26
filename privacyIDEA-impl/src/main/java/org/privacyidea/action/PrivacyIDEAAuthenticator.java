@@ -84,7 +84,6 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                         {
                             UsernameContext userCtx = profileRequestContext.getSubcontext(UsernameContext.class, true);
                             userCtx.setUsername(piResponse.username);
-                            String username = userCtx.getUsername();
                             ActionSupport.buildEvent(profileRequestContext, "validateResponseStandalone");
                             return;
                         }
@@ -229,10 +228,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                         LOGGER.info("{} Standalone mode, setting username and building event...", this.getLogPrefix());
                     }
                     UsernameContext userCtx = profileRequestContext.getSubcontext(UsernameContext.class, true);
-                    LOGGER.error("{} setting username to {}", this.getLogPrefix(), piContext.getUsername());
                     userCtx.setUsername(piContext.getUsername());
-                    String username = userCtx.getUsername();
-                    LOGGER.error("{} user name from context {}", this.getLogPrefix(), username);
                     ActionSupport.buildEvent(profileRequestContext, "validateResponseStandalone");
                 }
                 else
