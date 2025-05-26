@@ -14,12 +14,12 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.security.auth.Subject;
 
-public class ValidatePasskeyResponse extends AbstractValidationAction
+public class ValidateResponseStandalone extends AbstractValidationAction
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ValidatePasskeyResponse.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ValidateResponseStandalone.class);
     private String username;
 
-    public ValidatePasskeyResponse() {}
+    public ValidateResponseStandalone() {}
 
     protected void doExecute(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull AuthenticationContext authenticationContext)
     {
@@ -34,7 +34,7 @@ public class ValidatePasskeyResponse extends AbstractValidationAction
         }
         else
         {
-            LOGGER.error("{} Unknown passkey user. Restarting the authentication process.", this.getLogPrefix());
+            LOGGER.error("{} Unknown user. Restarting the authentication process.", this.getLogPrefix());
             ActionSupport.buildEvent(profileRequestContext, "unknownUser");
         }
     }
