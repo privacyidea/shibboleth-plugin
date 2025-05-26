@@ -87,12 +87,12 @@
 
         <transition on="reload" to="displayPrivacyIDEAForm"/>
         <transition on="abort" to="RestartAuthentication"/>
-        <transition on="validatePasskeyResp" to="ValidatePasskeyResponse"/>
+        <transition on="validateResponseStandalone" to="ValidateResponseStandalone"/>
         <transition on="success" to="proceed"/>
     </action-state>
 
-    <action-state id="ValidatePasskeyResponse">
-        <evaluate expression="validatePasskeyResponse" />
+    <action-state id="ValidateResponseStandalone">
+        <evaluate expression="validateResponseStandalone" />
 
         <transition on="unknownUser" to="RestartAuthentication" />
         <transition on="success" to="proceed" />
