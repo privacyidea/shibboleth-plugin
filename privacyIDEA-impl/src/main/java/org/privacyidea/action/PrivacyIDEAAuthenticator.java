@@ -51,7 +51,10 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         piContext.setPasskeyChallenge(request.getParameterValues("passkeyChallenge")[0]);
         piContext.setOrigin(request.getParameterValues("origin")[0]);
         piContext.setFormErrorMessage(request.getParameterValues("errorMessage")[0]);
-
+        if (request.getParameterValues("standalone") != null && StringUtil.isNotBlank(request.getParameterValues("standalone")[0]))
+        {
+            piContext.setStandalone(request.getParameterValues("standalone")[0]);
+        }
         if (request.getParameterValues("username") != null && StringUtil.isNotBlank(request.getParameterValues("username")[0]))
         {
             piContext.setUsername(request.getParameterValues("username")[0]);
@@ -219,12 +222,27 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             }
             else if (piResponse.value)
             {
-                UsernameContext userCtx = profileRequestContext.getSubcontext(UsernameContext.class, true);
-                LOGGER.error("{} setting username to {}", this.getLogPrefix(), piContext.getUsername());
-                userCtx.setUsername(piContext.getUsername());
-                String username = userCtx.getUsername();
-                LOGGER.error("{} user name from context {}", this.getLogPrefix(), username);
-                ActionSupport.buildEvent(profileRequestContext, "validateResponseStandalone");
+                if (StringUtil.isNotBlank(piContext.getStandalone()) && piContext.getStandalone().equals("1"))
+                {
+                    if (debug)
+                    {
+                        LOGGER.info("{} Standalone mode, setting username and building event...", this.getLogPrefix());
+                    }
+                    UsernameContext userCtx = profileRequestContext.getSubcontext(UsernameContext.class, true);
+                    LOGGER.error("{} setting username to {}", this.getLogPrefix(), piContext.getUsername());
+                    userCtx.setUsername(piContext.getUsername());
+                    String username = userCtx.getUsername();
+                    LOGGER.error("{} user name from context {}", this.getLogPrefix(), username);
+                    ActionSupport.buildEvent(profileRequestContext, "validateResponseStandalone");
+                }
+                else
+                {
+                    if (debug)
+                    {
+                        LOGGER.info("{} Authentication successful, building success event...", this.getLogPrefix());
+                    }
+                    ActionSupport.buildEvent(profileRequestContext, "success");
+                }
             }
             else
             {
