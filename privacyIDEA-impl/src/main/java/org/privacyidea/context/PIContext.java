@@ -17,6 +17,8 @@ package org.privacyidea.context;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import org.jetbrains.annotations.NotNull;
 import org.opensaml.messaging.context.BaseContext;
 
 public class PIContext extends BaseContext
@@ -45,6 +47,8 @@ public class PIContext extends BaseContext
     private String formErrorMessage = null;
     @Nullable
     private String origin = null;
+    @Nonnull
+    private String standalone = "0";
     private boolean isPushAvailable = false;
     @Nonnull
     private String mode = "otp";
@@ -111,6 +115,11 @@ public class PIContext extends BaseContext
     public String getOrigin() {return origin;}
 
     public void setOrigin(@Nullable String origin) {this.origin = origin;}
+
+    @NotNull
+    public String getStandalone() {return standalone;}
+
+    public void setStandalone(@NotNull String standalone) {this.standalone = standalone;}
 
     @Nonnull
     public String getMode() {return mode;}
