@@ -87,11 +87,11 @@
 
         <transition on="reload" to="displayPrivacyIDEAForm"/>
         <transition on="abort" to="RestartAuthentication"/>
-        <transition on="validateResponseStandalone" to="ValidateResponseStandalone"/>
+        <transition on="validateResponseStandalone" to="validateResponseStandalone"/>
         <transition on="success" to="proceed"/>
     </action-state>
 
-    <action-state id="ValidateResponseStandalone">
+    <action-state id="validateResponseStandalone">
         <evaluate expression="validateResponseStandalone" />
 
         <transition on="unknownUser" to="RestartAuthentication" />
