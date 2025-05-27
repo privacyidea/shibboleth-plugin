@@ -96,7 +96,7 @@ public class PIContext extends BaseContext
 
     public void setPasskeyRegistrationSerial(@Nullable String passkeyRegistrationSerial) {this.passkeyRegistrationSerial = passkeyRegistrationSerial;}
 
-    @Nonnull
+    @Nullable
     public String getPasskeyChallenge() {return passkeyChallenge;}
 
     public void setPasskeyChallenge(@Nullable String passkeyChallenge) {this.passkeyChallenge = passkeyChallenge;}
