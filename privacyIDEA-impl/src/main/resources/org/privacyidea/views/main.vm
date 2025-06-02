@@ -91,7 +91,7 @@
                                     #if ($piFormContext.getImagePush() != "")
                                         <br>
                                         <img class="pi-tokenImage" src="$piFormContext.getImagePush()" alt="[Push Image]">
-                                        <br><br>
+                                        <br>
                                     #end
                                 #else
                                     <p class="pi-message">$piFormContext.getMessage()</p>
@@ -102,14 +102,14 @@
                                     #if ($piFormContext.getImageOtp() != "")
                                         <br>
                                         <img class="pi-tokenImage" src="$piFormContext.getImageOtp()" alt="[OTP Image]">
-                                        <br><br>
+                                        <br>
                                     #end
                                 #end
                                 #if ($piContext.getMode() == "webauthn" && $passkeyRegistrationEmpty)
                                     #if ($piFormContext.getImageWebauthn() != "")
                                         <br>
                                         <img class="pi-tokenImage" src="$piFormContext.getImageWebauthn()" alt="[WebAuthn Image]">
-                                        <br><br>
+                                        <br>
                                     #end
                                 #end
                                 #set ($formErrorMsg = $piContext.getFormErrorMessage())
@@ -137,20 +137,15 @@
                                 <input id="mode" name="mode" value='$piContext.getMode()' type="hidden">
                                 <input id="errorMessage" name="errorMessage" value="" type="hidden">
                                 <input id="silentModeChange" name="silentModeChange" value="0" type="hidden">
-                                <input id="webauthnSignRequest" name="webauthnSignRequest" value='$piContext.getWebauthnSignRequest()'
-                                       type="hidden">
+                                <input id="webauthnSignRequest" name="webauthnSignRequest" value='$piContext.getWebauthnSignRequest()' type="hidden">
                                 <input id="webauthnSignResponse" name="webauthnSignResponse" value="" type="hidden">
                                 <input id="origin" name="origin" value="" type="hidden">
                                 <input id="isPushAvailable" name="isPushAvailable" value='$piContext.getIsPushAvailable()' type="hidden">
-                                <input id="pollingInterval" name="pollingInterval" value='$piFormContext.getPollingInterval()'
-                                       type="hidden">
-                                <input id="pollInBrowserUrl" name="pollInBrowserUrl" value='$piFormContext.getPollInBrowserUrl()'
-                                       type="hidden">
+                                <input id="pollingInterval" name="pollingInterval" value='$piFormContext.getPollingInterval()' type="hidden">
+                                <input id="pollInBrowserUrl" name="pollInBrowserUrl" value='$piFormContext.getPollInBrowserUrl()' type="hidden">
                                 <input id="transactionID" name="transactionID" value='$piContext.getTransactionID()' type="hidden">
-                                <input id="pollInBrowserFailed" name="pollInBrowserFailed" value='$piFormContext.getPollInBrowserFailed()'
-                                       type="hidden">
-                                <input id="passkeyRegistration" name="passkeyRegistration" value='$piContext.getPasskeyRegistration()'
-                                       type="hidden">
+                                <input id="pollInBrowserFailed" name="pollInBrowserFailed" value='$piFormContext.getPollInBrowserFailed()' type="hidden">
+                                <input id="passkeyRegistration" name="passkeyRegistration" value='$piContext.getPasskeyRegistration()' type="hidden">
                                 <input id="passkeyRegistrationResponse" name="passkeyRegistrationResponse" value="" type="hidden">
                                 <input id="passkeyChallenge" name="passkeyChallenge" value='$piContext.getPasskeyChallenge()' type="hidden">
                                 <input id="passkeyLoginCancelled" name="passkeyLoginCancelled" value="0" type="hidden">
@@ -165,9 +160,14 @@
                                 #if ($piContext.getPasskeyChallenge() && $piContext.getPasskeyChallenge() != "")
                                     <script>passkeyAuthentication()</script>
                                     <input class="form-element-button" id="passkeyButton" type="button" name="passkeyButton"
-                                           onclick="passkeyAuthentication()"
-                                           value="#springMessageText("privacyidea.passkeyLogin", "Passkey Login")">
-                                    <br><br>
+                                           onclick="passkeyAuthentication()" value="#springMessageText("privacyidea.passkeyLogin", "Passkey Login")">
+                                    <br>
+                                #elseif ($passkeyRegistrationEmpty == true)
+                                    ## PASSKEY INIT ##
+                                    <button class="form-element-button" id="initPasskeyLogin" type="submit"
+                                            onclick="document.getElementById('passkeyLoginRequested').value = '1'"
+                                            name="_eventId_proceed">#springMessageText("privacyidea.passkeyButton", "Sign in with Passkey")</button>
+                                    <br>
                                 #end
 
                                 ## PASSKEY REGISTRATION ##
@@ -175,8 +175,8 @@
                                 #if ($passkeyRegistrationEmpty != true)
                                     <script>registerPasskey()</script>
                                     <input class="form-element-button" id="retryPasskeyRegistrationButton" type="button"
-                                           name="retryPasskeyRegistrationButton"
-                                           onclick="registerPasskey()" value="#springMessageText("privacyidea.retryPasskeyRegistration", "Retry Passkey Registration")">
+                                           name="retryPasskeyRegistrationButton" onclick="registerPasskey()"
+                                           value="#springMessageText("privacyidea.retryPasskeyRegistration", "Retry Passkey Registration")">
                                     <br><br>
                                 #end
                             </div>
@@ -200,10 +200,9 @@
 
                                 ## WEBAUTHN TOKEN ##
                                 #if ($piContext.getWebauthnSignRequest() && $piContext.getWebauthnSignRequest() != "")
-                                    <input class="form-element-button" id="webauthnButton" name="webauthnButton" type="button"
-                                           value="WebAuthn">
+                                    <input class="form-element-button" id="webauthnButton" name="webauthnButton" type="button" value="WebAuthn">
                                 #end
-                                <br><br>
+                                <br>
                             </div>
 
                             ## RESET THE LOGIN PROCESS ##
