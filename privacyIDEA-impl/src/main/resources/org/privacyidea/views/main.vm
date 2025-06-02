@@ -25,7 +25,6 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <title>#springMessageText('$titleMessageTextProperty', 'privacyIDEA Authentication')</title>
-    <link rel="stylesheet" type="text/css" href="$request.getContextPath()#springMessageText('idp.css', '/css/placeholder.css')">
     <link rel="stylesheet" type="text/css" href="$request.getContextPath()/css/pi-main.css">
     <script type="text/javascript" src='$request.getContextPath()/js/pi-webauthn.js'></script>
     <script type="text/javascript" src='$request.getContextPath()/js/pi-pollTransaction.worker.js'></script>
@@ -130,7 +129,7 @@
                                     <button class="form-element-button" id="pi-form-submit-button" type="submit"
                                             name="_eventId_proceed">#springMessageText("privacyidea.submit", "Submit")</button>
                                 #end
-                                <br><br>
+                                <br>
                             </div>
 
                             ## FORM OPTIONS ##
