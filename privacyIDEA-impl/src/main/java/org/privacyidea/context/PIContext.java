@@ -32,7 +32,7 @@ public class PIContext extends BaseContext
     @Nullable
     private String webauthnSignResponse = null;
     @Nullable
-    private String passkeyRegistration = null;
+    private String passkeyRegistration = "";
     @Nullable
     private String passkeyRegistrationResponse = null;
     @Nullable
