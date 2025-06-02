@@ -17,11 +17,11 @@
 body {
     background: #f5f7fa;
     font-family: 'Segoe UI', Arial, sans-serif;
+    min-height: 100vh;
     margin: 30px;
     padding: 0;
     display: flex;
     flex-direction: column;
-    align-items: center;
     justify-content: center;
 }
 
@@ -78,7 +78,6 @@ body {
 
 #otherLoginOptions {
     padding-top: 20px;
-    text-align: center;
     color: #888;
     font-size: 0.98em;
 }
