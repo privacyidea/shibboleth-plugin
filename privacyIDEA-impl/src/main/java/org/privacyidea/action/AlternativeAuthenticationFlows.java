@@ -15,6 +15,7 @@
  */
 package org.privacyidea.action;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nonnull;
@@ -45,7 +46,7 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
 
             HttpServletRequest request = Objects.requireNonNull(getHttpServletRequestSupplier()).get();
             Map<String, String> headers = this.getHeadersToForward(request);
-            PIResponse piResponse = privacyIDEA.triggerChallenges(piContext.getUsername(), headers);
+            PIResponse piResponse = privacyIDEA.triggerChallenges(piContext.getUsername(), new LinkedHashMap<>(), headers);
 
             if (piResponse != null)
             {
