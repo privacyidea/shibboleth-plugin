@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -48,6 +49,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         piContext.setWebauthnSignResponse(request.getParameterValues("webauthnSignResponse")[0]);
         piContext.setPasskeySignResponse(request.getParameterValues("passkeySignResponse")[0]);
         piContext.setPasskeyRegistration(request.getParameterValues("passkeyRegistration")[0]);
+        piContext.setPasskeyRegistrationResponse(request.getParameterValues("passkeyRegistrationResponse")[0]);
         piContext.setPasskeyChallenge(request.getParameterValues("passkeyChallenge")[0]);
         piContext.setOrigin(request.getParameterValues("origin")[0]);
         piContext.setFormErrorMessage(request.getParameterValues("errorMessage")[0]);
@@ -94,12 +96,12 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         // Passkey login requested: Get a challenge and return
         if (request.getParameterValues("passkeyLoginRequested")[0].equals("1"))
         {
-            PIResponse res = privacyIDEA.validateInitialize("passkey");
-            if (StringUtil.isNotBlank(res.passkeyChallenge))
+            PIResponse response = privacyIDEA.validateInitialize("passkey");
+            if (StringUtil.isNotBlank(response.passkeyChallenge))
             {
-                piContext.setPasskeyChallenge(res.passkeyChallenge);
+                piContext.setPasskeyChallenge(response.passkeyChallenge);
                 piContext.setMode("passkey");
-                piContext.setPasskeyTransactionID(res.transactionID);
+                piContext.setPasskeyTransactionID(response.transactionID);
 
                 ActionSupport.buildEvent(profileRequestContext, "reload");
                 return;
@@ -110,6 +112,29 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         {
             piContext.setPasskeyChallenge("");
             piContext.setPasskeyTransactionID(null);
+        }
+        // Passkey registration: enroll_via_multichallenge, this happens after successful authentication
+        if (StringUtil.isNotBlank(piContext.getPasskeyRegistrationResponse()))
+        {
+            PIResponse response = privacyIDEA.validateCheckCompletePasskeyRegistration(piContext.getTransactionID(),
+                                                                                       piContext.getPasskeyRegistrationSerial(),
+                                                                                       piContext.getUsername(),
+                                                                                       piContext.getPasskeyRegistrationResponse(),
+                                                                                       piContext.getOrigin(),
+                                                                                       headers);
+            if (response != null)
+            {
+                if (response.error != null)
+                {
+                    LOGGER.error(response.error.message);
+                    ActionSupport.buildEvent(profileRequestContext, "abort");
+                    return;
+                }
+                else if (response.value)
+                {
+                    finalizeAuthentication(profileRequestContext, piContext);
+                }
+            }
         }
 
         if (request.getParameterValues("silentModeChange")[0].equals("1"))
@@ -168,6 +193,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                                                                piContext.getTransactionID(),
                                                                piContext.getWebauthnSignResponse(),
                                                                piContext.getOrigin(),
+                                                               new LinkedHashMap<>(),
                                                                headers);
             }
         }
@@ -221,24 +247,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             }
             else if (piResponse.value)
             {
-                if (StringUtil.isNotBlank(piContext.getStandalone()) && piContext.getStandalone().equals("1"))
-                {
-                    if (debug)
-                    {
-                        LOGGER.info("{} Standalone mode, setting username and building event...", this.getLogPrefix());
-                    }
-                    UsernameContext userCtx = profileRequestContext.getSubcontext(UsernameContext.class, true);
-                    userCtx.setUsername(piContext.getUsername());
-                    ActionSupport.buildEvent(profileRequestContext, "validateResponseStandalone");
-                }
-                else
-                {
-                    if (debug)
-                    {
-                        LOGGER.info("{} Authentication successful, building success event...", this.getLogPrefix());
-                    }
-                    ActionSupport.buildEvent(profileRequestContext, "success");
-                }
+                finalizeAuthentication(profileRequestContext, piContext);
             }
             else
             {
@@ -253,6 +262,37 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         {
             LOGGER.error("{} privacyIDEA response was null. Please check the config and try again.", this.getLogPrefix());
             ActionSupport.buildEvent(profileRequestContext, "reload");
+        }
+    }
+
+    /**
+     * Finalizes the authentication process by building the success event.
+     * In standalone mode plugin additionally sets the username in UsernameContext and then build the appropriate event.
+     *
+     * @param profileRequestContext The ProfileRequestContext for the current request.
+     * @param piContext             The PIContext containing the authentication details.
+     */
+    private void finalizeAuthentication(@Nonnull ProfileRequestContext profileRequestContext,
+                                        @Nonnull PIContext piContext)
+    {
+        if (StringUtil.isNotBlank(piContext.getStandalone()) && piContext.getStandalone().equals("1"))
+        {
+            if (debug)
+            {
+                LOGGER.info("{} Standalone mode, setting username and building event...", this.getLogPrefix());
+            }
+            UsernameContext userCtx = profileRequestContext.getSubcontext(UsernameContext.class, true);
+            assert userCtx != null;
+            userCtx.setUsername(piContext.getUsername());
+            ActionSupport.buildEvent(profileRequestContext, "validateResponseStandalone");
+        }
+        else
+        {
+            if (debug)
+            {
+                LOGGER.info("{} Authentication successful, building success event...", this.getLogPrefix());
+            }
+            ActionSupport.buildEvent(profileRequestContext, "success");
         }
     }
 }
