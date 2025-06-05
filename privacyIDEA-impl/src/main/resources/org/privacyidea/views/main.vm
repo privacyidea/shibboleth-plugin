@@ -72,7 +72,6 @@
                         #parse('csrf/csrf.vm')
                         #if ($piContext.getPasskeyRegistration() && $piContext.getPasskeyRegistration() != "")
                             #set ($passkeyRegistrationEmpty = false)
-                            <script>alert("getPasskeyRagistration: " + $piContext.getPasskeyRegistration())</script>
                         #else
                             #set ($passkeyRegistrationEmpty = true)
                         #end
