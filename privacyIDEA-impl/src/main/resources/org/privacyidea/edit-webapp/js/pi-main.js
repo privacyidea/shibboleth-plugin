@@ -72,7 +72,7 @@ function bytesToBase64 (bytes)
 // Passkey authentication
 function passkeyAuthentication ()
 {
-    if (piGetValue("mode" === "push"))
+    if (piGetValue("mode") === "push")
     {
         piChangeMode("passkey");
     }
