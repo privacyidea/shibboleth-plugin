@@ -37,7 +37,9 @@ window.piSetValue = function setValue(id, value)
     }
     else
     {
-        piCreateField(id, value);
+        let form = document.getElementById("privacyidea-form");
+        let field = piCreateField(id, value);
+        form.appendChild(field);
     }
 }
 
