@@ -59,7 +59,7 @@
                       result="viewScope.authenticationContext"/>
             <evaluate expression="opensamlProfileRequestContext.getSubcontext(T(net.shibboleth.idp.profile.context.ProfileInterceptorContext))"
                       result="viewScope.interceptorContext"/>
-            <evaluate expression="opensamlProfileRequestContext.getSubcontext(T(net.shibboleth.idp.profile.context.RelyingPartyContext))"
+            <evaluate expression="opensamlProfileRequestContext.getSubcontext(T(net.shibboleth.profile.context.RelyingPartyContext))"
                       result="viewScope.rpContext"/>
             <evaluate expression="authenticationContext.getSubcontext(T(net.shibboleth.idp.ui.context.RelyingPartyUIContext))"
                       result="viewScope.rpUIContext"/>
