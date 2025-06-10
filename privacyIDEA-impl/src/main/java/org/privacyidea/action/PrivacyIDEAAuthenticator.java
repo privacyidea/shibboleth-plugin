@@ -18,6 +18,7 @@ package org.privacyidea.action;
 import net.shibboleth.idp.authn.context.UsernameContext;
 import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.context.ProfileRequestContext;
+import org.privacyidea.AuthenticationStatus;
 import org.privacyidea.ChallengeStatus;
 import org.privacyidea.PIResponse;
 import org.privacyidea.context.PIContext;
@@ -82,13 +83,23 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                 {
                     if (piResponse.value)
                     {
-                        if (StringUtil.isNotBlank(piResponse.username))
-                        {
-                            UsernameContext userCtx = profileRequestContext.getSubcontext(UsernameContext.class, true);
-                            userCtx.setUsername(piResponse.username);
-                            ActionSupport.buildEvent(profileRequestContext, "validateResponseStandalone");
-                            return;
-                        }
+                        finalizeAuthentication(profileRequestContext, piContext);
+                        return;
+                    }
+                    else if (piResponse.authentication == AuthenticationStatus.REJECT)
+                    {
+                        LOGGER.error("{} Passkey authentication rejected!", this.getLogPrefix());
+                        piContext.setFormErrorMessage("Passkey authentication rejected!");
+                        piContext.setMode("otp");
+                        ActionSupport.buildEvent(profileRequestContext, "reload");
+                        return;
+                    }
+                    else if (piResponse.error != null)
+                    {
+                        LOGGER.error("{} Passkey authentication error: {}!", this.getLogPrefix(), piResponse.error.message);
+                        piContext.setFormErrorMessage(piResponse.error.message);
+                        ActionSupport.buildEvent(profileRequestContext, "reload");
+                        return;
                     }
                 }
             }
@@ -132,7 +143,9 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                 }
                 else if (response.value)
                 {
+                    piContext.setPasskeyRegistration("");
                     finalizeAuthentication(profileRequestContext, piContext);
+                    return;
                 }
             }
         }
