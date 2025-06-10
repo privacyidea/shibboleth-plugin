@@ -55,6 +55,11 @@ The different configuration parameters are explained in the following table:
 | `privacyidea.polling_in_browser_url` | If 'poll in browser' should use a deviating URL, set it here. Otherwise, the general URL will be used.                                                                                                                                                                                                                                                                                                                                                                     |
 | `privacyidea.debug`                  | Set this parameter to true to see the debug messages in the `idp-process.log`.                                                                                                                                                                                                                                                                                                                                                                                               |
 
+### Passkey:
+**If you want to use passkey authentication without the password module, you can adjust the mfa-authn-config.xml file to use the privacyIDEA subflow directly.**<br>
+Note: This will change the authentication flow to allow passkey authentication without need for entering the username and password.<br>
+Example of the *util:map* is located in the *privacyidea.properties* file (`$idp_install_path/conf/authn/privacyidea.properties`).
+
 ### Log check:
 - **Main log: `$idp_install_path/logs/idp-process.log`.**
 - **Warn and error log: `$idp_install_path/logs/idp-warn.log`.**
