@@ -83,7 +83,7 @@ function passkeyAuthentication ()
     }
     else
     {
-        piSetValue("passkeyLoginCancelled", 0);
+        piSetValue("passkeyLoginCancelled", "0");
         let challengeObject = JSON.parse(passkeyChallenge.replace(/(&quot;)/g, "\""));
         let userVerification = "preferred";
         if ([ "required", "preferred", "discouraged" ].includes(challengeObject.user_verification))
@@ -107,7 +107,7 @@ function passkeyAuthentication ()
             piSubmit();
         }, function (error) {
             console.log("Error during passkey authentication: " + error);
-            piSetValue("passkeyLoginCancelled", true);
+            piSetValue("passkeyLoginCancelled", "1");
         });
     }
 }
