@@ -21,12 +21,15 @@ function fieldCheck(field)
 
 function piEventListeners()
 {
-    document.getElementById("otp").addEventListener("keyup", () => {
-        if (piGetValue('otp').length === parseInt(piGetValue("otpLength")))
-        {
-            piSubmit();
-        }
-    });
+    if (document.getElementById("otp") != null)
+    {
+        document.getElementById("otp").addEventListener("keyup", () => {
+            if (piGetValue('otp').length === parseInt(piGetValue("otpLength")))
+            {
+                piSubmit();
+            }
+        });
+    }
 
     if (piGetValue("mode") === "push")
     {
@@ -46,12 +49,6 @@ function piEventListeners()
     {
     document.getElementById("webauthnButton").addEventListener("click", () => {
        doWebAuthn();
-    });
-    }
-    if (fieldCheck(document.getElementById('passkeyButton')))
-    {
-    document.getElementById("passkeyButton").addEventListener("click", () => {
-       requestPasskeyLogin();
     });
     }
 }
