@@ -234,7 +234,7 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
                 }
                 else
                 {
-                    LOGGER.info("{} No values for header \"" + headerName + "\" found.", this.getLogPrefix());
+                    LOGGER.info("{} No values for header \"{}\" found.", this.getLogPrefix(), headerName);
                 }
             }
         }
@@ -247,7 +247,7 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
     {
         if (debug)
         {
-            LOGGER.info("PrivacyIDEA Client: " + message);
+            LOGGER.info(message);
         }
     }
 
@@ -256,7 +256,7 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
     {
         if (debug)
         {
-            LOGGER.error("PrivacyIDEA Client: " + message);
+            LOGGER.error(message);
         }
     }
 
@@ -265,7 +265,7 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
     {
         if (debug)
         {
-            LOGGER.info("PrivacyIDEA Client: " + throwable);
+            LOGGER.info(String.valueOf(throwable));
         }
     }
 
@@ -274,7 +274,7 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
     {
         if (debug)
         {
-            LOGGER.error("PrivacyIDEA Client: " + throwable);
+            LOGGER.error(String.valueOf(throwable));
         }
     }
 }
