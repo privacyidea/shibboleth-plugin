@@ -83,6 +83,10 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                 {
                     if (piResponse.value)
                     {
+                        if (StringUtil.isNotBlank(piResponse.username))
+                        {
+                            piContext.setUsername(piResponse.username);
+                        }
                         finalizeAuthentication(profileRequestContext, piContext);
                         return;
                     }
