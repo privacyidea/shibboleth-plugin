@@ -56,6 +56,11 @@ window.piDisableElement = function disableElement(id)
     }
 }
 
+window.piElementCheck = function elementCheck(field)
+{
+    return typeof (field) != 'undefined' && field != null;
+}
+
 window.piEnableElement = function enableElement(id)
 {
     const element = document.getElementById(id);
