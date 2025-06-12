@@ -7,7 +7,7 @@
     <parent>
         <groupId>net.shibboleth</groupId>
         <artifactId>parent</artifactId>
-        <version>17.1.3</version>
+        <version>11.3.5</version>
     </parent>
 
     <name>Shibboleth IdP :: Plugins :: privacyIDEA</name>
@@ -68,7 +68,7 @@
         </repository>
         <repository>
             <id>gluu</id>
-            <url>https://ox.gluu.org/maven/</url>
+            <url>https://ox.gluu.org/maven4/</url>
         </repository>
     </repositories>
 

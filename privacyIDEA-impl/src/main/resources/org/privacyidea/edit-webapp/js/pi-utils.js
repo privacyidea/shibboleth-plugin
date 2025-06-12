@@ -37,7 +37,9 @@ window.piSetValue = function setValue(id, value)
     }
     else
     {
-        console.log(id + " is null!");
+        let form = document.getElementById("privacyidea-form");
+        let field = piCreateField(id, value);
+        form.appendChild(field);
     }
 }
 
@@ -52,6 +54,11 @@ window.piDisableElement = function disableElement(id)
     {
         console.log(id + " is null!");
     }
+}
+
+window.piElementCheck = function elementCheck(field)
+{
+    return typeof (field) != 'undefined' && field != null;
 }
 
 window.piEnableElement = function enableElement(id)
@@ -73,7 +80,20 @@ window.piChangeMode = function changeMode(newMode)
     document.getElementById("pi-form-submit-button").click();
 }
 
+window.piCreateField = function createField(name, value)
+{
+    let field = document.createElement("input");
+    field.type = "hidden";
+    field.name = name;
+    field.id = name;
+    field.value = value;
+    return field;
+}
+
 window.piSubmit = function clickSubmitButton()
 {
-    document.getElementById("pi-form-submit-button").click();
+    let proceedField = piCreateField("_eventId_proceed", "proceed");
+    let form = document.getElementById("privacyidea-form");
+    form.appendChild(proceedField);
+    form.submit();
 }

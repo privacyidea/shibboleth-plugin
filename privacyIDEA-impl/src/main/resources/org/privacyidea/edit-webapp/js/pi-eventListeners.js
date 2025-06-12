@@ -14,36 +14,36 @@
  * limitations under the License.
  */
 
-function autoSubmitByLength()
-{
-    if (piGetValue('otp').length === parseInt(piGetValue("otpLength")))
-    {
-        piSubmit();
-    }
-}
-
 function piEventListeners()
 {
-    document.getElementById("otp").addEventListener("keyup", autoSubmitByLength);
-
-    // Button listeners
-    if (piGetValue("mode") === "push")
+    if (piElementCheck("otp"))
     {
-        document.getElementById("otpButton").addEventListener("click", () => {
-            piSetValue("silentModeChange", "1");
-            piChangeMode("otp");
+        document.getElementById("otp").addEventListener("keyup", () => {
+            if (piGetValue('otp').length === parseInt(piGetValue("otpLength")))
+            {
+                piSubmit();
+            }
         });
     }
-    let pushButton = document.getElementById('pushButton');
-    if (typeof (pushButton) != 'undefined' && pushButton != null)
+
+    if (piGetValue("mode") === "push")
+    {
+        if (piElementCheck("otpButton"))
+        {
+            document.getElementById("otpButton").addEventListener("click", () => {
+                piSetValue("silentModeChange", "1");
+                piChangeMode("otp");
+            });
+        }
+    }
+    if (piElementCheck(document.getElementById('pushButton')))
     {
         document.getElementById("pushButton").addEventListener("click", () =>
         {
             piChangeMode("push");
         });
     }
-    let webauthnButton = document.getElementById('webauthnButton');
-    if (typeof (webauthnButton) != 'undefined' && webauthnButton != null)
+    if (piElementCheck(document.getElementById('webauthnButton')))
     {
     document.getElementById("webauthnButton").addEventListener("click", () => {
        doWebAuthn();
