@@ -14,14 +14,9 @@
  * limitations under the License.
  */
 
-function fieldCheck(field)
-{
-    return typeof (field) != 'undefined' && field != null;
-}
-
 function piEventListeners()
 {
-    if (document.getElementById("otp") != null)
+    if (piElementCheck("otp"))
     {
         document.getElementById("otp").addEventListener("keyup", () => {
             if (piGetValue('otp').length === parseInt(piGetValue("otpLength")))
@@ -33,19 +28,22 @@ function piEventListeners()
 
     if (piGetValue("mode") === "push")
     {
-        document.getElementById("otpButton").addEventListener("click", () => {
-            piSetValue("silentModeChange", "1");
-            piChangeMode("otp");
-        });
+        if (piElementCheck("otpButton"))
+        {
+            document.getElementById("otpButton").addEventListener("click", () => {
+                piSetValue("silentModeChange", "1");
+                piChangeMode("otp");
+            });
+        }
     }
-    if (fieldCheck(document.getElementById('pushButton')))
+    if (piElementCheck(document.getElementById('pushButton')))
     {
         document.getElementById("pushButton").addEventListener("click", () =>
         {
             piChangeMode("push");
         });
     }
-    if (fieldCheck(document.getElementById('webauthnButton')))
+    if (piElementCheck(document.getElementById('webauthnButton')))
     {
     document.getElementById("webauthnButton").addEventListener("click", () => {
        doWebAuthn();
