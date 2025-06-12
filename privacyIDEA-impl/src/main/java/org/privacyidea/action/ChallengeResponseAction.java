@@ -188,14 +188,17 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
         {
             if ("poll".equals(c.getClientMode()))
             {
+                piContext.setMode("push");
                 piFormContext.setImagePush(c.getImage());
             }
             else if ("interactive".equals(c.getClientMode()))
             {
+                piContext.setMode("otp");
                 piFormContext.setImageOtp(c.getImage());
             }
             if ("webauthn".equals(c.getClientMode()))
             {
+                piContext.setMode("webauthn");
                 piFormContext.setImageWebauthn(c.getImage());
             }
         }
