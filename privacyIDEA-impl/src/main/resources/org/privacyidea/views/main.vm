@@ -78,24 +78,12 @@
                         <div class="content">
                             #if ($piContext.getUsername())
                                 <div class="form-element-wrapper" id="greeting">
-                                    <p>Hello $piContext.getUsername()!</p>
+                                    <p id="pi-greeting">Hello $piContext.getUsername()!</p>
                                     <br>
                                 </div>
                             #end
 
                             <div class="form-element-wrapper" id="messages-and-images">
-                                ## MESSAGES ##
-                                #if ($piContext.getMode() == "push" && $passkeyRegistrationEmpty)
-                                    <p class="pi-message">$piFormContext.getPushMessage()</p>
-                                    #if ($piFormContext.getImagePush() != "")
-                                        <br>
-                                        <img class="pi-tokenImage" src="$piFormContext.getImagePush()" alt="[Push Image]">
-                                        <br>
-                                    #end
-                                #else
-                                    <p class="pi-message">$piFormContext.getMessage()</p>
-                                #end
-
                                 ## IMAGES ##
                                 #if ($piContext.getMode() == "otp" && $passkeyRegistrationEmpty)
                                     #if ($piFormContext.getImageOtp() != "")
@@ -117,6 +105,18 @@
                                     <p>$formErrorMsg</p>
                                 #end
                                 <br>
+
+                                ## MESSAGES ##
+                                #if ($piContext.getMode() == "push" && $passkeyRegistrationEmpty)
+                                    <p class="pi-message">$piFormContext.getPushMessage()</p>
+                                    #if ($piFormContext.getImagePush() != "")
+                                        <br>
+                                        <img class="pi-tokenImage" src="$piFormContext.getImagePush()" alt="[Push Image]">
+                                        <br>
+                                    #end
+                                #else
+                                    <p class="pi-message">$piFormContext.getMessage()</p>
+                                #end
                             </div>
 
                             ## OTP & SUBMIT ##
