@@ -81,7 +81,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                                                               headers);
                 if (piResponse != null)
                 {
-                    if (piResponse.value)
+                    if (piResponse.authenticationSuccessful())
                     {
                         if (StringUtil.isNotBlank(piResponse.username))
                         {
@@ -262,7 +262,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                 extractChallengeData(piResponse);
                 ActionSupport.buildEvent(profileRequestContext, "reload");
             }
-            else if (piResponse.value)
+            else if (piResponse.authenticationSuccessful())
             {
                 finalizeAuthentication(profileRequestContext, piContext);
             }

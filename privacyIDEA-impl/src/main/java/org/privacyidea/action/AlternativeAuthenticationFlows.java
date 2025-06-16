@@ -102,7 +102,7 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
                     }
                     extractMessage(piResponse);
                     
-                    if (piResponse.value)
+                    if (piResponse.authenticationSuccessful())
                     {
                         if (debug)
                         {
