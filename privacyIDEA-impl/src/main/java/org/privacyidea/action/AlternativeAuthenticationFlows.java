@@ -37,7 +37,7 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
     @Override
     protected final void doExecute(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext, @Nonnull PIServerConfigContext piServerConfigContext)
     {
-        if (piServerConfigContext.getConfigParams().getAuthenticationFlow().equals("triggerChallenge"))
+        if ("triggerChallenge".equals(piServerConfigContext.getConfigParams().getAuthenticationFlow()))
         {
             if (debug)
             {
@@ -72,7 +72,7 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
                 LOGGER.error("{} triggerChallenge failed. Response was null. Fallback to standard procedure.", this.getLogPrefix());
             }
         }
-        else if (piServerConfigContext.getConfigParams().getAuthenticationFlow().equals("sendStaticPass"))
+        else if ("sendStaticPass".equals(piServerConfigContext.getConfigParams().getAuthenticationFlow()))
         {
             if (debug)
             {

@@ -117,11 +117,11 @@ public class InitializePIContext extends AbstractAuthenticationAction
     {
         String authenticationFlow;
         String staticPass = null;
-        if (this.authenticationFlow.equals("triggerChallenge"))
+        if ("triggerChallenge".equals(this.authenticationFlow))
         {
             authenticationFlow = "triggerChallenge";
         }
-        else if (this.authenticationFlow.equals("sendStaticPass"))
+        else if ("sendStaticPass".equals(this.authenticationFlow))
         {
             authenticationFlow = "sendStaticPass";
             if (this.staticPass != null)

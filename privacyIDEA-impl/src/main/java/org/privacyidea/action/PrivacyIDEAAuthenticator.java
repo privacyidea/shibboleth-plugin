@@ -109,7 +109,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             }
         }
         // Passkey login requested: Get a challenge and return
-        if (request.getParameterValues("passkeyLoginRequested")[0].equals("1"))
+        if ("1".equals(request.getParameterValues("passkeyLoginRequested")[0]))
         {
             PIResponse response = privacyIDEA.validateInitialize("passkey");
             if (StringUtil.isNotBlank(response.passkeyChallenge))
@@ -123,7 +123,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             }
         }
         // Passkey login cancelled: Remove the challenge and passkey transaction ID
-        if (request.getParameterValues("passkeyLoginCancelled")[0].equals("1"))
+        if ("1".equals(request.getParameterValues("passkeyLoginCancelled")[0]))
         {
             piContext.setPasskeyChallenge("");
             piContext.setPasskeyTransactionID(null);
@@ -154,12 +154,12 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             }
         }
 
-        if (request.getParameterValues("silentModeChange")[0].equals("1"))
+        if ("1".equals(request.getParameterValues("silentModeChange")[0]))
         {
             ActionSupport.buildEvent(profileRequestContext, "reload");
             return;
         }
-        else if (piContext.getMode().equals("push"))
+        else if ("push".equals(piContext.getMode()))
         {
             // In push mode, poll for the transaction id to see if the challenge has been answered
             ChallengeStatus pollTransStatus = privacyIDEA.pollTransaction(piContext.getTransactionID());
@@ -214,7 +214,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                                                                headers);
             }
         }
-        else if (piContext.getMode().equals("otp"))
+        else if ("otp".equals(piContext.getMode()))
         {
             if (request.getParameterValues("otp") != null && request.getParameterValues("otp").length > 0)
             {
@@ -292,7 +292,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
     private void finalizeAuthentication(@Nonnull ProfileRequestContext profileRequestContext,
                                         @Nonnull PIContext piContext)
     {
-        if (StringUtil.isNotBlank(piContext.getStandalone()) && piContext.getStandalone().equals("1"))
+        if (StringUtil.isNotBlank(piContext.getStandalone()) && "1".equals(piContext.getStandalone()))
         {
             if (debug)
             {
