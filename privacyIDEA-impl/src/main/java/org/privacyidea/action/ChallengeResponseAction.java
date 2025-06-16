@@ -250,7 +250,7 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
     {
         if (debug)
         {
-            LOGGER.info(message);
+            LOGGER.info("{}{}", this.getLogPrefix(), message);
         }
     }
 
@@ -259,7 +259,7 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
     {
         if (debug)
         {
-            LOGGER.error(message);
+            LOGGER.error("{}{}", this.getLogPrefix(), message);
         }
     }
 
@@ -268,7 +268,7 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
     {
         if (debug)
         {
-            LOGGER.info(String.valueOf(throwable));
+            LOGGER.info("{}{}", this.getLogPrefix(), throwable);
         }
     }
 
@@ -277,7 +277,7 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
     {
         if (debug)
         {
-            LOGGER.error(String.valueOf(throwable));
+            LOGGER.error("{}{}", this.getLogPrefix(), throwable);
         }
     }
 }
