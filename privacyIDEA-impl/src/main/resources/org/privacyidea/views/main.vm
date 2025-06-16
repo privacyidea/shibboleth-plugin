@@ -77,7 +77,7 @@
                         #end
                         <div class="content">
                             <div class="form-element-wrapper" id="messages-and-images">
-                                ## IMAGES ##
+                                ## IMAGES & MESSAGES ##
                                 #if ($piContext.getMode() == "otp" && $passkeyRegistrationEmpty)
                                     #if ($piFormContext.getImageOtp() != "")
                                         <br>
@@ -98,8 +98,6 @@
                                     <p>$formErrorMsg</p>
                                 #end
                                 <br>
-
-                                ## MESSAGES ##
                                 #if ($piContext.getMode() == "push" && $passkeyRegistrationEmpty)
                                     <p class="pi-message">$piFormContext.getPushMessage()</p>
                                     #if ($piFormContext.getImagePush() != "")
@@ -146,6 +144,30 @@
                                 <input id="otpLength" name="otpLength" value='$piFormContext.getOtpLength()' type="hidden">
                             </div>
 
+                            ## OTHER LOGIN OPTIONS ##
+                            <div class="form-element-wrapper" id="otherLoginOptions">
+                                <h3 id="otherLoginOptionsHeader">#springMessageText("privacyidea.otherLoginOptions", "Other Login Options")</h3>
+                                ## POLL IN BROWSER ##
+                                #if ($piFormContext.getPollInBrowser() == true && $piFormContext.getPollInBrowserUrl()
+                                && $piContext.getTransactionID() && $piContext.getTransactionID() != "")
+                                    <script src='$request.getContextPath()/js/pi-pollInBrowser.js'></script>
+                                #end
+
+                                ## PUSH TOKEN ##
+                                #if ($piContext.getMode() == "push")
+                                    <input class="form-element-button" id="otpButton" name="otpButton" type="button" value="OTP">
+                                #end
+                                #if ($piContext.getIsPushAvailable() && $piContext.getMode() != "push")
+                                    <input class="form-element-button" id="pushButton" name="pushButton" type="button" value="Push">
+                                #end
+
+                                ## WEBAUTHN TOKEN ##
+                                #if ($piContext.getWebauthnSignRequest() && $piContext.getWebauthnSignRequest() != "")
+                                    <input class="form-element-button" id="webauthnButton" name="webauthnButton" type="button" value="WebAuthn">
+                                #end
+                                <br>
+                            </div>
+
                             ## PASSKEY ##
                             <div class="form-element-wrapper" id="passkey">
                                 ## PASSKEY AUTHENTICATION ##
@@ -171,30 +193,6 @@
                                            value="#springMessageText("privacyidea.retryPasskeyRegistration", "Retry Passkey Registration")">
                                     <br><br>
                                 #end
-                            </div>
-
-                            ## OTHER LOGIN OPTIONS ##
-                            <div class="form-element-wrapper" id="otherLoginOptions">
-                                <h3 id="otherLoginOptionsHeader">#springMessageText("privacyidea.otherLoginOptions", "Other Login Options")</h3>
-                                ## POLL IN BROWSER ##
-                                #if ($piFormContext.getPollInBrowser() == true && $piFormContext.getPollInBrowserUrl()
-                                && $piContext.getTransactionID() && $piContext.getTransactionID() != "")
-                                    <script src='$request.getContextPath()/js/pi-pollInBrowser.js'></script>
-                                #end
-
-                                ## PUSH TOKEN ##
-                                #if ($piContext.getMode() == "push")
-                                    <input class="form-element-button" id="otpButton" name="otpButton" type="button" value="OTP">
-                                #end
-                                #if ($piContext.getIsPushAvailable() && $piContext.getMode() != "push")
-                                    <input class="form-element-button" id="pushButton" name="pushButton" type="button" value="Push">
-                                #end
-
-                                ## WEBAUTHN TOKEN ##
-                                #if ($piContext.getWebauthnSignRequest() && $piContext.getWebauthnSignRequest() != "")
-                                    <input class="form-element-button" id="webauthnButton" name="webauthnButton" type="button" value="WebAuthn">
-                                #end
-                                <br>
                             </div>
 
                             ## RESET THE LOGIN PROCESS ##
