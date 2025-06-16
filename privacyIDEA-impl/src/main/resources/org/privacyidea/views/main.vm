@@ -76,13 +76,6 @@
                             #set ($passkeyRegistrationEmpty = true)
                         #end
                         <div class="content">
-                            #if ($piContext.getUsername())
-                                <div class="form-element-wrapper" id="greeting">
-                                    <p id="pi-greeting">Hello $piContext.getUsername()!</p>
-                                    <br>
-                                </div>
-                            #end
-
                             <div class="form-element-wrapper" id="messages-and-images">
                                 ## IMAGES ##
                                 #if ($piContext.getMode() == "otp" && $passkeyRegistrationEmpty)
