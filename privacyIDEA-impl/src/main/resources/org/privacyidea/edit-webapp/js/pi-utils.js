@@ -19,7 +19,6 @@ window.piGetValue = function getValue(id)
     const element = document.getElementById(id);
     if (element === null)
     {
-        console.log(id + " is null!");
         return "";
     }
     else
@@ -50,15 +49,6 @@ window.piDisableElement = function disableElement(id)
     {
         element.style.display = "none";
     }
-    else
-    {
-        console.log(id + " is null!");
-    }
-}
-
-window.piElementCheck = function elementCheck(field)
-{
-    return typeof (field) != 'undefined' && field != null;
 }
 
 window.piEnableElement = function enableElement(id)
@@ -70,7 +60,7 @@ window.piEnableElement = function enableElement(id)
     }
     else
     {
-        console.log(id + " is null!");
+        console.log(id + " is null! Cannot enable element.");
     }
 }
 

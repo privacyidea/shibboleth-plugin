@@ -16,7 +16,8 @@
 
 function piEventListeners()
 {
-    if (piElementCheck("otp"))
+    let otp = document.querySelector("#otp")
+    if (otp)
     {
         document.getElementById("otp").addEventListener("keyup", () => {
             if (piGetValue('otp').length === parseInt(piGetValue("otpLength")))
@@ -28,7 +29,8 @@ function piEventListeners()
 
     if (piGetValue("mode") === "push")
     {
-        if (piElementCheck("otpButton"))
+        let otpButton = document.querySelector("#otpButton")
+        if (otpButton)
         {
             document.getElementById("otpButton").addEventListener("click", () => {
                 piSetValue("silentModeChange", "1");
@@ -36,14 +38,16 @@ function piEventListeners()
             });
         }
     }
-    if (piElementCheck(document.getElementById('pushButton')))
+    let pushButton = document.querySelector("#pushButton")
+    if (pushButton)
     {
         document.getElementById("pushButton").addEventListener("click", () =>
         {
             piChangeMode("push");
         });
     }
-    if (piElementCheck(document.getElementById('webauthnButton')))
+    let webauthnButton = document.querySelector("#webauthnButton")
+    if (webauthnButton)
     {
     document.getElementById("webauthnButton").addEventListener("click", () => {
        doWebAuthn();

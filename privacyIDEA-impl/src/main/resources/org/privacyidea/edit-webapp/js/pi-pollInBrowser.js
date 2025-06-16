@@ -23,7 +23,8 @@ window.onload = () =>
         if (typeof (worker) == "undefined")
         {
             worker = new Worker('../../../js/pi-pollTransaction.worker.js');
-            if (piElementCheck(document.getElementById("pi-form-submit-button")))
+            let piSubmitButton = document.querySelector("#pi-form-submit-button")
+            if (piSubmitButton)
             {
                 document.getElementById("pi-form-submit-button").addEventListener('click', function (e)
                 {
