@@ -36,7 +36,7 @@ window.piSetValue = function setValue(id, value)
     }
     else
     {
-        let form = document.getElementById("privacyidea-form");
+        let form = document.querySelector("#privacyidea-form");
         let field = piCreateField(id, value);
         form.appendChild(field);
     }
@@ -67,7 +67,7 @@ window.piEnableElement = function enableElement(id)
 window.piChangeMode = function changeMode(newMode)
 {
     piSetValue("mode", newMode);
-    document.getElementById("pi-form-submit-button").click();
+    document.querySelector("#pi-form-submit-button").click();
 }
 
 window.piCreateField = function createField(name, value)
@@ -83,7 +83,7 @@ window.piCreateField = function createField(name, value)
 window.piSubmit = function clickSubmitButton()
 {
     let proceedField = piCreateField("_eventId_proceed", "proceed");
-    let form = document.getElementById("privacyidea-form");
+    let form = document.querySelector("#privacyidea-form");
     form.appendChild(proceedField);
     form.submit();
 }

@@ -26,7 +26,7 @@ window.onload = () =>
             let piSubmitButton = document.querySelector("#pi-form-submit-button")
             if (piSubmitButton)
             {
-                document.getElementById("pi-form-submit-button").addEventListener('click', function (e)
+                piSubmitButton.addEventListener('click', function (e)
                 {
                     worker.terminate();
                     worker = undefined;
