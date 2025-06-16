@@ -74,7 +74,7 @@ public class PIContext extends BaseContext
 
     public void setIsPushAvailable(boolean pushAvailable) {isPushAvailable = pushAvailable;}
 
-    public boolean getIsPushAvailable() {return isPushAvailable;}
+    public boolean isPushAvailable() {return isPushAvailable;}
 
     @Nullable
     public String getWebauthnSignResponse() {return webauthnSignResponse;}

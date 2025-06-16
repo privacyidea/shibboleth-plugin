@@ -178,7 +178,7 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
 
         // Push
         piContext.setIsPushAvailable(piResponse.pushAvailable());
-        if (piContext.getIsPushAvailable())
+        if (piContext.isPushAvailable())
         {
             piFormContext.setPushMessage(piResponse.pushMessage());
         }
