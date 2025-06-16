@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.LinkedHashMap;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
@@ -210,7 +210,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                                                                piContext.getTransactionID(),
                                                                piContext.getWebauthnSignResponse(),
                                                                piContext.getOrigin(),
-                                                               new LinkedHashMap<>(),
+                                                               Collections.emptyMap(),
                                                                headers);
             }
         }
