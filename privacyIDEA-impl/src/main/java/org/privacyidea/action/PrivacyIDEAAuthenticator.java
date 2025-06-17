@@ -58,11 +58,6 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         {
             piContext.setStandalone(request.getParameterValues("standalone")[0]);
         }
-        if (request.getParameterValues("username") != null && StringUtil.isNotBlank(request.getParameterValues("username")[0]))
-        {
-            piContext.setUsername(request.getParameterValues("username")[0]);
-        }
-
         PIResponse piResponse = null;
 
         // Passkey: Sets the username collected from the privacyIDEA server and ends the authentication on success.
