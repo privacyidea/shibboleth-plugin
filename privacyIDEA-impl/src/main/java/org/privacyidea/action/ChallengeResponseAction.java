@@ -22,10 +22,7 @@ import net.shibboleth.idp.profile.AbstractProfileAction;
 import org.opensaml.messaging.context.navigate.ChildContextLookup;
 import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.context.ProfileRequestContext;
-import org.privacyidea.Challenge;
-import org.privacyidea.IPILogger;
-import org.privacyidea.PIResponse;
-import org.privacyidea.PrivacyIDEA;
+import org.privacyidea.*;
 import org.privacyidea.context.PIContext;
 import org.privacyidea.context.PIFormContext;
 import org.privacyidea.context.PIServerConfigContext;
@@ -109,6 +106,8 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
                                                      .serviceRealm(piServerConfigContext.getConfigParams().getServiceRealm())
                                                      .logger(this)
                                                      .build();
+                            privacyIDEA.logExcludedEndpoints(Arrays.asList(PIConstants.ENDPOINT_POLLTRANSACTION, PIConstants.ENDPOINT_AUTH));
+                            //LOGGER.info("{}, privacyIDEA endpoints excluded from log: {}", this.getLogPrefix(), privacyIDEA.logExcludedEndpoints());
                         }
                         return true;
                     }
@@ -270,7 +269,7 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
     {
         if (debug)
         {
-            LOGGER.info("{}{}", this.getLogPrefix(), throwable);
+            LOGGER.info("{}", this.getLogPrefix(), throwable);
         }
     }
 
@@ -279,7 +278,7 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
     {
         if (debug)
         {
-            LOGGER.error("{}{}", this.getLogPrefix(), throwable);
+            LOGGER.error("{}", this.getLogPrefix(), throwable);
         }
     }
 }
