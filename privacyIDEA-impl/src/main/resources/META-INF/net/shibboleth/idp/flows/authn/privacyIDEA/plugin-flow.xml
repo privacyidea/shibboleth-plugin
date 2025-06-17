@@ -39,8 +39,8 @@
             <evaluate expression="authenticationContext.getSubcontext(T(org.privacyidea.context.PIFormContext))" result="viewScope.piFormContext"/>
         </on-render>
 
-        <!-- Save collected username and password in shibb, or initialize the passkey authentication -->
-        <transition on="proceed" to="piAuthenticator"/>
+        <transition on="passkey" to="piAuthenticator"/>
+        <transition on="proceed" to="checkAuthenticationFlow"/>
     </view-state>
 
     <action-state id="checkAuthenticationFlow">
