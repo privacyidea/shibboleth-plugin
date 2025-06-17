@@ -25,6 +25,7 @@ import org.opensaml.profile.context.ProfileRequestContext;
 import org.privacyidea.PIResponse;
 import org.privacyidea.context.PIContext;
 import org.privacyidea.context.PIServerConfigContext;
+import org.privacyidea.context.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +38,16 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
     @Override
     protected final void doExecute(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext, @Nonnull PIServerConfigContext piServerConfigContext)
     {
+        HttpServletRequest request = Objects.requireNonNull(getHttpServletRequestSupplier()).get();
+        if (request.getParameterValues("standalone") != null && StringUtil.isNotBlank(request.getParameterValues("standalone")[0]))
+        {
+            piContext.setStandalone(request.getParameterValues("standalone")[0]);
+        }
+        if (request.getParameterValues("username") != null && StringUtil.isNotBlank(request.getParameterValues("username")[0]))
+        {
+            piContext.setUsername(request.getParameterValues("username")[0]);
+        }
+
         if ("triggerChallenge".equals(piServerConfigContext.getConfigParams().getAuthenticationFlow()))
         {
             if (debug)
@@ -44,7 +55,6 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
                 LOGGER.info("{} Authentication flow - triggerChallenge.", this.getLogPrefix());
             }
 
-            HttpServletRequest request = Objects.requireNonNull(getHttpServletRequestSupplier()).get();
             Map<String, String> headers = this.getHeadersToForward(request);
             PIResponse piResponse = privacyIDEA.triggerChallenges(piContext.getUsername(), Collections.emptyMap(), headers);
 
@@ -88,7 +98,6 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
                 // Call /validate/check with a static pass from the configuration
                 // This could already end the authentication if the "passOnNoToken" policy is set.
                 // Otherwise, it might trigger the challenges.
-                HttpServletRequest request = Objects.requireNonNull(this.getHttpServletRequestSupplier()).get();
                 Map<String, String> headers = this.getHeadersToForward(request);
                 PIResponse piResponse = privacyIDEA.validateCheck(piContext.getUsername(), piServerConfigContext.getConfigParams().getStaticPass(), headers);
 
