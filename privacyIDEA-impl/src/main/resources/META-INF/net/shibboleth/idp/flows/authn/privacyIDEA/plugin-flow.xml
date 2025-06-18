@@ -48,6 +48,7 @@
         <evaluate expression="'proceed'"/>
 
         <transition on="proceed" to="displayPrivacyIDEAForm"/>
+        <transition on="validateResponseStandalone" to="validateResponseStandalone"/>
         <transition on="success" to="proceed"/>
     </action-state>
 
