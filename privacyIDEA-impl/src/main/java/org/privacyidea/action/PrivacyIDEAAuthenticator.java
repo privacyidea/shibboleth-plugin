@@ -162,6 +162,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             {
                 // If the challenge has been answered, finalize with a call to validate check
                 piResponse = privacyIDEA.validateCheck(piContext.getUsername(), "", piContext.getTransactionID(), headers);
+                piContext.setMode("otp");
             }
             else if (pollTransStatus == ChallengeStatus.pending)
             {
