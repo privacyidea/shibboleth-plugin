@@ -20,6 +20,8 @@ import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nonnull;
 import jakarta.servlet.http.HttpServletRequest;
+
+import net.shibboleth.idp.authn.context.UsernameContext;
 import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.context.ProfileRequestContext;
 import org.privacyidea.PIResponse;
@@ -117,7 +119,26 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
                         {
                             LOGGER.info("{} Authentication succeeded!", this.getLogPrefix());
                         }
-                        ActionSupport.buildEvent(profileRequestContext, "success");
+                        if (StringUtil.isNotBlank(piContext.getStandalone()) && "1".equals(piContext.getStandalone()))
+                        {
+                            if (debug)
+                            {
+                                LOGGER.info("{} Standalone mode, setting username and building event...", this.getLogPrefix());
+                                LOGGER.info("username: {}", piContext.getUsername());
+                            }
+                            UsernameContext userCtx = profileRequestContext.getSubcontext(UsernameContext.class, true);
+                            assert userCtx != null;
+                            userCtx.setUsername(piContext.getUsername());
+                            ActionSupport.buildEvent(profileRequestContext, "validateResponseStandalone");
+                        }
+                        else
+                        {
+                            if (debug)
+                            {
+                                LOGGER.info("{} Authentication successful, building success event...", this.getLogPrefix());
+                            }
+                            ActionSupport.buildEvent(profileRequestContext, "success");
+                        }
                     }
 
                     if (!piResponse.multiChallenge.isEmpty())
