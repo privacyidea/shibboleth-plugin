@@ -67,7 +67,7 @@ window.piEnableElement = function enableElement(id)
 window.piChangeMode = function changeMode(newMode)
 {
     piSetValue("mode", newMode);
-    document.querySelector("#pi-form-submit-button").click();
+    piSubmit();
 }
 
 window.piCreateField = function createField(name, value)
