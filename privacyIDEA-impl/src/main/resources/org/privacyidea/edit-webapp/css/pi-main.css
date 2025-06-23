@@ -63,6 +63,10 @@ body {
     background: #125ea2;
 }
 
+#pi-form-submit-button {
+    background: mediumseagreen;
+}
+
 #otp, #username, #password {
     max-width: 310px;
     width: 100%;
