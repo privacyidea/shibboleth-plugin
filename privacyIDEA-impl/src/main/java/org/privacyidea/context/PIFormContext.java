@@ -43,6 +43,7 @@ public class PIFormContext extends BaseContext
     private String imagePush = "";
     @Nonnull
     private String imageWebauthn = "";
+    private boolean enrollViaMultichallenge = false;
 
     public PIFormContext(@Nullable String defaultMessage, @Nullable String otpFieldHint, @Nullable Integer otpLength, @Nullable String pollingInterval, boolean pollInBrowser, @Nullable String pollInBrowserUrl)
     {
@@ -78,12 +79,12 @@ public class PIFormContext extends BaseContext
     @Nullable
     public String getPollInBrowserUrl() {return pollInBrowserUrl;}
 
-    public void setImageOtp(@Nonnull String imageOtp) {this.imageOtp = imageOtp;}
+    public void setImageOtp(@Nonnull String imageOtp) {this.imageOtp = imageOtp; this.enrollViaMultichallenge = true;}
 
     @Nonnull
     public String getImageOtp() {return imageOtp;}
 
-    public void setImagePush(@Nonnull String imagePush) {this.imagePush = imagePush;}
+    public void setImagePush(@Nonnull String imagePush) {this.imagePush = imagePush; this.enrollViaMultichallenge = true;}
 
     @Nonnull
     public String getImagePush() {return imagePush;}
@@ -92,4 +93,6 @@ public class PIFormContext extends BaseContext
 
     @Nonnull
     public String getImageWebauthn() {return imageWebauthn;}
+
+    public boolean isEnrollViaMultichallenge() {return enrollViaMultichallenge;}
 }
