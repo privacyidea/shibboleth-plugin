@@ -172,7 +172,8 @@ function registerPasskey ()
 function piMain()
 {
     // OTHER LOGIN OPTIONS SECTION VISIBILITY
-    if (piGetValue("webauthnSignRequest").length < 1 && piGetValue("isPushAvailable") !== true)
+    if (piGetValue("webauthnSignRequest").length < 1 && piGetValue("isPushAvailable") !== "true" && piGetValue("passkeyChallenge").length < 1
+        || piGetValue("isEnrollViaMultichallenge") === "true")
     {
         piDisableElement("otherLoginOptions");
     }
