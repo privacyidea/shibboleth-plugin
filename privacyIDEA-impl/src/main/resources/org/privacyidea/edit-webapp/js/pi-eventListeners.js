@@ -27,36 +27,32 @@ function piEventListeners()
         });
     }
 
-    if (piGetValue("mode") === "push")
+    let otpButton = document.querySelector("#otpButton")
+    if (otpButton)
     {
-        let otpButton = document.querySelector("#otpButton")
-        if (otpButton)
-        {
-            otpButton.addEventListener("click", () => {
-                piSetValue("silentModeChange", "1");
-                piChangeMode("otp");
-            });
-        }
+        otpButton.addEventListener("click", () => {
+            //piSetValue("silentModeChange", "1");
+            piChangeMode("otp");
+        });
     }
+
     let pushButton = document.querySelector("#pushButton")
     if (pushButton)
     {
-        pushButton.addEventListener("click", () =>
-        {
+        pushButton.addEventListener("click", () => {
             piChangeMode("push");
         });
     }
     let webauthnButton = document.querySelector("#webauthnButton")
     if (webauthnButton)
     {
-    webauthnButton.addEventListener("click", () => {
-       doWebAuthn();
-    });
+        webauthnButton.addEventListener("click", () => {
+            doWebAuthn();
+        });
     }
 }
 
 // Wait until the document is ready
-document.addEventListener("DOMContentLoaded", function ()
-{
+document.addEventListener("DOMContentLoaded", function () {
     piEventListeners();
 });
