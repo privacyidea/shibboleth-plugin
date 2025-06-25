@@ -37,6 +37,7 @@ public class PIFormContext extends BaseContext
     private boolean pollInBrowser;
     @Nullable
     private String pollInBrowserUrl;
+    private boolean disablePasskey;
     @Nonnull
     private String imageOtp = "";
     @Nonnull
@@ -45,13 +46,14 @@ public class PIFormContext extends BaseContext
     private String imageWebauthn = "";
     private boolean enrollViaMultichallenge = false;
 
-    public PIFormContext(@Nullable String defaultMessage, @Nullable String otpFieldHint, @Nullable Integer otpLength, @Nullable String pollingInterval, boolean pollInBrowser, @Nullable String pollInBrowserUrl)
+    public PIFormContext(@Nullable String defaultMessage, @Nullable String otpFieldHint, @Nullable Integer otpLength, @Nullable String pollingInterval, boolean pollInBrowser, @Nullable String pollInBrowserUrl, boolean disablePasskey)
     {
         this.defaultMessage = Objects.requireNonNullElse(defaultMessage, "One-Time-Password:");
         this.otpFieldHint = Objects.requireNonNullElse(otpFieldHint, "One-Time-Password (OTP)");
         this.pollingInterval = Objects.requireNonNullElse(pollingInterval, "2");
         this.pollInBrowser = pollInBrowser;
         this.pollInBrowserUrl = pollInBrowserUrl;
+        this.disablePasskey = disablePasskey;
         this.otpLength = otpLength;
     }
 
@@ -95,4 +97,6 @@ public class PIFormContext extends BaseContext
     public String getImageWebauthn() {return imageWebauthn;}
 
     public boolean isEnrollViaMultichallenge() {return enrollViaMultichallenge;}
+
+    public boolean isDisablePasskey() {return disablePasskey;}
 }

@@ -63,6 +63,7 @@ public class InitializePIContext extends AbstractAuthenticationAction
     @Nullable
     private String pollingInterval;
     private boolean pollInBrowser;
+    private boolean disablePasskey;
     @Nullable
     private String pollInBrowserUrl;
     private boolean debug;
@@ -88,7 +89,7 @@ public class InitializePIContext extends AbstractAuthenticationAction
         authenticationContext.addSubcontext(piContext);
 
         PIFormContext piFormContext = new PIFormContext(defaultMessage, otpFieldHint, getOtpLength(),
-                                                        pollingInterval, pollInBrowser, pollInBrowserUrl);
+                                                        pollingInterval, pollInBrowser, pollInBrowserUrl, disablePasskey);
         log.info("{} Create PIFormContext {}", this.getLogPrefix(), piFormContext);
         authenticationContext.addSubcontext(piFormContext);
         if (user == null)
@@ -144,6 +145,7 @@ public class InitializePIContext extends AbstractAuthenticationAction
                            serviceRealm,
                            staticPass,
                            pollInBrowser,
+                           disablePasskey,
                            forwardHeaders,
                            otpLength,
                            debug);
@@ -197,6 +199,8 @@ public class InitializePIContext extends AbstractAuthenticationAction
     public void setPollInBrowser(boolean pollInBrowser)                   {this.pollInBrowser = pollInBrowser;}
 
     public void setPollInBrowserUrl(@Nullable String pollInBrowserUrl)    {this.pollInBrowserUrl = pollInBrowserUrl;}
+
+    public void setDisablePasskey(boolean disablePasskey)                 {this.disablePasskey = disablePasskey;}
 
     public void setPluginVersion(@Nullable String pluginVersion)          {this.pluginVersion = pluginVersion;}
 

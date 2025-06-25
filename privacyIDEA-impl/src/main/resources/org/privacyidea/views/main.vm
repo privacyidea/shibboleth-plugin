@@ -176,7 +176,7 @@
                                     <input class="form-element-button" id="passkeyButton" type="button" name="passkeyButton"
                                            onclick="passkeyAuthentication()" value="#springMessageText("privacyidea.passkeyLogin", "Passkey Login")">
                                     <br>
-                                #elseif ($passkeyRegistrationEmpty == true && !$piFormContext.isEnrollViaMultichallenge())
+                                #elseif ($passkeyRegistrationEmpty == true && !$piFormContext.isEnrollViaMultichallenge() && $piFormContext.isDisablePasskey() != true)
                                     ## PASSKEY INIT ##
                                     <button class="form-element-button" id="initPasskeyLogin" type="submit"
                                             onclick="document.getElementById('passkeyLoginRequested').value = '1'"

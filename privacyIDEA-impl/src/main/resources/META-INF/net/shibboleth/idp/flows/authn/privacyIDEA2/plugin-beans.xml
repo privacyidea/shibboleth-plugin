@@ -33,6 +33,7 @@
           p:pollingInterval="%{privacyidea2.polling_interval:#{null}}"
           p:pollInBrowser="%{privacyidea2.poll_in_browser:false}"
           p:pollInBrowserUrl="%{privacyidea2.poll_in_browser_url:#{null}}"
+          p:disablePasskey="%{privacyidea2.disable_passkey:false}"
           p:pluginVersion="%{privacyidea2.plugin_version:#{null}}"
           p:debug="%{privacyidea2.debug:false}"/>
 
