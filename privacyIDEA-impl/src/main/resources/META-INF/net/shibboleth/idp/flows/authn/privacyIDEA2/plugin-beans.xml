@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:c="http://www.springframework.org/schema/c"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+                           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd"
+       default-init-method="initialize"
+       default-destroy-method="destroy">
+
+    <bean class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer"
+          p:placeholderPrefix="%{" p:placeholderSuffix="}"/>
+
+    <bean class="net.shibboleth.shared.spring.config.IdentifiableBeanPostProcessor"/>
+    <bean class="net.shibboleth.idp.profile.impl.ProfileActionBeanPostProcessor"/>
+
+    <bean id="initPIContext" class="org.privacyidea.action.InitializePIContext" scope="prototype"
+          p:serverURL="%{privacyidea2.server_url:#{'https://localhost'}}"
+          p:realm="%{privacyidea2.realm:#{null}}"
+          p:verifySSL="%{privacyidea2.verify_ssl:true}"
+          p:defaultMessage="%{privacyidea2.default_message:#{null}}"
+          p:otpFieldHint="%{privacyidea2.otp_field_hint:#{null}}"
+          p:otpLength="%{privacyidea2.otp_length:#{null}}"
+          p:authenticationFlow="%{privacyidea2.authentication_flow:#{'default'}}"
+          p:serviceName="%{privacyidea2.service_name:#{null}}"
+          p:servicePass="%{privacyidea2.service_pass:#{null}}"
+          p:serviceRealm="%{privacyidea2.service_realm:#{null}}"
+          p:staticPass="%{privacyidea2.static_pass:#{null}}"
+          p:forwardHeaders="%{privacyidea2.forward_headers:#{null}}"
+          p:pollingInterval="%{privacyidea2.polling_interval:#{null}}"
+          p:pollInBrowser="%{privacyidea2.poll_in_browser:false}"
+          p:pollInBrowserUrl="%{privacyidea2.poll_in_browser_url:#{null}}"
+          p:pluginVersion="%{privacyidea2.plugin_version:#{null}}"
+          p:debug="%{privacyidea2.debug:false}"/>
+
+    <bean id="piAuthenticator" class="org.privacyidea.action.PrivacyIDEAAuthenticator" scope="prototype"
+          p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier"/>
+
+    <bean id="validateResponseStandalone" scope="prototype" class="org.privacyidea.action.ValidateResponseStandalone"/>
+
+    <bean id="alternativeAuthenticationFlows" class="org.privacyidea.action.AlternativeAuthenticationFlows" scope="prototype"
+          p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier"/>
+</beans>
