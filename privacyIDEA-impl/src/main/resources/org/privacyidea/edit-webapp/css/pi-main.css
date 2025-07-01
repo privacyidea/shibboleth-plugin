@@ -39,7 +39,7 @@ body {
 .pi-tokenImage {
     max-width: 300px;
     display: block;
-    margin: 20px;
+    margin: 20px 20px 0 20px;
     border-radius: 6px;
     box-shadow: 0 1px 6px rgba(0,0,0,0.08);
 }
@@ -100,6 +100,25 @@ body {
 #resetButton:hover {
     background-color: #b94a48;
     border-color: #913535;
+}
+
+#enrollmentLink {
+    color: #1976d2;
+    text-decoration: underline;
+    font-weight: 600;
+    padding: 6px 14px;
+    margin: 0 20px 20px 90px;
+    border-radius: 4px;
+    background: #e3f2fd;
+    transition: background 0.2s, color 0.2s;
+    box-shadow: 0 1px 4px rgba(25, 118, 210, 0.08);
+    display: inline-block;
+}
+
+#enrollmentLink:hover {
+    background: #1976d2;
+    color: #fff;
+    text-decoration: none;
 }
 
 label {
