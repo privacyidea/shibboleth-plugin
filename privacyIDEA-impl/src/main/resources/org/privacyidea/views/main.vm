@@ -150,7 +150,7 @@
                             <div class="form-element-wrapper" id="otherLoginOptions">
                                 <h3 id="otherLoginOptionsHeader">#springMessageText("privacyidea.otherLoginOptions", "Other Login Options")</h3>
                                 ## POLL IN BROWSER ##
-                                #if ($piFormContext.getPollInBrowser() == true && $piFormContext.getPollInBrowserUrl()
+                                #if ($piFormContext.getPollInBrowser() == "true" && $piFormContext.getPollInBrowserUrl()
                                 && $piContext.getTransactionID() && $piContext.getTransactionID() != "")
                                     <script src='$request.getContextPath()/js/pi-pollInBrowser.js'></script>
                                 #end
