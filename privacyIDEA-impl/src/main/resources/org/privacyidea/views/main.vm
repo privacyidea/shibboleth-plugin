@@ -82,20 +82,17 @@
                                     #if ($piFormContext.getImageOtp() != "")
                                         <br>
                                         <img class="pi-tokenImage" src="$piFormContext.getImageOtp()" alt="[OTP Image]">
-                                        <br>
                                     #end
                                 #end
                                 #if ($piContext.getMode() == "webauthn" && $passkeyRegistrationEmpty)
                                     #if ($piFormContext.getImageWebauthn() != "")
                                         <br>
                                         <img class="pi-tokenImage" src="$piFormContext.getImageWebauthn()" alt="[WebAuthn Image]">
-                                        <br>
                                     #end
                                 #end
-                                #set ($formErrorMsg = $piContext.getFormErrorMessage())
-                                #if ($formErrorMsg)
+                                #if ($piContext.getFormErrorMessage())
                                     <br>
-                                    <p>$formErrorMsg</p>
+                                    <p>$piContext.getFormErrorMessage()</p>
                                 #end
                                 <br>
                                 #if ($piContext.getMode() == "push" && $passkeyRegistrationEmpty)
@@ -103,11 +100,15 @@
                                     #if ($piFormContext.getImagePush() != "")
                                         <br>
                                         <img class="pi-tokenImage" src="$piFormContext.getImagePush()" alt="[Push Image]">
-                                        <br>
                                     #end
                                 #else
+                                    #if ($piFormContext.getEnrollmentLink() != "")
+                                        <a id="enrollmentLink" href="$piFormContext.getEnrollmentLink()">#springMessageText("privacyidea.enrollmentLink", "Enrollment Link")</a>
+                                        <br>
+                                    #end
                                     <p class="pi-message">$piFormContext.getMessage()</p>
                                 #end
+
                             </div>
 
                             ## OTP & SUBMIT ##
