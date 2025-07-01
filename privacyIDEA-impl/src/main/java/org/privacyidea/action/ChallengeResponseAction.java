@@ -157,6 +157,10 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
         {
             piContext.setMode(piResponse.preferredClientMode);
         }
+        if (StringUtil.isNotBlank(piResponse.enrollmentLink))
+        {
+            piFormContext.setEnrollmentLink(piResponse.enrollmentLink);
+        }
 
         // WebAuthn
         if (piResponse.triggeredTokenTypes().contains("webauthn"))
