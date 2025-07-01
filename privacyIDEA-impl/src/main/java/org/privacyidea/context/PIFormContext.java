@@ -44,6 +44,8 @@ public class PIFormContext extends BaseContext
     private String imagePush = "";
     @Nonnull
     private String imageWebauthn = "";
+    @Nonnull
+    private String enrollmentLink = "";
     private boolean enrollViaMultichallenge = false;
 
     public PIFormContext(@Nullable String defaultMessage, @Nullable String otpFieldHint, @Nullable Integer otpLength, @Nullable String pollingInterval, boolean pollInBrowser, @Nullable String pollInBrowserUrl, boolean disablePasskey)
@@ -95,6 +97,11 @@ public class PIFormContext extends BaseContext
 
     @Nonnull
     public String getImageWebauthn() {return imageWebauthn;}
+
+    public void setEnrollmentLink(@Nonnull String enrollmentLink) {this.enrollmentLink = enrollmentLink;}
+
+    @Nonnull
+    public String getEnrollmentLink() {return enrollmentLink;}
 
     public boolean isEnrollViaMultichallenge() {return enrollViaMultichallenge;}
 
