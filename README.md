@@ -28,7 +28,7 @@ Updating the following parameters is required to ensure at least the very basic 
 
 2. **Add the privacyIDEA subflow to the MFA flow.**<br>
    - Path to the MFA flow configuration file: `$idp_install_path/conf/authn/mfa-authn-config.xml`.
-   - Example of the *util:map*: [mfa_config_example](docs/mfaConfigExample).
+   - Example of the configuration: [mfa_config_example](docs/mfaConfigExample).
    - Remember to activate the MFA flow.
 
 3. **Turn on the MFA Module by updating the following file: `$idp_install_path/conf/authn/authn.properties`.**<br>
@@ -37,7 +37,7 @@ Updating the following parameters is required to ensure at least the very basic 
 ### Passkey:
 **If you want to use passkey authentication without the password module, you can adjust the mfa-authn-config.xml file to use the privacyIDEA subflow directly.**<br>
 Note: This will change the authentication flow to allow passkey authentication without need for entering the username and password.<br>
-Example of the *util:map*: [mfa_config_example](docs/mfaConfigExample).
+Example of the configuration: [mfa_config_example](docs/mfaConfigExample).
 
 This is also located in the *privacyidea.properties* file (`$idp_install_path/conf/authn/privacyidea.properties`).
 
