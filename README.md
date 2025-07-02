@@ -28,12 +28,21 @@ Updating the following parameters is required to ensure at least the very basic 
 
 2. **Add the privacyIDEA subflow to the MFA flow.**<br>
    - Path to the MFA flow configuration file: `$idp_install_path/conf/authn/mfa-authn-config.xml`.
-   - Example of the *util:map* is located in the *privacyidea.properties* file (`$idp_install_path/conf/authn/privacyidea.properties`).
+   - Example of the *util:map*: [mfa_config_example](docs/mfaConfigExample).
    - Remember to activate the MFA flow.
 
 3. **Turn on the MFA Module by updating the following file: `$idp_install_path/conf/authn/authn.properties`.**<br>
-Note: An example of the configuration can be found in *privacyidea.properties* (`$idp_install_path/conf/authn/privacyidea.properties`).
+   - Example of the basic configuration: [authn_config_example](docs/authnConfigExample).
 
+### Passkey:
+**If you want to use passkey authentication without the password module, you can adjust the mfa-authn-config.xml file to use the privacyIDEA subflow directly.**<br>
+Note: This will change the authentication flow to allow passkey authentication without need for entering the username and password.<br>
+Example of the *util:map*: [mfa_config_example](docs/mfaConfigExample).
+
+This is also located in the *privacyidea.properties* file (`$idp_install_path/conf/authn/privacyidea.properties`).
+
+### Configuration Parameters for privacyIDEA Plugin:
+An example of the privacyIDEA plugin configuration can be found in *privacyidea.properties* (`$idp_install_path/conf/authn/privacyidea.properties`).
 The different configuration parameters are explained in the following table:
 
 | Configuration                        | Explanation                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
@@ -56,11 +65,6 @@ The different configuration parameters are explained in the following table:
 | `privacyidea.disable_passkey`        | Set to 'true' to disable passkey authentication.                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `privacyidea.debug`                  | Set this parameter to true to see the debug messages in the `idp-process.log`.                                                                                                                                                                                                                                                                                                                                                                                                         |
 
-### Passkey:
-**If you want to use passkey authentication without the password module, you can adjust the mfa-authn-config.xml file to use the privacyIDEA subflow directly.**<br>
-Note: This will change the authentication flow to allow passkey authentication without need for entering the username and password.<br>
-Example of the *util:map* is located in the *privacyidea.properties* file (`$idp_install_path/conf/authn/privacyidea.properties`).
-
 ### Log check:
 - **Main log: `$idp_install_path/logs/idp-process.log`.**
 - **Warn and error log: `$idp_install_path/logs/idp-warn.log`.**
@@ -68,12 +72,13 @@ Example of the *util:map* is located in the *privacyidea.properties* file (`$idp
 ### Plugin update:
 **To update the plugin, repeat the installation process with the new archive data.<br>**
 If something goes wrong, check if some of the plugin files have their .idpnew copies,<br>
-remove the .idpnew copies, and re-run the install process.
+remove the .idpnew copies, and re-run the installation process.
 
 ### 2nd authentication flow:
 **If you want to set up a second authentication flow (e.g. for another privacyIDEA server or realm):<br>**
 - Add a new subflow called `authn/privacyIDEA2` to the mfa-authn-config.xml file.
 Note: Obviously, you need to adjust the flow transition map to your needs.
+- Example of the MFA flow configuration based on IP check: [mfa_config_example](docs/mfaConfigExample).
 - Copy the `privacyidea.properties` file to `privacyidea2.properties`.
 - Update the `privacyidea2.properties` file with the new configuration data.
 Note: Make sure to change each configuration variables names to `privacyidea2.*` in the `privacyidea2.properties` file.
