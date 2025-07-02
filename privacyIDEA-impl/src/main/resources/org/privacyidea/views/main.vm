@@ -115,7 +115,7 @@
                             <div class="form-element-wrapper" id="one-time-password">
                                 #if ($piContext.getMode() != "push" && $piContext.getMode() != "passkey" && $passkeyRegistrationEmpty == true)
                                     <label for="otp">$piFormContext.getOtpFieldHint()</label>
-                                    <input id="otp" class="form-element form-field" name="otp" type="password" autofocus value="">
+                                    <input id="otp" class="form-element form-field" name="otp" type="password" autocomplete="new-password" autofocus value="">
                                     <br>
                                     <button class="form-element-button" id="pi-form-submit-button" type="submit"
                                             name="_eventId_proceed">#springMessageText("privacyidea.submit", "Submit")</button>
