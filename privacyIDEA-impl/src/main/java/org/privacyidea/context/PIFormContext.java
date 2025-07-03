@@ -50,7 +50,7 @@ public class PIFormContext extends BaseContext
 
     public PIFormContext(@Nullable String defaultMessage, @Nullable String otpFieldHint, @Nullable Integer otpLength, @Nullable String pollingInterval, boolean pollInBrowser, @Nullable String pollInBrowserUrl, boolean disablePasskey)
     {
-        this.defaultMessage = Objects.requireNonNullElse(defaultMessage, "One-Time-Password:");
+        this.defaultMessage = Objects.requireNonNullElse(defaultMessage, "Please enter your One-Time-Password:");
         this.otpFieldHint = Objects.requireNonNullElse(otpFieldHint, "One-Time-Password (OTP)");
         this.pollingInterval = Objects.requireNonNullElse(pollingInterval, "2");
         this.pollInBrowser = pollInBrowser;
