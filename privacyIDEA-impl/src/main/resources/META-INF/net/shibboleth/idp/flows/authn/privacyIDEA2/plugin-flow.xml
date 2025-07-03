@@ -2,7 +2,7 @@
       xsi:schemaLocation="http://www.springframework.org/schema/webflow http://www.springframework.org/schema/webflow/spring-webflow.xsd"
       parent="authn.abstract, authn/conditions">
 
-    <!-- This is a login flow for multifactor authentication against the privacyIDEA -->
+    <!-- This is a login flow for multifactor authentication with privacyIDEA -->
     <action-state id="initPIContext">
         <evaluate expression="initPIContext"/>
         <evaluate expression="'proceed'"/>
