@@ -52,11 +52,11 @@
             <version>8.4.0</version>
         </dependency>
 
-        <!-- privacyIDEA java-client dependencies -->
+        <!-- privacyIDEA java-client dependency -->
         <dependency>
             <groupId>org.privacyidea</groupId>
             <artifactId>privacyidea-java-client</artifactId>
-            <version>1.2.2</version>
+            <version>1.4.0</version>
         </dependency>
     </dependencies>
 

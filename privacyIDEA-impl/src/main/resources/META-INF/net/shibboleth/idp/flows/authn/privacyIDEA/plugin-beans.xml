@@ -33,11 +33,14 @@
           p:pollingInterval="%{privacyidea.polling_interval:#{null}}"
           p:pollInBrowser="%{privacyidea.poll_in_browser:false}"
           p:pollInBrowserUrl="%{privacyidea.poll_in_browser_url:#{null}}"
+          p:disablePasskey="%{privacyidea.disable_passkey:false}"
           p:pluginVersion="%{privacyidea.plugin_version:#{null}}"
           p:debug="%{privacyidea.debug:false}"/>
 
     <bean id="piAuthenticator" class="org.privacyidea.action.PrivacyIDEAAuthenticator" scope="prototype"
           p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier"/>
+
+    <bean id="validateResponseStandalone" scope="prototype" class="org.privacyidea.action.ValidateResponseStandalone"/>
 
     <bean id="alternativeAuthenticationFlows" class="org.privacyidea.action.AlternativeAuthenticationFlows" scope="prototype"
           p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier"/>

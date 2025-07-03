@@ -15,22 +15,22 @@
  */
 package org.privacyidea.action;
 
-import java.util.function.Function;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import net.shibboleth.idp.authn.AbstractAuthenticationAction;
 import net.shibboleth.idp.authn.context.AuthenticationContext;
 import net.shibboleth.idp.session.context.navigate.CanonicalUsernameLookupStrategy;
 import org.jetbrains.annotations.NotNull;
+import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.context.ProfileRequestContext;
-import org.privacyidea.context.Config;
-import org.privacyidea.context.PIContext;
-import org.privacyidea.context.PIFormContext;
-import org.privacyidea.context.PIServerConfigContext;
-import org.privacyidea.context.User;
+import org.privacyidea.context.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.function.Function;
+
+import static org.privacyidea.context.StringUtil.isBlank;
 
 public class InitializePIContext extends AbstractAuthenticationAction
 {
@@ -63,6 +63,7 @@ public class InitializePIContext extends AbstractAuthenticationAction
     @Nullable
     private String pollingInterval;
     private boolean pollInBrowser;
+    private boolean disablePasskey;
     @Nullable
     private String pollInBrowserUrl;
     private boolean debug;
@@ -78,24 +79,23 @@ public class InitializePIContext extends AbstractAuthenticationAction
         authenticationContext.removeSubcontext(PIContext.class);
         authenticationContext.removeSubcontext(PIServerConfigContext.class);
 
+        PIServerConfigContext piServerConfigContext = getConfigBaseContext();
+        log.info("{} Create PIServerConfigContext {}", this.getLogPrefix(), piServerConfigContext);
+        authenticationContext.addSubcontext(piServerConfigContext);
+
         User user = getUser(profileRequestContext);
+        PIContext piContext = new PIContext(user, pluginVersion);
+        log.info("{} Create PIContext {}", this.getLogPrefix(), piContext);
+        authenticationContext.addSubcontext(piContext);
+
+        PIFormContext piFormContext = new PIFormContext(defaultMessage, otpFieldHint, getOtpLength(),
+                                                        pollingInterval, pollInBrowser, pollInBrowserUrl, disablePasskey);
+        log.info("{} Create PIFormContext {}", this.getLogPrefix(), piFormContext);
+        authenticationContext.addSubcontext(piFormContext);
         if (user == null)
         {
-            log.info("{} No principal name available.", getLogPrefix());
-        }
-        else
-        {
-            PIServerConfigContext piServerConfigContext = getConfigBaseContext();
-            log.info("{} Create PIServerConfigContext {}", this.getLogPrefix(), piServerConfigContext);
-            authenticationContext.addSubcontext(piServerConfigContext);
-
-            PIContext piContext = new PIContext(user, pluginVersion);
-            log.info("{} Create PIContext {}", this.getLogPrefix(), piContext);
-            authenticationContext.addSubcontext(piContext);
-
-            PIFormContext piFormContext = new PIFormContext(defaultMessage, otpFieldHint, getOtpLength(), pollingInterval, pollInBrowser, pollInBrowserUrl);
-            log.info("{} Create PIFormContext {}", this.getLogPrefix(), piFormContext);
-            authenticationContext.addSubcontext(piFormContext);
+            log.info("{} No principal name available. Displaying username-password-form.", getLogPrefix());
+            ActionSupport.buildEvent(profileRequestContext, "displayUsernamePasswordForm");
         }
     }
 
@@ -118,11 +118,11 @@ public class InitializePIContext extends AbstractAuthenticationAction
     {
         String authenticationFlow;
         String staticPass = null;
-        if (this.authenticationFlow.equals("triggerChallenge"))
+        if ("triggerChallenge".equals(this.authenticationFlow))
         {
             authenticationFlow = "triggerChallenge";
         }
-        else if (this.authenticationFlow.equals("sendStaticPass"))
+        else if ("sendStaticPass".equals(this.authenticationFlow))
         {
             authenticationFlow = "sendStaticPass";
             if (this.staticPass != null)
@@ -134,7 +134,21 @@ public class InitializePIContext extends AbstractAuthenticationAction
         {
             authenticationFlow = "default";
         }
-        Config configParams = new Config(serverURL, realm, verifySSL, authenticationFlow, serviceName, servicePass, serviceRealm, staticPass, pollInBrowser, forwardHeaders, otpLength, debug);
+        Config
+                configParams =
+                new Config(serverURL,
+                           realm,
+                           verifySSL,
+                           authenticationFlow,
+                           serviceName,
+                           servicePass,
+                           serviceRealm,
+                           staticPass,
+                           pollInBrowser,
+                           disablePasskey,
+                           forwardHeaders,
+                           otpLength,
+                           debug);
         return new PIServerConfigContext(configParams);
     }
 
@@ -158,35 +172,37 @@ public class InitializePIContext extends AbstractAuthenticationAction
     // Spring bean property setters
     public void setServerURL(@Nonnull String serverURL) {this.serverURL = serverURL;}
 
-    public void setRealm(@Nullable String realm) {this.realm = realm;}
+    public void setRealm(@Nullable String realm)                          {this.realm = realm;}
 
-    public void setVerifySSL(boolean verifySSL) {this.verifySSL = verifySSL;}
+    public void setVerifySSL(boolean verifySSL)                           {this.verifySSL = verifySSL;}
 
-    public void setDefaultMessage(@Nullable String defaultMessage) {this.defaultMessage = defaultMessage;}
+    public void setDefaultMessage(@Nullable String defaultMessage)        {this.defaultMessage = defaultMessage;}
 
-    public void setOtpFieldHint(@Nullable String otpFieldHint) {this.otpFieldHint = otpFieldHint;}
+    public void setOtpFieldHint(@Nullable String otpFieldHint)            {this.otpFieldHint = otpFieldHint;}
 
     public void setAuthenticationFlow(@Nonnull String authenticationFlow) {this.authenticationFlow = authenticationFlow;}
 
-    public void setServiceName(@Nullable String serviceName) {this.serviceName = serviceName;}
+    public void setServiceName(@Nullable String serviceName)              {this.serviceName = serviceName;}
 
-    public void setServicePass(@Nullable String servicePass) {this.servicePass = servicePass;}
+    public void setServicePass(@Nullable String servicePass)              {this.servicePass = servicePass;}
 
-    public void setServiceRealm(@Nullable String serviceRealm) {this.serviceRealm = serviceRealm;}
+    public void setServiceRealm(@Nullable String serviceRealm)            {this.serviceRealm = serviceRealm;}
 
-    public void setStaticPass(@Nullable String staticPass) {this.staticPass = staticPass;}
+    public void setStaticPass(@Nullable String staticPass)                {this.staticPass = staticPass;}
 
-    public void setForwardHeaders(@Nullable String forwardHeaders) {this.forwardHeaders = forwardHeaders;}
+    public void setForwardHeaders(@Nullable String forwardHeaders)        {this.forwardHeaders = forwardHeaders;}
 
-    public void setOtpLength(@Nullable String otpLength) {this.otpLength = otpLength;}
+    public void setOtpLength(@Nullable String otpLength)                  {this.otpLength = otpLength;}
 
-    public void setPollingInterval(@Nullable String pollingInterval) {this.pollingInterval = pollingInterval;}
+    public void setPollingInterval(@Nullable String pollingInterval)      {this.pollingInterval = pollingInterval;}
 
-    public void setPollInBrowser(boolean pollInBrowser) {this.pollInBrowser = pollInBrowser;}
+    public void setPollInBrowser(boolean pollInBrowser)                   {this.pollInBrowser = pollInBrowser;}
 
-    public void setPollInBrowserUrl(@Nullable String pollInBrowserUrl) {this.pollInBrowserUrl = pollInBrowserUrl;}
+    public void setPollInBrowserUrl(@Nullable String pollInBrowserUrl)    {this.pollInBrowserUrl = pollInBrowserUrl;}
 
-    public void setPluginVersion(@Nullable String pluginVersion) {this.pluginVersion = pluginVersion;}
+    public void setDisablePasskey(boolean disablePasskey)                 {this.disablePasskey = disablePasskey;}
 
-    public void setDebug(boolean debug) {this.debug = debug;}
+    public void setPluginVersion(@Nullable String pluginVersion)          {this.pluginVersion = pluginVersion;}
+
+    public void setDebug(boolean debug)                                   {this.debug = debug;}
 }

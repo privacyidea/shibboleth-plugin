@@ -1,0 +1,69 @@
+####################################
+#  Example MFA flow configuration  #
+####################################
+
+Path for the MFA flow configuration file: $idp_install_path/conf/authn/mfa-authn-config.xml
+
+With password module which will ask for username and password first then privacyidea in a second step. 
+This is the classic flow.
+
+<!-- Basic MFA flow mapping with the password module and privacyidea -->
+    <util:map id="shibboleth.authn.MFA.TransitionMap">
+       <entry key="">
+           <bean parent="shibboleth.authn.MFA.Transition" p:nextFlow="authn/Password"/>
+       </entry>
+       <entry key="authn/Password">
+           <bean parent="shibboleth.authn.MFA.Transition" p:nextFlow="authn/privacyIDEA"/>
+       </entry>
+    </util:map>
+    
+####################################
+
+Without password module, recommended for passkeys:
+
+<!-- MFA flow mapping without the password module, recommended for passkeys -->
+    <util:map id="shibboleth.authn.MFA.TransitionMap">
+       <entry key="">
+           <bean parent="shibboleth.authn.MFA.Transition" p:nextFlow="authn/privacyIDEA"/>
+       </entry>
+    </util:map>
+
+####################################
+
+Example of the MFA flow mapping for 2 different privacyIDEA instances.
+Note: To use the inline scripts, you need to activate the Nashorn module in the Shibboleth IdP.
+
+<!-- Mapping to enable the SelectFlow bean below -->
+    <util:map id="shibboleth.authn.MFA.TransitionMap">
+        <entry key="">
+            <bean parent="shibboleth.authn.MFA.Transition" p:nextFlowStrategy-ref="SelectFlow"/>
+        </entry>
+    </util:map>
+
+    <!-- BEAN WITH INLINE SCRIPT TO SELECT THE NEXT FLOW BASED ON CUSTOM CRITERIA. REQUIRES THE SELECT FLOW TO BE ACTIVE -->
+    <bean id="SelectFlow" parent="shibboleth.ContextFunctions.Scripted" factory-method="inlineScript"
+        p:customObject-ref="shibboleth.HttpServletRequestSupplier">
+        <constructor-arg>
+            <value>
+                <![CDATA[
+			// This example selects the next flow based on the ip address.
+			// Please note that this is just a very simple example which you can customize.
+                    	nextFlow = null;
+			// Logging
+			logger = Java.type("org.slf4j.LoggerFactory").getLogger("SelectFlow");
+    			var request = custom.get();
+    			if (request.getRemoteAddr().startsWith("10.0."))
+    			{
+       				logger.info("User is from FOO.BAR domain - sending to privacyIDEA internal");
+    				nextFlow="authn/privacyIDEA";
+    			}
+    			else
+               		{
+    				logger.info("User is from foreign domain - sending to privacyIDEA external");
+    				nextFlow="authn/privacyIDEA2";
+    			}
+		    	nextFlow;   // Pass control to PrivacyIDEA
+                ]]>
+            </value>
+        </constructor-arg>
+    </bean>

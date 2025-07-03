@@ -37,6 +37,7 @@ public class Config
     @Nullable
     private final String staticPass;
     private final boolean pollInBrowser;
+    private final boolean disablePasskey;
     @Nullable
     private final String forwardHeaders;
     @Nullable
@@ -44,7 +45,7 @@ public class Config
 
     public Config(@Nonnull String serverURL, @Nullable String realm, boolean verifySSL, @Nonnull String authenticationFlow,
                   @Nullable String serviceName, @Nullable String servicePass, @Nullable String serviceRealm, @Nullable String staticPass,
-                  boolean pollInBrowser, @Nullable String forwardHeaders, @Nullable String otpLength, boolean debug)
+                  boolean pollInBrowser, boolean disablePasskey, @Nullable String forwardHeaders, @Nullable String otpLength, boolean debug)
     {
         this.serverURL = serverURL;
         this.realm = realm;
@@ -55,6 +56,7 @@ public class Config
         this.serviceRealm = serviceRealm;
         this.staticPass = staticPass;
         this.pollInBrowser = pollInBrowser;
+        this.disablePasskey = disablePasskey;
         this.forwardHeaders = forwardHeaders;
         this.otpLength = otpLength;
         this.debug = debug;
@@ -105,6 +107,11 @@ public class Config
     public boolean getPollInBrowser()
     {
         return pollInBrowser;
+    }
+
+    public boolean getDisablePasskey()
+    {
+        return disablePasskey;
     }
 
     @Nullable

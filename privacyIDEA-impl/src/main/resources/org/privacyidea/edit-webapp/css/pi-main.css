@@ -14,19 +14,122 @@
  * limitations under the License.
  */
 
-.pi-message
-{
+body {
+    background: #f5f7fa;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    min-height: 100vh;
+    margin: 30px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.pi-message {
     max-width: 700px;
+    margin-bottom: 10px;
+    padding: 18px 28px;
+    background: #fffbe6;
+    border: 1px solid #ffe58f;
+    border-radius: 8px;
+    color: #664d03;
+    font-size: 1.1em;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
 }
-.pi-tokenImage
-{
+
+.pi-tokenImage {
     max-width: 300px;
+    display: block;
+    margin: 20px 20px 0 20px;
+    border-radius: 6px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.08);
 }
-#otp
-{
-    max-width: 260px;
+
+.form-element-button {
+    width: 280px;
+    padding: 12px 0;
+    background: #1976d2;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 12px;
+    margin-bottom: 8px;
 }
-#alternateToken
-{
+
+.form-element-button:hover {
+    background: #125ea2;
+}
+
+#pi-form-submit-button {
+    background: mediumseagreen;
+}
+
+#otp, #username, #password {
+    max-width: 310px;
+    width: 100%;
+    padding: 10px 12px;
+    margin: 8px 0 16px 0;
+    border: 1px solid #bdbdbd;
+    border-radius: 4px;
+    font-size: 1em;
+    background: #fafbfc;
+    box-sizing: border-box;
+}
+
+#otherLoginOptions {
     padding-top: 20px;
+    color: #888;
+    font-size: 0.98em;
+}
+
+#resetButton {
+    background-color: #913535;
+    border-color: #622c2c;
+    color: #fff;
+    border-radius: 5px;
+    padding: 10px 0;
+    width: 180px;
+    margin-top: 10px;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+#resetButton:hover {
+    background-color: #b94a48;
+    border-color: #913535;
+}
+
+#enrollmentLink {
+    color: #1976d2;
+    text-decoration: underline;
+    font-weight: 600;
+    padding: 6px 14px;
+    margin: 0 20px 20px 90px;
+    border-radius: 4px;
+    background: #e3f2fd;
+    transition: background 0.2s, color 0.2s;
+    box-shadow: 0 1px 4px rgba(25, 118, 210, 0.08);
+    display: inline-block;
+}
+
+#enrollmentLink:hover {
+    background: #1976d2;
+    color: #fff;
+    text-decoration: none;
+}
+
+label {
+    display: block;
+    margin-bottom: 6px;
+    color: #333;
+    font-weight: 500;
+    font-size: 1em;
+}
+
+input:focus {
+    outline: 2px solid #1976d2;
+    background: #e3f2fd;
 }

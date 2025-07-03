@@ -14,45 +14,45 @@
  * limitations under the License.
  */
 
-function autoSubmitByLength()
-{
-    if (piGetValue('otp').length === parseInt(piGetValue("otpLength")))
-    {
-        piSubmit();
-    }
-}
-
 function piEventListeners()
 {
-    document.getElementById("otp").addEventListener("keyup", autoSubmitByLength);
-
-    // Button listeners
-    if (piGetValue("mode") === "push")
+    let otp = document.querySelector("#otp")
+    if (otp)
     {
-        document.getElementById("otpButton").addEventListener("click", () => {
-            piSetValue("silentModeChange", "1");
+        otp.addEventListener("keyup", () => {
+            if (piGetValue('otp').length === parseInt(piGetValue("otpLength")))
+            {
+                piSubmit();
+            }
+        });
+    }
+
+    let otpButton = document.querySelector("#otpButton")
+    if (otpButton)
+    {
+        otpButton.addEventListener("click", () => {
+            //piSetValue("silentModeChange", "1");
             piChangeMode("otp");
         });
     }
-    let pushButton = document.getElementById('pushButton');
-    if (typeof (pushButton) != 'undefined' && pushButton != null)
+
+    let pushButton = document.querySelector("#pushButton")
+    if (pushButton)
     {
-        document.getElementById("pushButton").addEventListener("click", () =>
-        {
+        pushButton.addEventListener("click", () => {
             piChangeMode("push");
         });
     }
-    let webauthnButton = document.getElementById('webauthnButton');
-    if (typeof (webauthnButton) != 'undefined' && webauthnButton != null)
+    let webauthnButton = document.querySelector("#webauthnButton")
+    if (webauthnButton)
     {
-    document.getElementById("webauthnButton").addEventListener("click", () => {
-       doWebAuthn();
-    });
+        webauthnButton.addEventListener("click", () => {
+            doWebAuthn();
+        });
     }
 }
 
 // Wait until the document is ready
-document.addEventListener("DOMContentLoaded", function ()
-{
+document.addEventListener("DOMContentLoaded", function () {
     piEventListeners();
 });

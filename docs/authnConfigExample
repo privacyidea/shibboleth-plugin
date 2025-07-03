@@ -1,0 +1,14 @@
+############################################
+#  Example authn.properties configuration  #
+############################################
+
+
+Path for the authn.properties file: $idp_install_path/conf/authn/authn.properties
+
+To enable the MFA login flow and add the following line:
+idp.authn.flows = MFA
+
+To activate the SSO for all flows, make sure to enable it by adding (e.g.):
+idp.authn.MFA.reuseCondition=shibboleth.Conditions.TRUE
+idp.authn.Password.reuseCondition=shibboleth.Conditions.TRUE
+idp.authn.privacyIDEA.reuseCondition=shibboleth.Conditions.TRUE
