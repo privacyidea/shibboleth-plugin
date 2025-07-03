@@ -106,8 +106,6 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
                                                      .serviceRealm(piServerConfigContext.getConfigParams().getServiceRealm())
                                                      .logger(this)
                                                      .build();
-                            privacyIDEA.logExcludedEndpoints(Arrays.asList(PIConstants.ENDPOINT_POLLTRANSACTION, PIConstants.ENDPOINT_AUTH));
-                            //LOGGER.info("{}, privacyIDEA endpoints excluded from log: {}", this.getLogPrefix(), privacyIDEA.logExcludedEndpoints());
                         }
                         return true;
                     }
@@ -194,7 +192,8 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
                 if (StringUtil.isNotBlank(c.getImage()))
                 {
                     piFormContext.setImagePush(c.getImage());
-                    //todo Walkaround to show the push image by enrollment via challenge. Waiting for an update of privacyIDEA response.
+                    //todo Workaround to show the push image by enrollment via challenge. Waiting for an update of privacyIDEA response.
+                    // Waiting for updating of privacyidea that clearly indicates enroll_via_multichallenge challenges.
                     piContext.setMode("push");
                 }
             }
@@ -255,7 +254,7 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
     {
         if (debug)
         {
-            LOGGER.info("{}{}", this.getLogPrefix(), message);
+            LOGGER.info("{}", message);
         }
     }
 
@@ -264,7 +263,7 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
     {
         if (debug)
         {
-            LOGGER.error("{}{}", this.getLogPrefix(), message);
+            LOGGER.error("{}", message);
         }
     }
 
