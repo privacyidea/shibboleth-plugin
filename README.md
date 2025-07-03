@@ -28,16 +28,16 @@ Updating the following parameters is required to ensure at least the very basic 
 
 2. **Add the privacyIDEA subflow to the MFA flow.**<br>
    - Path to the MFA flow configuration file: `$idp_install_path/conf/authn/mfa-authn-config.xml`.
-   - Example of the configuration: [mfa_config_example](docs/mfaConfigExample).
+   - Example of the configuration: [MFA Config Example](docs/mfaConfigExample).
    - Remember to activate the MFA flow.
 
 3. **Turn on the MFA Module by updating the following file: `$idp_install_path/conf/authn/authn.properties`.**<br>
-   - Example of the basic configuration: [authn_config_example](docs/authnConfigExample).
+   - Example of the basic configuration: [Authn Config Example](docs/authnConfigExample).
 
 ### Passkey:
 **If you want to use passkey authentication without the password module, you can adjust the mfa-authn-config.xml file to use the privacyIDEA subflow directly.**<br>
 Note: This will change the authentication flow to allow passkey authentication without need for entering the username and password.<br>
-Example of the configuration: [mfa_config_example](docs/mfaConfigExample).
+Example of the configuration: [MFA Config Example](docs/mfaConfigExample).
 
 This is also located in the *privacyidea.properties* file (`$idp_install_path/conf/authn/privacyidea.properties`).
 
@@ -78,8 +78,12 @@ remove the .idpnew copies, and re-run the installation process.
 **If you want to set up a second authentication flow (e.g. for another privacyIDEA server or realm):<br>**
 - Add a new subflow called `authn/privacyIDEA2` to the mfa-authn-config.xml file.
 Note: Obviously, you need to adjust the flow transition map to your needs.
-- Example of the MFA flow configuration based on IP check: [mfa_config_example](docs/mfaConfigExample).
+- Example of the MFA flow configuration based on IP check: [MFA Config Example](docs/mfaConfigExample).
 - Copy the `privacyidea.properties` file to `privacyidea2.properties`.
 - Update the `privacyidea2.properties` file with the new configuration data.
 Note: Make sure to change each configuration variables names to `privacyidea2.*` in the `privacyidea2.properties` file.
 - Restart the Shibboleth IdP server to apply the changes and register new auth flow.
+
+### Translation:
+If you want to translate the plugin, you can use the `messages.properties` file located in `$idp_install_path/conf/authn/messages.properties`.<br>
+See shibboleth documentation for more information about the translation process: [Shibboleth - Translation](https://shibboleth.atlassian.net/wiki/spaces/IDP30/pages/2499314036/MessagesTranslation).
