@@ -17,12 +17,14 @@ package org.privacyidea.context;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import org.jetbrains.annotations.NotNull;
 import org.opensaml.messaging.context.BaseContext;
 
 public class PIContext extends BaseContext
 {
-    @Nonnull
-    private final User user;
+    @Nullable
+    private User user;
     @Nullable
     private String transactionID = null;
     @Nonnull
@@ -30,24 +32,42 @@ public class PIContext extends BaseContext
     @Nullable
     private String webauthnSignResponse = null;
     @Nullable
+    private String passkeyRegistration = "";
+    @Nullable
+    private String passkeyRegistrationResponse = null;
+    @Nullable
+    private String passkeyRegistrationSerial = null;
+    @Nullable
+    private String passkeyChallenge = "";
+    @Nullable
+    private String passkeyMessage = null;
+    @Nullable
+    private String passkeySignResponse = null;
+    @Nullable
+    private String passkeyTransactionID = null;
+    @Nullable
     private String formErrorMessage = null;
     @Nullable
     private String origin = null;
+    @Nonnull
+    private String standalone = "0";
     private boolean isPushAvailable = false;
     @Nonnull
     private String mode = "otp";
     @Nullable
     private final String pluginVersion;
 
-    public PIContext(@Nonnull User user, @Nullable String pluginVersion)
+    public PIContext(@Nullable User user, @Nullable String pluginVersion)
     {
         this.user = user;
         this.pluginVersion = pluginVersion;
     }
 
     // Getters and Setters
-    @Nonnull
-    public String getUsername() {return user.getUsername();}
+    @Nullable
+    public String getUsername() {return user != null ? user.getUsername() : null;}
+
+    public void setUsername(@Nonnull String username) {this.user = new User(username);}
 
     public void setTransactionID(@Nonnull String transactionID) {this.transactionID = transactionID;}
 
@@ -56,7 +76,7 @@ public class PIContext extends BaseContext
 
     public void setIsPushAvailable(boolean pushAvailable) {isPushAvailable = pushAvailable;}
 
-    public boolean getIsPushAvailable() {return isPushAvailable;}
+    public boolean isPushAvailable() {return isPushAvailable;}
 
     @Nullable
     public String getWebauthnSignResponse() {return webauthnSignResponse;}
@@ -64,9 +84,44 @@ public class PIContext extends BaseContext
     public void setWebauthnSignResponse(@Nullable String webauthnSignResponse) {this.webauthnSignResponse = webauthnSignResponse;}
 
     @Nullable
+    public String getPasskeyRegistration() {return passkeyRegistration;}
+
+    public void setPasskeyRegistration(@Nullable String passkeyRegistration) {this.passkeyRegistration = passkeyRegistration;}
+
+    @Nullable
+    public String getPasskeyRegistrationResponse() {return passkeyRegistrationResponse;}
+
+    public void setPasskeyRegistrationResponse(@Nullable String passkeyRegistrationResponse) {this.passkeyRegistrationResponse = passkeyRegistrationResponse;}
+
+    @Nullable
+    public String getPasskeyRegistrationSerial() {return passkeyRegistrationSerial;}
+
+    public void setPasskeyRegistrationSerial(@Nullable String passkeyRegistrationSerial) {this.passkeyRegistrationSerial = passkeyRegistrationSerial;}
+
+    @Nullable
+    public String getPasskeyChallenge() {return passkeyChallenge;}
+
+    public void setPasskeyChallenge(@Nullable String passkeyChallenge) {this.passkeyChallenge = passkeyChallenge;}
+
+    @Nullable
+    public String getPasskeySignResponse() {return passkeySignResponse;}
+
+    public void setPasskeySignResponse(@Nullable String passkeySignResponse) {this.passkeySignResponse = passkeySignResponse;}
+
+    public void setPasskeyTransactionID(@Nullable String passkeyTransactionID) {this.passkeyTransactionID = passkeyTransactionID;}
+
+    @Nullable
+    public String getPasskeyTransactionID() {return passkeyTransactionID;}
+
+    @Nullable
     public String getOrigin() {return origin;}
 
     public void setOrigin(@Nullable String origin) {this.origin = origin;}
+
+    @NotNull
+    public String getStandalone() {return standalone;}
+
+    public void setStandalone(@NotNull String standalone) {this.standalone = standalone;}
 
     @Nonnull
     public String getMode() {return mode;}
@@ -77,6 +132,11 @@ public class PIContext extends BaseContext
     public String getWebauthnSignRequest() {return webauthnSignRequest;}
 
     public void setWebauthnSignRequest(@Nonnull String webauthnSignRequest) {this.webauthnSignRequest = webauthnSignRequest;}
+
+    public void setPasskeyMessage(@Nullable String passkeyMessage) {this.passkeyMessage = passkeyMessage;}
+
+    @Nullable
+    public String getPasskeyMessage() {return passkeyMessage;}
 
     @Nullable
     public String getFormErrorMessage() {return formErrorMessage;}

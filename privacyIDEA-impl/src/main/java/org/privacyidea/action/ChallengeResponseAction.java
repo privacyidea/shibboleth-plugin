@@ -30,15 +30,18 @@ import net.shibboleth.idp.profile.AbstractProfileAction;
 import org.opensaml.messaging.context.navigate.ChildContextLookup;
 import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.context.ProfileRequestContext;
-import org.privacyidea.Challenge;
-import org.privacyidea.IPILogger;
-import org.privacyidea.PIResponse;
-import org.privacyidea.PrivacyIDEA;
+import org.privacyidea.*;
 import org.privacyidea.context.PIContext;
 import org.privacyidea.context.PIFormContext;
 import org.privacyidea.context.PIServerConfigContext;
+import org.privacyidea.context.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class ChallengeResponseAction extends AbstractProfileAction implements IPILogger
 {
@@ -49,13 +52,16 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
     protected PrivacyIDEA privacyIDEA;
     protected boolean debug = false;
     @Nonnull
-    private final Function<ProfileRequestContext, PIContext> piContextLookupStrategy = (new ChildContextLookup(PIContext.class, false)).compose(
+    private final Function<ProfileRequestContext, PIContext> piContextLookupStrategy = (
+            new ChildContextLookup(PIContext.class, false)).compose(
             new ChildContextLookup(AuthenticationContext.class));
     @Nonnull
-    private final Function<ProfileRequestContext, PIFormContext> piFormContextLookupStrategy = (new ChildContextLookup(PIFormContext.class, false)).compose(
+    private final Function<ProfileRequestContext, PIFormContext> piFormContextLookupStrategy = (
+            new ChildContextLookup(PIFormContext.class, false)).compose(
             new ChildContextLookup(AuthenticationContext.class));
     @Nonnull
-    private final Function<ProfileRequestContext, PIServerConfigContext> piServerConfigLookupStrategy = (new ChildContextLookup(PIServerConfigContext.class, false)).compose(
+    private final Function<ProfileRequestContext, PIServerConfigContext> piServerConfigLookupStrategy = (
+            new ChildContextLookup(PIServerConfigContext.class, false)).compose(
             new ChildContextLookup(AuthenticationContext.class));
 
     protected final boolean doPreExecute(@Nonnull ProfileRequestContext profileRequestContext)
@@ -101,7 +107,7 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
                             String userAgent = "privacyIDEA-Shibboleth/" + pluginVersion + " ShibbolethIdP/" + shibbVersion;
 
                             privacyIDEA = PrivacyIDEA.newBuilder(piServerConfigContext.getConfigParams().getServerURL(), userAgent)
-                                                     .sslVerify(piServerConfigContext.getConfigParams().getVerifySSL())
+                                                     .verifySSL(piServerConfigContext.getConfigParams().getVerifySSL())
                                                      .realm(piServerConfigContext.getConfigParams().getRealm())
                                                      .serviceAccount(piServerConfigContext.getConfigParams().getServiceName(),
                                                                      piServerConfigContext.getConfigParams().getServicePass())
@@ -125,7 +131,9 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
         this.doExecute(profileRequestContext, this.piContext, this.piServerConfigContext);
     }
 
-    protected void doExecute(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext, @Nonnull PIServerConfigContext piServerConfigContext) {}
+    protected void doExecute(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext,
+                             @Nonnull PIServerConfigContext piServerConfigContext)
+    {}
 
     /**
      * Extract message from server response, and save it in form context.
@@ -134,7 +142,7 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
      */
     protected void extractMessage(@Nonnull PIResponse piResponse)
     {
-        if (piResponse.message != null && !piResponse.message.isEmpty())
+        if (StringUtil.isNotBlank(piResponse.message))
         {
             piFormContext.setMessage(piResponse.message);
         }
@@ -147,13 +155,17 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
      */
     protected void extractChallengeData(@Nonnull PIResponse piResponse)
     {
-        if (piResponse.transactionID != null && !piResponse.transactionID.isEmpty())
+        if (StringUtil.isNotBlank(piResponse.transactionID))
         {
             piContext.setTransactionID(piResponse.transactionID);
         }
-        if (piResponse.preferredClientMode != null && !piResponse.preferredClientMode.isEmpty())
+        if (StringUtil.isNotBlank(piResponse.preferredClientMode))
         {
             piContext.setMode(piResponse.preferredClientMode);
+        }
+        if (StringUtil.isNotBlank(piResponse.enrollmentLink))
+        {
+            piFormContext.setEnrollmentLink(piResponse.enrollmentLink);
         }
 
         // WebAuthn
@@ -162,19 +174,36 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
             piContext.setWebauthnSignRequest(piResponse.mergedSignRequest());
         }
 
+        // Passkey
+        if (StringUtil.isNotBlank(piResponse.passkeyRegistration) && StringUtil.isNotBlank(piResponse.serial))
+        {
+            piContext.setPasskeyRegistration(piResponse.passkeyRegistration);
+            piContext.setPasskeyRegistrationSerial(piResponse.serial);
+        }
+        if (StringUtil.isNotBlank(piResponse.passkeyChallenge))
+        {
+            piContext.setPasskeyChallenge(piResponse.passkeyChallenge);
+        }
+
         // Push
         piContext.setIsPushAvailable(piResponse.pushAvailable());
-        if (piContext.getIsPushAvailable())
+        if (piContext.isPushAvailable())
         {
             piFormContext.setPushMessage(piResponse.pushMessage());
         }
 
         // Check for the images
-        for (Challenge c : piResponse.multichallenge)
+        for (Challenge c : piResponse.multiChallenge)
         {
             if ("poll".equals(c.getClientMode()))
             {
-                piFormContext.setImagePush(c.getImage());
+                if (StringUtil.isNotBlank(c.getImage()))
+                {
+                    piFormContext.setImagePush(c.getImage());
+                    //todo Workaround to show the push image by enrollment via challenge. Waiting for an update of privacyIDEA response.
+                    // Waiting for updating of privacyidea that clearly indicates enroll_via_multichallenge challenges.
+                    piContext.setMode("push");
+                }
             }
             else if ("interactive".equals(c.getClientMode()))
             {
@@ -196,7 +225,7 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
     protected Map<String, String> getHeadersToForward(HttpServletRequest request)
     {
         Map<String, String> headersToForward = new LinkedHashMap<>();
-        if (piServerConfigContext.getConfigParams().getForwardHeaders() != null && !piServerConfigContext.getConfigParams().getForwardHeaders().isEmpty())
+        if (StringUtil.isNotBlank(piServerConfigContext.getConfigParams().getForwardHeaders()))
         {
             String cleanHeaders = piServerConfigContext.getConfigParams().getForwardHeaders().replaceAll(" ", "");
             List<String> headersList = List.of(cleanHeaders.split(","));
@@ -220,7 +249,7 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
                 }
                 else
                 {
-                    LOGGER.info("{} No values for header \"" + headerName + "\" found.", this.getLogPrefix());
+                    LOGGER.info("{} No values for header \"{}\" found.", this.getLogPrefix(), headerName);
                 }
             }
         }
@@ -233,7 +262,7 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
     {
         if (debug)
         {
-            LOGGER.info("PrivacyIDEA Client: " + message);
+            LOGGER.info("{}", message);
         }
     }
 
@@ -242,7 +271,7 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
     {
         if (debug)
         {
-            LOGGER.error("PrivacyIDEA Client: " + message);
+            LOGGER.error("{}", message);
         }
     }
 
@@ -251,7 +280,7 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
     {
         if (debug)
         {
-            LOGGER.info("PrivacyIDEA Client: " + throwable);
+            LOGGER.info("{}", this.getLogPrefix(), throwable);
         }
     }
 
@@ -260,7 +289,7 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
     {
         if (debug)
         {
-            LOGGER.error("PrivacyIDEA Client: " + throwable);
+            LOGGER.error("{}", this.getLogPrefix(), throwable);
         }
     }
 }

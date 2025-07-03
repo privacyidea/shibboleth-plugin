@@ -37,20 +37,25 @@ public class PIFormContext extends BaseContext
     private boolean pollInBrowser;
     @Nullable
     private String pollInBrowserUrl;
+    private boolean disablePasskey;
     @Nonnull
     private String imageOtp = "";
     @Nonnull
     private String imagePush = "";
     @Nonnull
     private String imageWebauthn = "";
+    @Nonnull
+    private String enrollmentLink = "";
+    private boolean enrollViaMultichallenge = false;
 
-    public PIFormContext(@Nullable String defaultMessage, @Nullable String otpFieldHint, @Nullable Integer otpLength, @Nullable String pollingInterval, boolean pollInBrowser, @Nullable String pollInBrowserUrl)
+    public PIFormContext(@Nullable String defaultMessage, @Nullable String otpFieldHint, @Nullable Integer otpLength, @Nullable String pollingInterval, boolean pollInBrowser, @Nullable String pollInBrowserUrl, boolean disablePasskey)
     {
-        this.defaultMessage = Objects.requireNonNullElse(defaultMessage, "Please enter the OTP!");
-        this.otpFieldHint = Objects.requireNonNullElse(otpFieldHint, "OTP");
+        this.defaultMessage = Objects.requireNonNullElse(defaultMessage, "Please enter your One-Time-Password:");
+        this.otpFieldHint = Objects.requireNonNullElse(otpFieldHint, "One-Time-Password (OTP)");
         this.pollingInterval = Objects.requireNonNullElse(pollingInterval, "2");
         this.pollInBrowser = pollInBrowser;
         this.pollInBrowserUrl = pollInBrowserUrl;
+        this.disablePasskey = disablePasskey;
         this.otpLength = otpLength;
     }
 
@@ -78,12 +83,12 @@ public class PIFormContext extends BaseContext
     @Nullable
     public String getPollInBrowserUrl() {return pollInBrowserUrl;}
 
-    public void setImageOtp(@Nonnull String imageOtp) {this.imageOtp = imageOtp;}
+    public void setImageOtp(@Nonnull String imageOtp) {this.imageOtp = imageOtp; this.enrollViaMultichallenge = true;}
 
     @Nonnull
     public String getImageOtp() {return imageOtp;}
 
-    public void setImagePush(@Nonnull String imagePush) {this.imagePush = imagePush;}
+    public void setImagePush(@Nonnull String imagePush) {this.imagePush = imagePush; this.enrollViaMultichallenge = true;}
 
     @Nonnull
     public String getImagePush() {return imagePush;}
@@ -92,4 +97,13 @@ public class PIFormContext extends BaseContext
 
     @Nonnull
     public String getImageWebauthn() {return imageWebauthn;}
+
+    public void setEnrollmentLink(@Nonnull String enrollmentLink) {this.enrollmentLink = enrollmentLink;}
+
+    @Nonnull
+    public String getEnrollmentLink() {return enrollmentLink;}
+
+    public boolean isEnrollViaMultichallenge() {return enrollViaMultichallenge;}
+
+    public boolean isDisablePasskey() {return disablePasskey;}
 }
