@@ -101,6 +101,8 @@
                                         <br>
                                         <img class="pi-tokenImage" src="$piFormContext.getImagePush()" alt="[Push Image]">
                                     #end
+                                #elseif ($piContext.getMode() == "passkey" && $piContext.getPasskeyMessage() && $passkeyRegistrationEmpty)
+                                    <p class="pi-message">$piContext.getPasskeyMessage()</p>
                                 #else
                                     #if ($piFormContext.getEnrollmentLink() != "")
                                         <a id="enrollmentLink" href="$piFormContext.getEnrollmentLink()">#springMessageText("privacyidea.enrollmentLink", "Enrollment Link")</a>

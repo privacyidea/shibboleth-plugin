@@ -40,6 +40,8 @@ public class PIContext extends BaseContext
     @Nullable
     private String passkeyChallenge = "";
     @Nullable
+    private String passkeyMessage = null;
+    @Nullable
     private String passkeySignResponse = null;
     @Nullable
     private String passkeyTransactionID = null;
@@ -130,6 +132,11 @@ public class PIContext extends BaseContext
     public String getWebauthnSignRequest() {return webauthnSignRequest;}
 
     public void setWebauthnSignRequest(@Nonnull String webauthnSignRequest) {this.webauthnSignRequest = webauthnSignRequest;}
+
+    public void setPasskeyMessage(@Nullable String passkeyMessage) {this.passkeyMessage = passkeyMessage;}
+
+    @Nullable
+    public String getPasskeyMessage() {return passkeyMessage;}
 
     @Nullable
     public String getFormErrorMessage() {return formErrorMessage;}

@@ -109,6 +109,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             PIResponse response = privacyIDEA.validateInitialize("passkey");
             if (StringUtil.isNotBlank(response.passkeyChallenge))
             {
+                piContext.setPasskeyMessage(response.passkeyMessage);
                 piContext.setPasskeyChallenge(response.passkeyChallenge);
                 piContext.setMode("passkey");
                 piContext.setPasskeyTransactionID(response.transactionID);
