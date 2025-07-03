@@ -1,3 +1,17 @@
+## 1.2.0 07/2025
+
+### Features
+* Passkey support
+* Possibility to choose between 2 different privacyIDEA configurations or instances
+* Translation support by using messages.properties
+* Possibility to use privacyIDEA in standalone mode (without password module)
+* Improved UI and UX
+
+### Fixes
+* Display link for token enrollment in UI
+* Use Feth API for polling in browser (push token)
+* Implemented restart button to the authentication form
+
 ## 1.1.0 02/2024
 
 ### Features
