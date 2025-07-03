@@ -127,8 +127,7 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
                                 LOGGER.info("username: {}", piContext.getUsername());
                             }
                             UsernameContext userCtx = profileRequestContext.getSubcontext(UsernameContext.class, true);
-                            assert userCtx != null;
-                            userCtx.setUsername(piContext.getUsername());
+                            Objects.requireNonNull(userCtx).setUsername(piContext.getUsername());
                             ActionSupport.buildEvent(profileRequestContext, "validateResponseStandalone");
                         }
                         else
