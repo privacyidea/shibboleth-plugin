@@ -7,10 +7,10 @@
 * Possibility to use privacyIDEA in standalone mode (without password module)
 * Improved UI and UX
 
-### Fixes
+### Enhancements
 * Display link for token enrollment in UI
-* Use Feth API for polling in browser (push token)
-* Implemented restart button to the authentication form
+* Use Fetch API for polling in browser (push token)
+* Option to restart the authentication
 
 ## 1.1.0 02/2024
 
