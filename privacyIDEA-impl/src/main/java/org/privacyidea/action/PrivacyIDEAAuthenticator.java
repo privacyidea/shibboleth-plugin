@@ -141,7 +141,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                     ActionSupport.buildEvent(profileRequestContext, "abort");
                     return;
                 }
-                else if (response.value)
+                else if (response.authenticationSuccessful())
                 {
                     piContext.setPasskeyRegistration("");
                     finalizeAuthentication(profileRequestContext, piContext);
