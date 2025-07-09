@@ -31,7 +31,8 @@ Without password module, recommended for passkeys:
 ####################################
 
 Example of the MFA flow mapping for 2 different privacyIDEA instances.
-Note: To use the inline scripts, you need to activate the Nashorn module in the Shibboleth IdP.
+Note: To use the inline scripts, you need to activate the Nashorn module in the Shibboleth IdP:
+/opt/shibboleth-idp/bin/plugin.sh -I net.shibboleth.idp.plugin.nashorn
 
 <!-- Mapping to enable the SelectFlow bean below -->
     <util:map id="shibboleth.authn.MFA.TransitionMap">
