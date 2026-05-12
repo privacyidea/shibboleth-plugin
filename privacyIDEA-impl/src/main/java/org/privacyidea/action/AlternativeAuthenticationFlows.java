@@ -41,13 +41,17 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
     protected final void doExecute(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext, @Nonnull PIServerConfigContext piServerConfigContext)
     {
         HttpServletRequest request = Objects.requireNonNull(getHttpServletRequestSupplier()).get();
-        if (request.getParameterValues("standalone") != null && StringUtil.isNotBlank(request.getParameterValues("standalone")[0]))
+        
+        String standalone = request.getParameter("standalone");
+        if (StringUtil.isNotBlank(standalone))
         {
-            piContext.setStandalone(request.getParameterValues("standalone")[0]);
+            piContext.setStandalone(standalone);
         }
-        if (request.getParameterValues("username") != null && StringUtil.isNotBlank(request.getParameterValues("username")[0]))
+        
+        String username = request.getParameter("username");
+        if (StringUtil.isNotBlank(username))
         {
-            piContext.setUsername(request.getParameterValues("username")[0]);
+            piContext.setUsername(username);
         }
 
         if ("triggerChallenge".equals(piServerConfigContext.getConfigParams().getAuthenticationFlow()))
@@ -152,6 +156,56 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
             if (debug)
             {
                 LOGGER.info("{} Authentication flow: default.", this.getLogPrefix());
+            }
+
+            String otp = request.getParameter("otp");
+            if (StringUtil.isNotBlank(otp))
+            {
+                Map<String, String> headers = this.getHeadersToForward(request);
+                PIResponse piResponse = privacyIDEA.validateCheck(piContext.getUsername(), otp, headers);
+
+                if (piResponse == null)
+                {
+                    LOGGER.warn("{} No response from privacyIDEA server for validateCheck.", this.getLogPrefix());
+                    return;
+                }
+                if (piResponse.error != null)
+                {
+                    LOGGER.error("{} privacyIDEA server error: {}!", this.getLogPrefix(), piResponse.error.message);
+                    ActionSupport.buildEvent(profileRequestContext, "AuthenticationException");
+                    return;
+                }
+                extractMessage(piResponse);
+
+                if (piResponse.authenticationSuccessful())
+                {
+                    if ("1".equals(piContext.getStandalone()))
+                    {
+                        if (debug)
+                        {
+                            LOGGER.info("{} Standalone mode, setting username '{}' and building event...",
+                                        this.getLogPrefix(), piContext.getUsername());
+                        }
+                        UsernameContext userCtx = profileRequestContext.getSubcontext(UsernameContext.class, true);
+                        Objects.requireNonNull(userCtx).setUsername(piContext.getUsername());
+                        ActionSupport.buildEvent(profileRequestContext, "validateResponseStandalone");
+                    }
+                    else
+                    {
+                        if (debug)
+                        {
+                            LOGGER.info("{} Authentication successful, building success event...", this.getLogPrefix());
+                        }
+                        ActionSupport.buildEvent(profileRequestContext, "success");
+                    }
+                    return;
+                }
+
+                // Authentication not yet successful — extract any additional challenge for re-render.
+                if (!piResponse.multiChallenge.isEmpty())
+                {
+                    extractChallengeData(piResponse);
+                }
             }
         }
     }

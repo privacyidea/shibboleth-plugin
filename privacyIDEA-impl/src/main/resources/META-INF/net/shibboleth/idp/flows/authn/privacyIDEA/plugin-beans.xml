@@ -35,7 +35,8 @@
           p:pollInBrowserUrl="%{privacyidea.poll_in_browser_url:#{null}}"
           p:disablePasskey="%{privacyidea.disable_passkey:false}"
           p:pluginVersion="%{privacyidea.plugin_version:#{null}}"
-          p:debug="%{privacyidea.debug:false}"/>
+          p:debug="%{privacyidea.debug:false}"
+          p:skipFirstStep="%{privacyidea.skip_first_step:true}"/>
 
     <bean id="piAuthenticator" class="org.privacyidea.action.PrivacyIDEAAuthenticator" scope="prototype"
           p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier"/>

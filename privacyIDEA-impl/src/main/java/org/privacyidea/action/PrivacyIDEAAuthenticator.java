@@ -46,17 +46,23 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         HttpServletRequest request = Objects.requireNonNull(getHttpServletRequestSupplier()).get();
         Map<String, String> headers = this.getHeadersToForward(request);
 
-        piContext.setMode(request.getParameterValues("mode")[0]);
-        piContext.setWebauthnSignResponse(request.getParameterValues("webauthnSignResponse")[0]);
-        piContext.setPasskeySignResponse(request.getParameterValues("passkeySignResponse")[0]);
-        piContext.setPasskeyRegistration(request.getParameterValues("passkeyRegistration")[0]);
-        piContext.setPasskeyRegistrationResponse(request.getParameterValues("passkeyRegistrationResponse")[0]);
-        piContext.setPasskeyChallenge(request.getParameterValues("passkeyChallenge")[0]);
-        piContext.setOrigin(request.getParameterValues("origin")[0]);
-        piContext.setFormErrorMessage(request.getParameterValues("errorMessage")[0]);
-        if (request.getParameterValues("standalone") != null && StringUtil.isNotBlank(request.getParameterValues("standalone")[0]))
+        String mode = request.getParameter("mode");
+        if (mode != null)
         {
-            piContext.setStandalone(request.getParameterValues("standalone")[0]);
+            piContext.setMode(mode);
+        }
+        piContext.setWebauthnSignResponse(request.getParameter("webauthnSignResponse"));
+        piContext.setPasskeySignResponse(request.getParameter("passkeySignResponse"));
+        piContext.setPasskeyRegistration(request.getParameter("passkeyRegistration"));
+        piContext.setPasskeyRegistrationResponse(request.getParameter("passkeyRegistrationResponse"));
+        piContext.setPasskeyChallenge(request.getParameter("passkeyChallenge"));
+        piContext.setOrigin(request.getParameter("origin"));
+        piContext.setFormErrorMessage(request.getParameter("errorMessage"));
+
+        String standalone = request.getParameter("standalone");
+        if (StringUtil.isNotBlank(standalone))
+        {
+            piContext.setStandalone(standalone);
         }
         PIResponse piResponse = null;
 
@@ -104,12 +110,12 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             }
         }
         // Passkey login requested: Get a challenge and return
-        if ("1".equals(request.getParameterValues("passkeyLoginRequested")[0]))
+        if ("1".equals(request.getParameter("passkeyLoginRequested")))
         {
             PIResponse response = privacyIDEA.validateInitialize("passkey");
             if (StringUtil.isNotBlank(response.passkeyChallenge))
             {
-                piContext.setPasskeyMessage(response.passkeyMessage);
+                piContext.setPasskeyMessage(response.message);
                 piContext.setPasskeyChallenge(response.passkeyChallenge);
                 piContext.setMode("passkey");
                 piContext.setPasskeyTransactionID(response.transactionID);
@@ -119,7 +125,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             }
         }
         // Passkey login cancelled: Remove the challenge and passkey transaction ID
-        if ("1".equals(request.getParameterValues("passkeyLoginCancelled")[0]))
+        if ("1".equals(request.getParameter("passkeyLoginCancelled")))
         {
             piContext.setPasskeyChallenge("");
             piContext.setPasskeyTransactionID(null);
@@ -150,7 +156,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             }
         }
 
-        if ("1".equals(request.getParameterValues("silentModeChange")[0]))
+        if ("1".equals(request.getParameter("silentModeChange")))
         {
             ActionSupport.buildEvent(profileRequestContext, "reload");
             return;
@@ -213,21 +219,18 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         }
         else if ("otp".equals(piContext.getMode()))
         {
-            if (request.getParameterValues("otp") != null && request.getParameterValues("otp").length > 0)
+            String otp = request.getParameter("otp");
+            if (StringUtil.isNotBlank(otp))
             {
-                String otp = request.getParameterValues("otp")[0];
-                if (otp != null)
+                piResponse = privacyIDEA.validateCheck(piContext.getUsername(), otp, piContext.getTransactionID(), headers);
+            }
+            else
+            {
+                if (debug)
                 {
-                    piResponse = privacyIDEA.validateCheck(piContext.getUsername(), otp, piContext.getTransactionID(), headers);
+                    LOGGER.info("{} Cannot send password because it is null or blank!", this.getLogPrefix());
                 }
-                else
-                {
-                    if (debug)
-                    {
-                        LOGGER.info("{} Cannot send password because it is null!", this.getLogPrefix());
-                    }
-                    return;
-                }
+                return;
             }
         }
         else

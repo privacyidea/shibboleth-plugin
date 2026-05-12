@@ -9,15 +9,6 @@
     </formats>
 
     <fileSets>
-        <!-- The plugin property file -->
-        <fileSet>
-            <directory>../privacyIDEA-impl/target/classes/org/privacyidea</directory>
-            <outputDirectory>bootstrap</outputDirectory>
-            <includes>
-                <include>plugin.properties</include>
-            </includes>
-        </fileSet>
-
         <!--  The implementation jar -->
         <fileSet>
             <directory>../privacyIDEA-impl/target</directory>
@@ -60,12 +51,13 @@
             </excludes>
         </fileSet>
 
-        <!-- The signing certificates -->
+        <!-- The signing certificates and plugin properties -->
         <fileSet>
             <directory>src/main/resources/bootstrap</directory>
             <outputDirectory>bootstrap</outputDirectory>
             <includes>
                 <include>keys.txt</include>
+                <include>plugin.properties</include>
             </includes>
         </fileSet>
     </fileSets>

@@ -14,7 +14,7 @@
     <description>An IdP plugin providing MFA support.</description>
     <groupId>org.privacyidea</groupId>
     <artifactId>java-idp-plugin-privacyidea-parent</artifactId>
-    <version>1.2.0</version>
+    <version>1.3.0</version>
     <packaging>pom</packaging>
 
     <organization>
@@ -23,6 +23,11 @@
     </organization>
 
     <developers>
+        <developer>
+            <name>Nils Behlen</name>
+            <email>nils.behlen@netknights.it</email>
+            <organization>NetKnights GmbH</organization>
+        </developer>
         <developer>
             <name>Lukas Matusiewicz</name>
             <email>lukas.matusiewicz@netknights.it</email>
@@ -143,6 +148,20 @@
                         </manifestEntries>
                     </archive>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

@@ -17,6 +17,7 @@ package org.privacyidea.action;
 
 import net.shibboleth.idp.authn.AbstractAuthenticationAction;
 import net.shibboleth.idp.authn.context.AuthenticationContext;
+import net.shibboleth.idp.authn.context.MultiFactorAuthenticationContext;
 import net.shibboleth.idp.session.context.navigate.CanonicalUsernameLookupStrategy;
 import org.jetbrains.annotations.NotNull;
 import org.opensaml.profile.action.ActionSupport;
@@ -67,6 +68,7 @@ public class InitializePIContext extends AbstractAuthenticationAction
     @Nullable
     private String pollInBrowserUrl;
     private boolean debug;
+    private boolean skipFirstStep = true;
 
     public InitializePIContext()
     {
@@ -97,6 +99,27 @@ public class InitializePIContext extends AbstractAuthenticationAction
             log.info("{} No principal name available. Displaying username-password-form.", getLogPrefix());
             ActionSupport.buildEvent(profileRequestContext, "displayUsernamePasswordForm");
         }
+        else if (!skipFirstStep)
+        {
+            log.info("{} Principal name '{}' available but skip_first_step=false. Displaying username-password-form with prefilled username.", getLogPrefix(), user.getUsername());
+            ActionSupport.buildEvent(profileRequestContext, "displayUsernamePasswordForm");
+        }
+        else if (!hasFreshAuthenticationResult(authenticationContext))
+        {
+            log.info("{} Principal name '{}' available from CanonicalUsernameLookupStrategy but no prior authentication flow produced a fresh result in this MFA run. Displaying username-password-form with prefilled username.",
+                     getLogPrefix(), user.getUsername());
+            ActionSupport.buildEvent(profileRequestContext, "displayUsernamePasswordForm");
+        }
+        else
+        {
+            log.info("{} Principal name '{}' already available via CanonicalUsernameLookupStrategy. Skipping username-password-form.", getLogPrefix(), user.getUsername());
+        }
+    }
+
+    private boolean hasFreshAuthenticationResult(@Nonnull AuthenticationContext authenticationContext)
+    {
+        MultiFactorAuthenticationContext mfaCtx = authenticationContext.getSubcontext(MultiFactorAuthenticationContext.class);
+        return mfaCtx != null && !mfaCtx.getActiveResults().isEmpty();
     }
 
     @Nullable
@@ -205,4 +228,6 @@ public class InitializePIContext extends AbstractAuthenticationAction
     public void setPluginVersion(@Nullable String pluginVersion)          {this.pluginVersion = pluginVersion;}
 
     public void setDebug(boolean debug)                                   {this.debug = debug;}
+
+    public void setSkipFirstStep(boolean skipFirstStep)                   {this.skipFirstStep = skipFirstStep;}
 }
