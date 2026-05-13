@@ -161,12 +161,15 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
             String otp = request.getParameter("otp");
             if (StringUtil.isBlank(piContext.getUsername()))
             {
-                // Form submitted without a username — don't issue a /validate/check with user=null.
-                // checkAuthenticationFlow always fires `proceed` so the user lands on main.vm anyway.
+                // Form submitted without a username — skip the /validate/check and send the user back
+                // to the username/password form. checkAuthenticationFlow short-circuits on this event
+                // before its hard-coded "proceed" evaluate runs.
                 if (debug)
                 {
-                    LOGGER.info("{} No username available; skipping validateCheck.", this.getLogPrefix());
+                    LOGGER.info("{} No username available; redisplaying username/password form.", this.getLogPrefix());
                 }
+                piContext.setFormErrorMessage("Username is required.");
+                ActionSupport.buildEvent(profileRequestContext, "redisplayUsernameForm");
                 return;
             }
             if (StringUtil.isNotBlank(otp))
