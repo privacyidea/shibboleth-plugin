@@ -120,7 +120,18 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                 piContext.setMode("passkey");
                 piContext.setPasskeyTransactionID(response.transactionID);
 
-                ActionSupport.buildEvent(profileRequestContext, "reload");
+                // If the click originated from the username/password form's "Sign in with Passkey"
+                // button, Spring Web Flow set _eventId_passkey on the request. In that case re-render
+                // the same username form (with auto-triggered passkey JS) instead of jumping to the
+                // second-step view — the user only sees the OS passkey dialog, not a UI transition.
+                if (request.getParameterMap().containsKey("_eventId_passkey"))
+                {
+                    ActionSupport.buildEvent(profileRequestContext, "reloadUsernameForm");
+                }
+                else
+                {
+                    ActionSupport.buildEvent(profileRequestContext, "reload");
+                }
                 return;
             }
         }
@@ -159,6 +170,19 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         if ("1".equals(request.getParameter("silentModeChange")))
         {
             ActionSupport.buildEvent(profileRequestContext, "reload");
+            return;
+        }
+
+        // User declined an optional enroll-via-multichallenge offer: notify the server and finish.
+        if ("1".equals(request.getParameter("cancelEnrollment")))
+        {
+            if (debug)
+            {
+                LOGGER.info("{} User declined optional enroll-via-multichallenge. Cancelling enrollment for transaction '{}'.",
+                            this.getLogPrefix(), piContext.getTransactionID());
+            }
+            privacyIDEA.validateCheckCancelEnrollment(piContext.getTransactionID(), headers);
+            ActionSupport.buildEvent(profileRequestContext, "success");
             return;
         }
         else if ("push".equals(piContext.getMode()))
@@ -253,7 +277,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                 piContext.setFormErrorMessage(piResponse.error.message);
                 ActionSupport.buildEvent(profileRequestContext, "reload");
             }
-            else if (!piResponse.multiChallenge.isEmpty())
+            else if (piResponse.hasChallenges())
             {
                 if (debug)
                 {

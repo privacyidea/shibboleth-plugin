@@ -86,9 +86,12 @@ function passkeyAuthentication ()
         piSetValue("passkeyLoginCancelled", "0");
         let challengeObject = JSON.parse(passkeyChallenge.replace(/(&quot;)/g, "\""));
         let userVerification = "preferred";
-        if ([ "required", "preferred", "discouraged" ].includes(challengeObject.user_verification))
+        // /validate/initialize uses snake_case (user_verification); PIN-triggered passkey via
+        // /validate/check uses camelCase (userVerification). Accept either.
+        const uv = challengeObject.user_verification || challengeObject.userVerification;
+        if ([ "required", "preferred", "discouraged" ].includes(uv))
         {
-            userVerification = challengeObject.user_verification;
+            userVerification = uv;
         }
         navigator.credentials.get({
                                       publicKey: {
@@ -104,7 +107,7 @@ function passkeyAuthentication ()
                 userHandle: bytesToBase64(new Uint8Array(credential.response.userHandle)),
             };
             piSetValue("passkeySignResponse", JSON.stringify(params));
-            piSubmit();
+            piSubmitPasskey();
         }, function (error) {
             console.log("Error during passkey authentication: " + error);
             piSetValue("passkeyLoginCancelled", "1");

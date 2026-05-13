@@ -22,7 +22,10 @@ import net.shibboleth.idp.profile.AbstractProfileAction;
 import org.opensaml.messaging.context.navigate.ChildContextLookup;
 import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.context.ProfileRequestContext;
-import org.privacyidea.*;
+import org.privacyidea.Challenge;
+import org.privacyidea.IPILogger;
+import org.privacyidea.PIResponse;
+import org.privacyidea.PrivacyIDEA;
 import org.privacyidea.context.PIContext;
 import org.privacyidea.context.PIFormContext;
 import org.privacyidea.context.PIServerConfigContext;
@@ -31,7 +34,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -175,6 +182,20 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
         if (StringUtil.isNotBlank(piResponse.passkeyChallenge))
         {
             piContext.setPasskeyChallenge(piResponse.passkeyChallenge);
+            // PIN-triggered passkey (PasskeyAPITest::test_05_trigger_with_pin): server returns
+            // preferred_client_mode=webauthn alongside type=passkey. Pin the mode to "passkey"
+            // so the view renders the passkey path and pi-main.js doesn't fire doWebAuthn() with
+            // an empty webauthnSignRequest. Also propagate the transaction id into
+            // passkeyTransactionID because validateCheckPasskey() reads from there.
+            piContext.setMode("passkey");
+            if (StringUtil.isNotBlank(piResponse.transactionID))
+            {
+                piContext.setPasskeyTransactionID(piResponse.transactionID);
+            }
+            if (StringUtil.isNotBlank(piResponse.passkeyMessage))
+            {
+                piContext.setPasskeyMessage(piResponse.passkeyMessage);
+            }
         }
 
         // Push
@@ -183,6 +204,9 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
         {
             piFormContext.setPushMessage(piResponse.pushMessage());
         }
+
+        // Carry the optional-enrollment flag through to the form so the view can render a "Not Now" button.
+        piFormContext.setEnrollViaMultichallengeOptional(piResponse.isEnrollViaMultichallengeOptional);
 
         // Check for the images
         for (Challenge c : piResponse.multiChallenge)
@@ -217,6 +241,14 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
     protected Map<String, String> getHeadersToForward(HttpServletRequest request)
     {
         Map<String, String> headersToForward = new LinkedHashMap<>();
+
+        // Always forward Accept-Language so privacyIDEA can localize its responses.
+        String acceptLanguage = request.getHeader("Accept-Language");
+        if (StringUtil.isNotBlank(acceptLanguage))
+        {
+            headersToForward.put("Accept-Language", acceptLanguage);
+        }
+
         if (StringUtil.isNotBlank(piServerConfigContext.getConfigParams().getForwardHeaders()))
         {
             String cleanHeaders = piServerConfigContext.getConfigParams().getForwardHeaders().replaceAll(" ", "");

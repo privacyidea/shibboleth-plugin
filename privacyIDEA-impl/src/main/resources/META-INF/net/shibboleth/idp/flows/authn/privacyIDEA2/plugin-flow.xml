@@ -80,6 +80,7 @@
         </on-render>
 
         <transition on="proceed" to="piAuthenticator"/>
+        <transition on="passkey" to="piAuthenticator"/>
         <transition on="reset" to="RestartAuthentication"/>
     </view-state>
 
@@ -87,6 +88,7 @@
         <evaluate expression="piAuthenticator"/>
 
         <transition on="reload" to="displayPrivacyIDEAForm"/>
+        <transition on="reloadUsernameForm" to="displayUsernamePasswordForm"/>
         <transition on="abort" to="RestartAuthentication"/>
         <transition on="validateResponseStandalone" to="validateResponseStandalone"/>
         <transition on="success" to="proceed"/>

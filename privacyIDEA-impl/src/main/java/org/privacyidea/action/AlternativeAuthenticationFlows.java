@@ -73,7 +73,7 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
                     return;
                 }
 
-                if (!piResponse.multiChallenge.isEmpty())
+                if (piResponse.hasChallenges())
                 {
                     if (debug)
                     {
@@ -144,7 +144,7 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
                         }
                     }
 
-                    if (!piResponse.multiChallenge.isEmpty())
+                    if (piResponse.hasChallenges())
                     {
                         extractChallengeData(piResponse);
                     }
@@ -202,7 +202,7 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
                 }
 
                 // Authentication not yet successful — extract any additional challenge for re-render.
-                if (!piResponse.multiChallenge.isEmpty())
+                if (piResponse.hasChallenges())
                 {
                     extractChallengeData(piResponse);
                 }

@@ -22,16 +22,18 @@ import net.shibboleth.idp.session.context.navigate.CanonicalUsernameLookupStrate
 import org.jetbrains.annotations.NotNull;
 import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.context.ProfileRequestContext;
-import org.privacyidea.context.*;
+import org.privacyidea.context.Config;
+import org.privacyidea.context.PIContext;
+import org.privacyidea.context.PIFormContext;
+import org.privacyidea.context.PIServerConfigContext;
+import org.privacyidea.context.StringUtil;
+import org.privacyidea.context.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.StringUtils;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.function.Function;
-
-import static org.privacyidea.context.StringUtil.isBlank;
 
 public class InitializePIContext extends AbstractAuthenticationAction
 {
@@ -126,7 +128,7 @@ public class InitializePIContext extends AbstractAuthenticationAction
     private User getUser(@Nonnull ProfileRequestContext profileRequestContext)
     {
         String collectedUser = usernameLookupStrategy.apply(profileRequestContext);
-        if (!StringUtils.hasText(collectedUser))
+        if (StringUtil.isBlank(collectedUser))
         {
             return null;
         }

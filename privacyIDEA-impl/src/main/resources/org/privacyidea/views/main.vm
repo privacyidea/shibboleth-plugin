@@ -146,6 +146,7 @@
                                 <input id="passkeySignResponse" name="passkeySignResponse" value="" type="hidden">
                                 <input id="passkeyLoginRequested" name="passkeyLoginRequested" value="0" type="hidden">
                                 <input id="otpLength" name="otpLength" value='$piFormContext.getOtpLength()' type="hidden">
+                                <input id="cancelEnrollment" name="cancelEnrollment" value="0" type="hidden">
                             </div>
 
                             ## OTHER LOGIN OPTIONS ##
@@ -197,6 +198,16 @@
                                     <br><br>
                                 #end
                             </div>
+
+                            ## SKIP OPTIONAL ENROLL-VIA-MULTICHALLENGE ##
+                            #if ($piFormContext.isEnrollViaMultichallenge() && $piFormContext.isEnrollViaMultichallengeOptional())
+                                <div class="form-element-wrapper" id="cancelEnrollmentWrapper">
+                                    <button class="form-element-button" id="cancelEnrollmentButton" type="submit"
+                                            name="_eventId_proceed"
+                                            onclick="document.getElementById('cancelEnrollment').value = '1'">
+                                        #springMessageText("privacyidea.notNowButton", "Not Now")</button>
+                                </div>
+                            #end
 
                             ## RESET THE LOGIN PROCESS ##
                             <div class="form-element-wrapper" id="resetLogin">
