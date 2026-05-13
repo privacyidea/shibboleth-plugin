@@ -47,6 +47,7 @@ public class PIFormContext extends BaseContext
     @Nonnull
     private String enrollmentLink = "";
     private boolean enrollViaMultichallenge = false;
+    private boolean enrollViaMultichallengeOptional = false;
 
     public PIFormContext(@Nullable String defaultMessage, @Nullable String otpFieldHint, @Nullable Integer otpLength, @Nullable String pollingInterval, boolean pollInBrowser, @Nullable String pollInBrowserUrl, boolean disablePasskey)
     {
@@ -104,6 +105,10 @@ public class PIFormContext extends BaseContext
     public String getEnrollmentLink() {return enrollmentLink;}
 
     public boolean isEnrollViaMultichallenge() {return enrollViaMultichallenge;}
+
+    public void setEnrollViaMultichallengeOptional(boolean enrollViaMultichallengeOptional) {this.enrollViaMultichallengeOptional = enrollViaMultichallengeOptional;}
+
+    public boolean isEnrollViaMultichallengeOptional() {return enrollViaMultichallengeOptional;}
 
     public boolean isDisablePasskey() {return disablePasskey;}
 }

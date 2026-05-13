@@ -36,7 +36,7 @@ window.piSetValue = function setValue(id, value)
     }
     else
     {
-        let form = document.querySelector("#privacyidea-form");
+        let form = document.querySelector("#privacyidea-form") || document.querySelector("#username-password-form");
         let field = piCreateField(id, value);
         form.appendChild(field);
     }
@@ -80,10 +80,26 @@ window.piCreateField = function createField(name, value)
     return field;
 }
 
+function piFindForm()
+{
+    // main.vm uses #privacyidea-form; usernamePasswordForm.vm uses #username-password-form.
+    return document.querySelector("#privacyidea-form") || document.querySelector("#username-password-form");
+}
+
 window.piSubmit = function clickSubmitButton()
 {
     let proceedField = piCreateField("_eventId_proceed", "proceed");
-    let form = document.querySelector("#privacyidea-form");
+    let form = piFindForm();
     form.appendChild(proceedField);
+    form.submit();
+}
+
+// Submit using the _eventId_passkey event so the flow routes to piAuthenticator from either
+// view-state (main or username/password) — only the username form's "proceed" goes elsewhere.
+window.piSubmitPasskey = function clickSubmitPasskeyButton()
+{
+    let passkeyField = piCreateField("_eventId_passkey", "passkey");
+    let form = piFindForm();
+    form.appendChild(passkeyField);
     form.submit();
 }

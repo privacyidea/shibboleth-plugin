@@ -46,17 +46,23 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         HttpServletRequest request = Objects.requireNonNull(getHttpServletRequestSupplier()).get();
         Map<String, String> headers = this.getHeadersToForward(request);
 
-        piContext.setMode(request.getParameterValues("mode")[0]);
-        piContext.setWebauthnSignResponse(request.getParameterValues("webauthnSignResponse")[0]);
-        piContext.setPasskeySignResponse(request.getParameterValues("passkeySignResponse")[0]);
-        piContext.setPasskeyRegistration(request.getParameterValues("passkeyRegistration")[0]);
-        piContext.setPasskeyRegistrationResponse(request.getParameterValues("passkeyRegistrationResponse")[0]);
-        piContext.setPasskeyChallenge(request.getParameterValues("passkeyChallenge")[0]);
-        piContext.setOrigin(request.getParameterValues("origin")[0]);
-        piContext.setFormErrorMessage(request.getParameterValues("errorMessage")[0]);
-        if (request.getParameterValues("standalone") != null && StringUtil.isNotBlank(request.getParameterValues("standalone")[0]))
+        String mode = request.getParameter("mode");
+        if (mode != null)
         {
-            piContext.setStandalone(request.getParameterValues("standalone")[0]);
+            piContext.setMode(mode);
+        }
+        piContext.setWebauthnSignResponse(request.getParameter("webauthnSignResponse"));
+        piContext.setPasskeySignResponse(request.getParameter("passkeySignResponse"));
+        piContext.setPasskeyRegistration(request.getParameter("passkeyRegistration"));
+        piContext.setPasskeyRegistrationResponse(request.getParameter("passkeyRegistrationResponse"));
+        piContext.setPasskeyChallenge(request.getParameter("passkeyChallenge"));
+        piContext.setOrigin(request.getParameter("origin"));
+        piContext.setFormErrorMessage(request.getParameter("errorMessage"));
+
+        String standalone = request.getParameter("standalone");
+        if (StringUtil.isNotBlank(standalone))
+        {
+            piContext.setStandalone(standalone);
         }
         PIResponse piResponse = null;
 
@@ -104,22 +110,37 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             }
         }
         // Passkey login requested: Get a challenge and return
-        if ("1".equals(request.getParameterValues("passkeyLoginRequested")[0]))
+        if ("1".equals(request.getParameter("passkeyLoginRequested")))
         {
             PIResponse response = privacyIDEA.validateInitialize("passkey");
             if (StringUtil.isNotBlank(response.passkeyChallenge))
             {
-                piContext.setPasskeyMessage(response.passkeyMessage);
+                // /validate/initialize puts the prompt at detail.passkey.message, parsed into
+                // response.passkeyMessage. detail.message is empty for that shape. Fall back to
+                // response.message in case future server versions populate the top-level field.
+                String passkeyPrompt = StringUtil.isNotBlank(response.passkeyMessage) ? response.passkeyMessage : response.message;
+                piContext.setPasskeyMessage(passkeyPrompt);
                 piContext.setPasskeyChallenge(response.passkeyChallenge);
                 piContext.setMode("passkey");
                 piContext.setPasskeyTransactionID(response.transactionID);
 
-                ActionSupport.buildEvent(profileRequestContext, "reload");
+                // If the click originated from the username/password form's "Sign in with Passkey"
+                // button, Spring Web Flow set _eventId_passkey on the request. In that case re-render
+                // the same username form (with auto-triggered passkey JS) instead of jumping to the
+                // second-step view — the user only sees the OS passkey dialog, not a UI transition.
+                if (request.getParameterMap().containsKey("_eventId_passkey"))
+                {
+                    ActionSupport.buildEvent(profileRequestContext, "reloadUsernameForm");
+                }
+                else
+                {
+                    ActionSupport.buildEvent(profileRequestContext, "reload");
+                }
                 return;
             }
         }
         // Passkey login cancelled: Remove the challenge and passkey transaction ID
-        if ("1".equals(request.getParameterValues("passkeyLoginCancelled")[0]))
+        if ("1".equals(request.getParameter("passkeyLoginCancelled")))
         {
             piContext.setPasskeyChallenge("");
             piContext.setPasskeyTransactionID(null);
@@ -150,9 +171,24 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             }
         }
 
-        if ("1".equals(request.getParameterValues("silentModeChange")[0]))
+        if ("1".equals(request.getParameter("silentModeChange")))
         {
             ActionSupport.buildEvent(profileRequestContext, "reload");
+            return;
+        }
+
+        // User declined an optional enroll-via-multichallenge offer: notify the server and finish.
+        if ("1".equals(request.getParameter("cancelEnrollment")))
+        {
+            if (debug)
+            {
+                LOGGER.info("{} User declined optional enroll-via-multichallenge. Cancelling enrollment for transaction '{}'.",
+                            this.getLogPrefix(), piContext.getTransactionID());
+            }
+            privacyIDEA.validateCheckCancelEnrollment(piContext.getTransactionID(), headers);
+            // Primary auth already succeeded (otherwise no enroll-via-multichallenge offer would exist).
+            // Use finalizeAuthentication so the standalone path still populates UsernameContext.
+            finalizeAuthentication(profileRequestContext, piContext);
             return;
         }
         else if ("push".equals(piContext.getMode()))
@@ -213,21 +249,22 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         }
         else if ("otp".equals(piContext.getMode()))
         {
-            if (request.getParameterValues("otp") != null && request.getParameterValues("otp").length > 0)
+            String otp = request.getParameter("otp");
+            if (StringUtil.isNotBlank(otp))
             {
-                String otp = request.getParameterValues("otp")[0];
-                if (otp != null)
+                piResponse = privacyIDEA.validateCheck(piContext.getUsername(), otp, piContext.getTransactionID(), headers);
+            }
+            else
+            {
+                if (debug)
                 {
-                    piResponse = privacyIDEA.validateCheck(piContext.getUsername(), otp, piContext.getTransactionID(), headers);
+                    LOGGER.info("{} Cannot send OTP because the otp parameter is null or blank!", this.getLogPrefix());
                 }
-                else
-                {
-                    if (debug)
-                    {
-                        LOGGER.info("{} Cannot send password because it is null!", this.getLogPrefix());
-                    }
-                    return;
-                }
+                // Without an explicit event the action-state falls through to its default outcome
+                // (treated as `success` by Spring Web Flow → flow-state "proceed"), which would
+                // finalize auth despite no OTP being submitted. Force a reload instead.
+                ActionSupport.buildEvent(profileRequestContext, "reload");
+                return;
             }
         }
         else
@@ -250,7 +287,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                 piContext.setFormErrorMessage(piResponse.error.message);
                 ActionSupport.buildEvent(profileRequestContext, "reload");
             }
-            else if (!piResponse.multiChallenge.isEmpty())
+            else if (piResponse.hasChallenges())
             {
                 if (debug)
                 {

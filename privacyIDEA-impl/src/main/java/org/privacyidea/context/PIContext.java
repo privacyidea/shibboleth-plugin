@@ -69,6 +69,9 @@ public class PIContext extends BaseContext
 
     public void setUsername(@Nonnull String username) {this.user = new User(username);}
 
+    /** Clear the bound user — used when a form submission explicitly blanks the username. */
+    public void clearUsername() {this.user = null;}
+
     public void setTransactionID(@Nonnull String transactionID) {this.transactionID = transactionID;}
 
     @Nullable

@@ -41,14 +41,34 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
     protected final void doExecute(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext, @Nonnull PIServerConfigContext piServerConfigContext)
     {
         HttpServletRequest request = Objects.requireNonNull(getHttpServletRequestSupplier()).get();
-        if (request.getParameterValues("standalone") != null && StringUtil.isNotBlank(request.getParameterValues("standalone")[0]))
+        
+        String standalone = request.getParameter("standalone");
+        if (StringUtil.isNotBlank(standalone))
         {
-            piContext.setStandalone(request.getParameterValues("standalone")[0]);
+            piContext.setStandalone(standalone);
         }
-        if (request.getParameterValues("username") != null && StringUtil.isNotBlank(request.getParameterValues("username")[0]))
+        
+        // The "username" param is present (possibly empty) when the user submits the username/password
+        // form; it is absent (null) on flow paths that didn't go through the form (skip_first_step etc.).
+        // If the form was submitted with a blank field, clear any prefilled username so a stale principal
+        // can't be carried forward — the downstream isBlank guard then redirects to the username form.
+        String username = request.getParameter("username");
+        if (username != null)
         {
-            piContext.setUsername(request.getParameterValues("username")[0]);
+            if (StringUtil.isNotBlank(username))
+            {
+                piContext.setUsername(username);
+            }
+            else
+            {
+                piContext.clearUsername();
+            }
         }
+
+        // Reset any stale form error from a previous submission. Matches the pattern in
+        // PrivacyIDEAAuthenticator, which reads the hidden "errorMessage" field (hardcoded "")
+        // on every submit so the message only displays for the failing render.
+        piContext.setFormErrorMessage(request.getParameter("errorMessage"));
 
         if ("triggerChallenge".equals(piServerConfigContext.getConfigParams().getAuthenticationFlow()))
         {
@@ -69,7 +89,7 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
                     return;
                 }
 
-                if (!piResponse.multiChallenge.isEmpty())
+                if (piResponse.hasChallenges())
                 {
                     if (debug)
                     {
@@ -140,7 +160,7 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
                         }
                     }
 
-                    if (!piResponse.multiChallenge.isEmpty())
+                    if (piResponse.hasChallenges())
                     {
                         extractChallengeData(piResponse);
                     }
@@ -152,6 +172,69 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
             if (debug)
             {
                 LOGGER.info("{} Authentication flow: default.", this.getLogPrefix());
+            }
+
+            String otp = request.getParameter("otp");
+            if (StringUtil.isBlank(piContext.getUsername()))
+            {
+                // Form submitted without a username — skip the /validate/check and send the user back
+                // to the username/password form. checkAuthenticationFlow short-circuits on this event
+                // before its hard-coded "proceed" evaluate runs.
+                if (debug)
+                {
+                    LOGGER.info("{} No username available; redisplaying username/password form.", this.getLogPrefix());
+                }
+                piContext.setFormErrorMessage("Username is required.");
+                ActionSupport.buildEvent(profileRequestContext, "redisplayUsernameForm");
+                return;
+            }
+            if (StringUtil.isNotBlank(otp))
+            {
+                Map<String, String> headers = this.getHeadersToForward(request);
+                PIResponse piResponse = privacyIDEA.validateCheck(piContext.getUsername(), otp, headers);
+
+                if (piResponse == null)
+                {
+                    LOGGER.warn("{} No response from privacyIDEA server for validateCheck.", this.getLogPrefix());
+                    return;
+                }
+                if (piResponse.error != null)
+                {
+                    LOGGER.error("{} privacyIDEA server error: {}!", this.getLogPrefix(), piResponse.error.message);
+                    ActionSupport.buildEvent(profileRequestContext, "AuthenticationException");
+                    return;
+                }
+                extractMessage(piResponse);
+
+                if (piResponse.authenticationSuccessful())
+                {
+                    if ("1".equals(piContext.getStandalone()))
+                    {
+                        if (debug)
+                        {
+                            LOGGER.info("{} Standalone mode, setting username '{}' and building event...",
+                                        this.getLogPrefix(), piContext.getUsername());
+                        }
+                        UsernameContext userCtx = profileRequestContext.getSubcontext(UsernameContext.class, true);
+                        Objects.requireNonNull(userCtx).setUsername(piContext.getUsername());
+                        ActionSupport.buildEvent(profileRequestContext, "validateResponseStandalone");
+                    }
+                    else
+                    {
+                        if (debug)
+                        {
+                            LOGGER.info("{} Authentication successful, building success event...", this.getLogPrefix());
+                        }
+                        ActionSupport.buildEvent(profileRequestContext, "success");
+                    }
+                    return;
+                }
+
+                // Authentication not yet successful — extract any additional challenge for re-render.
+                if (piResponse.hasChallenges())
+                {
+                    extractChallengeData(piResponse);
+                }
             }
         }
     }

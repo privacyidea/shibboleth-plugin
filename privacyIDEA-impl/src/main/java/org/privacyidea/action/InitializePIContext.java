@@ -17,20 +17,23 @@ package org.privacyidea.action;
 
 import net.shibboleth.idp.authn.AbstractAuthenticationAction;
 import net.shibboleth.idp.authn.context.AuthenticationContext;
+import net.shibboleth.idp.authn.context.MultiFactorAuthenticationContext;
 import net.shibboleth.idp.session.context.navigate.CanonicalUsernameLookupStrategy;
 import org.jetbrains.annotations.NotNull;
 import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.context.ProfileRequestContext;
-import org.privacyidea.context.*;
+import org.privacyidea.context.Config;
+import org.privacyidea.context.PIContext;
+import org.privacyidea.context.PIFormContext;
+import org.privacyidea.context.PIServerConfigContext;
+import org.privacyidea.context.StringUtil;
+import org.privacyidea.context.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.StringUtils;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.function.Function;
-
-import static org.privacyidea.context.StringUtil.isBlank;
 
 public class InitializePIContext extends AbstractAuthenticationAction
 {
@@ -67,6 +70,7 @@ public class InitializePIContext extends AbstractAuthenticationAction
     @Nullable
     private String pollInBrowserUrl;
     private boolean debug;
+    private boolean skipFirstStep = true;
 
     public InitializePIContext()
     {
@@ -97,13 +101,34 @@ public class InitializePIContext extends AbstractAuthenticationAction
             log.info("{} No principal name available. Displaying username-password-form.", getLogPrefix());
             ActionSupport.buildEvent(profileRequestContext, "displayUsernamePasswordForm");
         }
+        else if (!skipFirstStep)
+        {
+            log.info("{} Principal name '{}' available but skip_first_step=false. Displaying username-password-form with prefilled username.", getLogPrefix(), user.getUsername());
+            ActionSupport.buildEvent(profileRequestContext, "displayUsernamePasswordForm");
+        }
+        else if (!hasFreshAuthenticationResult(authenticationContext))
+        {
+            log.info("{} Principal name '{}' available from CanonicalUsernameLookupStrategy but no prior authentication flow produced a fresh result in this MFA run. Displaying username-password-form with prefilled username.",
+                     getLogPrefix(), user.getUsername());
+            ActionSupport.buildEvent(profileRequestContext, "displayUsernamePasswordForm");
+        }
+        else
+        {
+            log.info("{} Principal name '{}' already available via CanonicalUsernameLookupStrategy. Skipping username-password-form.", getLogPrefix(), user.getUsername());
+        }
+    }
+
+    private boolean hasFreshAuthenticationResult(@Nonnull AuthenticationContext authenticationContext)
+    {
+        MultiFactorAuthenticationContext mfaCtx = authenticationContext.getSubcontext(MultiFactorAuthenticationContext.class);
+        return mfaCtx != null && !mfaCtx.getActiveResults().isEmpty();
     }
 
     @Nullable
     private User getUser(@Nonnull ProfileRequestContext profileRequestContext)
     {
         String collectedUser = usernameLookupStrategy.apply(profileRequestContext);
-        if (!StringUtils.hasText(collectedUser))
+        if (StringUtil.isBlank(collectedUser))
         {
             return null;
         }
@@ -205,4 +230,6 @@ public class InitializePIContext extends AbstractAuthenticationAction
     public void setPluginVersion(@Nullable String pluginVersion)          {this.pluginVersion = pluginVersion;}
 
     public void setDebug(boolean debug)                                   {this.debug = debug;}
+
+    public void setSkipFirstStep(boolean skipFirstStep)                   {this.skipFirstStep = skipFirstStep;}
 }

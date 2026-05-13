@@ -41,6 +41,17 @@ Example of the configuration: [MFA Config Example](docs/mfaConfigExample).
 
 This is also located in the *privacyidea.properties* file (`$idp_install_path/conf/authn/privacyidea.properties`).
 
+
+### User Verification (Passkey / Standalone):
+**Important Note on User Existence:**<br>
+When using the plugin in **Passkey** or **Standalone** mode (where the standard `authn/Password` flow is skipped), the plugin asserts the identity (username) returned by the privacyIDEA server.
+The plugin **does not** verify if this user exists in the local IdP user store (e.g., LDAP, SQL, or htpasswd).
+However, if you enter username and password in these modes, it will always send these parameters to privacyIDEA for validation.
+
+To ensure that only valid local users can log in, you should rely on the standard Shibboleth mechanisms that run after authentication:
+1.  **Attribute Resolution**: Ensure your Attribute Resolver is configured to look up the user in your backend. If the user does not exist, no attributes will be resolved. You can configure the IdP to fail the request if essential attributes are missing.
+2.  **Subject Canonicalization (c14n)**: Configure a c14n flow that verifies the principal against your user store.
+
 ### Configuration Parameters for privacyIDEA Plugin:
 An example of the privacyIDEA plugin configuration can be found in *privacyidea.properties* (`$idp_install_path/conf/authn/privacyidea.properties`).
 The different configuration parameters are explained in the following table:
@@ -63,6 +74,7 @@ The different configuration parameters are explained in the following table:
 | `privacyidea.polling_in_browser`     | Enable this to do the polling for accepted push requests in the user's browser. When enabled, the login page does not refresh to confirm the push authentication. CORS settings for privacyidea can be adjusted in etc/apache2/sites-available/privacyidea.conf.                                                                                                                                                                                                                       |
 | `privacyidea.polling_in_browser_url` | If 'poll in browser' should use a deviating URL, set it here. Otherwise, the general URL will be used.                                                                                                                                                                                                                                                                                                                                                                                 |
 | `privacyidea.disable_passkey`        | Set to 'true' to disable passkey authentication.                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `privacyidea.skip_first_step`        | Default `true`. When `true`, the plugin's own username/password form is skipped if a prior MFA sub-flow (e.g. `authn/Password`) produced a fresh authentication result in the current MFA run, and that result's principal is used. If no fresh result exists (e.g. privacyIDEA is the first factor, or only a stale session principal is available), the form is displayed regardless — prefilled with the principal if one is known. Set to `false` to always display the form.      |
 | `privacyidea.debug`                  | Set this parameter to true to see the debug messages in the `idp-process.log`.                                                                                                                                                                                                                                                                                                                                                                                                         |
 
 ### Log check:

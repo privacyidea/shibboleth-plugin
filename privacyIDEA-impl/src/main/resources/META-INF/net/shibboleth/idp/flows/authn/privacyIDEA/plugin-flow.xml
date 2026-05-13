@@ -28,7 +28,7 @@
                       result="viewScope.authenticationErrorContext"/>
             <evaluate expression="authenticationContext.getSubcontext(T(net.shibboleth.idp.authn.context.AuthenticationWarningContext))"
                       result="viewScope.authenticationWarningContext"/>
-            <evaluate expression="T(net.shibboleth.utilities.java.support.codec.HTMLEncoder)" result="viewScope.encoder"/>
+            <evaluate expression="T(net.shibboleth.shared.codec.HTMLEncoder)" result="viewScope.encoder"/>
             <evaluate expression="flowRequestContext.getExternalContext().getNativeRequest()" result="viewScope.request"/>
             <evaluate expression="flowRequestContext.getExternalContext().getNativeResponse()" result="viewScope.response"/>
             <evaluate expression="flowRequestContext.getActiveFlow().getApplicationContext().containsBean('shibboleth.CustomViewContext')
@@ -48,6 +48,7 @@
         <evaluate expression="'proceed'"/>
 
         <transition on="proceed" to="displayPrivacyIDEAForm"/>
+        <transition on="redisplayUsernameForm" to="displayUsernamePasswordForm"/>
         <transition on="validateResponseStandalone" to="validateResponseStandalone"/>
         <transition on="success" to="proceed"/>
     </action-state>
@@ -68,7 +69,7 @@
                       result="viewScope.authenticationErrorContext"/>
             <evaluate expression="authenticationContext.getSubcontext(T(net.shibboleth.idp.authn.context.AuthenticationWarningContext))"
                       result="viewScope.authenticationWarningContext"/>
-            <evaluate expression="T(net.shibboleth.utilities.java.support.codec.HTMLEncoder)" result="viewScope.encoder"/>
+            <evaluate expression="T(net.shibboleth.shared.codec.HTMLEncoder)" result="viewScope.encoder"/>
             <evaluate expression="flowRequestContext.getExternalContext().getNativeRequest()" result="viewScope.request"/>
             <evaluate expression="flowRequestContext.getExternalContext().getNativeResponse()" result="viewScope.response"/>
             <evaluate expression="flowRequestContext.getActiveFlow().getApplicationContext().containsBean('shibboleth.CustomViewContext')
@@ -80,6 +81,7 @@
         </on-render>
 
         <transition on="proceed" to="piAuthenticator"/>
+        <transition on="passkey" to="piAuthenticator"/>
         <transition on="reset" to="RestartAuthentication"/>
     </view-state>
 
@@ -87,6 +89,7 @@
         <evaluate expression="piAuthenticator"/>
 
         <transition on="reload" to="displayPrivacyIDEAForm"/>
+        <transition on="reloadUsernameForm" to="displayUsernamePasswordForm"/>
         <transition on="abort" to="RestartAuthentication"/>
         <transition on="validateResponseStandalone" to="validateResponseStandalone"/>
         <transition on="success" to="proceed"/>

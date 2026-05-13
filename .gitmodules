@@ -1,3 +1,4 @@
 [submodule "java-client"]
 	path = java-client
 	url = https://github.com/privacyidea/java-client.git
+	branch = master
