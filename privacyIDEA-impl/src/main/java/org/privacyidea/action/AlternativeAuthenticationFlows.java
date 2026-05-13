@@ -48,10 +48,21 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
             piContext.setStandalone(standalone);
         }
         
+        // The "username" param is present (possibly empty) when the user submits the username/password
+        // form; it is absent (null) on flow paths that didn't go through the form (skip_first_step etc.).
+        // If the form was submitted with a blank field, clear any prefilled username so a stale principal
+        // can't be carried forward — the downstream isBlank guard then redirects to the username form.
         String username = request.getParameter("username");
-        if (StringUtil.isNotBlank(username))
+        if (username != null)
         {
-            piContext.setUsername(username);
+            if (StringUtil.isNotBlank(username))
+            {
+                piContext.setUsername(username);
+            }
+            else
+            {
+                piContext.clearUsername();
+            }
         }
 
         // Reset any stale form error from a previous submission. Matches the pattern in
