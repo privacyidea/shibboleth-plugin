@@ -260,6 +260,10 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                 {
                     LOGGER.info("{} Cannot send OTP because the otp parameter is null or blank!", this.getLogPrefix());
                 }
+                // Without an explicit event the action-state falls through to its default outcome
+                // (treated as `success` by Spring Web Flow → flow-state "proceed"), which would
+                // finalize auth despite no OTP being submitted. Force a reload instead.
+                ActionSupport.buildEvent(profileRequestContext, "reload");
                 return;
             }
         }
