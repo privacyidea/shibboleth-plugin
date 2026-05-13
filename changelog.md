@@ -1,3 +1,11 @@
+## 1.3.0 05/2026
+Update features to be on par with privacyIDEA 3.13. Support for the following policies:
+* passkey_trigger_by_pin
+* enroll_via_multichallenge_optional
+* push_code_to_phone
+
+* The Accept-Language header will now always be forwarded from the browser to privacyIDEA.
+
 ## 1.2.0 07/2025
 
 ### Features
