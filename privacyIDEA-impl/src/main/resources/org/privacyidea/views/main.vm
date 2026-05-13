@@ -90,9 +90,10 @@
                                         <img class="pi-tokenImage" src="$piFormContext.getImageWebauthn()" alt="[WebAuthn Image]">
                                     #end
                                 #end
+                                ## Encoded — formErrorMessage may originate from request params or server error text.
                                 #if ($piContext.getFormErrorMessage())
                                     <br>
-                                    <p>$piContext.getFormErrorMessage()</p>
+                                    <p>$encoder.encodeForHTML($piContext.getFormErrorMessage())</p>
                                 #end
                                 <br>
                                 #if ($piContext.getMode() == "push" && $passkeyRegistrationEmpty)

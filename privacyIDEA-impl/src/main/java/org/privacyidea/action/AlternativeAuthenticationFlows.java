@@ -54,6 +54,11 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
             piContext.setUsername(username);
         }
 
+        // Reset any stale form error from a previous submission. Matches the pattern in
+        // PrivacyIDEAAuthenticator, which reads the hidden "errorMessage" field (hardcoded "")
+        // on every submit so the message only displays for the failing render.
+        piContext.setFormErrorMessage(request.getParameter("errorMessage"));
+
         if ("triggerChallenge".equals(piServerConfigContext.getConfigParams().getAuthenticationFlow()))
         {
             if (debug)
