@@ -104,8 +104,12 @@ function passkeyAuthentication ()
                 authenticatorData: bytesToBase64(new Uint8Array(credential.response.authenticatorData)),
                 clientDataJSON: bytesToBase64(new Uint8Array(credential.response.clientDataJSON)),
                 signature: bytesToBase64(new Uint8Array(credential.response.signature)),
-                userHandle: bytesToBase64(new Uint8Array(credential.response.userHandle)),
             };
+            // userHandle is nullable per the WebAuthn spec — only include it when the authenticator returned one.
+            if (credential.response.userHandle)
+            {
+                params.userHandle = bytesToBase64(new Uint8Array(credential.response.userHandle));
+            }
             piSetValue("passkeySignResponse", JSON.stringify(params));
             piSubmitPasskey();
         }, function (error) {

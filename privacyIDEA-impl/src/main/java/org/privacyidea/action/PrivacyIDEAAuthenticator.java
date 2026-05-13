@@ -186,7 +186,9 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                             this.getLogPrefix(), piContext.getTransactionID());
             }
             privacyIDEA.validateCheckCancelEnrollment(piContext.getTransactionID(), headers);
-            ActionSupport.buildEvent(profileRequestContext, "success");
+            // Primary auth already succeeded (otherwise no enroll-via-multichallenge offer would exist).
+            // Use finalizeAuthentication so the standalone path still populates UsernameContext.
+            finalizeAuthentication(profileRequestContext, piContext);
             return;
         }
         else if ("push".equals(piContext.getMode()))
