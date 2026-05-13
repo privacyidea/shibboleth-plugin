@@ -115,7 +115,11 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             PIResponse response = privacyIDEA.validateInitialize("passkey");
             if (StringUtil.isNotBlank(response.passkeyChallenge))
             {
-                piContext.setPasskeyMessage(response.message);
+                // /validate/initialize puts the prompt at detail.passkey.message, parsed into
+                // response.passkeyMessage. detail.message is empty for that shape. Fall back to
+                // response.message in case future server versions populate the top-level field.
+                String passkeyPrompt = StringUtil.isNotBlank(response.passkeyMessage) ? response.passkeyMessage : response.message;
+                piContext.setPasskeyMessage(passkeyPrompt);
                 piContext.setPasskeyChallenge(response.passkeyChallenge);
                 piContext.setMode("passkey");
                 piContext.setPasskeyTransactionID(response.transactionID);
@@ -252,7 +256,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             {
                 if (debug)
                 {
-                    LOGGER.info("{} Cannot send password because it is null or blank!", this.getLogPrefix());
+                    LOGGER.info("{} Cannot send OTP because the otp parameter is null or blank!", this.getLogPrefix());
                 }
                 return;
             }
