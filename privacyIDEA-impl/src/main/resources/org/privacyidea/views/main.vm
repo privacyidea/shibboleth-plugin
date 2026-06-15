@@ -126,6 +126,15 @@
                                 <br>
                             </div>
 
+                            ## REMEMBER THIS DEVICE ##
+                            ## Shown only when enabled and not in standalone mode (standalone has no first factor to trust).
+                            #if ($piFormContext.isRememberMeEnabled() && $piContext.getStandalone() != "1")
+                                <div class="form-element-wrapper" id="rememberMe">
+                                    <input id="pidea_remember_me" name="pidea_remember_me" value="1" type="checkbox"#if($piContext.isRememberMe()) checked#end>
+                                    <label for="pidea_remember_me">#springMessageText("privacyidea.rememberMe", "Remember this device")</label>
+                                </div>
+                            #end
+
                             ## FORM OPTIONS ##
                             <div class="form-options">
                                 <input id="mode" name="mode" value='$piContext.getMode()' type="hidden">

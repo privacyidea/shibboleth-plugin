@@ -58,6 +58,9 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         piContext.setPasskeyChallenge(request.getParameter("passkeyChallenge"));
         piContext.setOrigin(request.getParameter("origin"));
         piContext.setFormErrorMessage(request.getParameter("errorMessage"));
+        // Capture the "remember this device" checkbox on every submit so its state survives form
+        // reloads (e.g. push polling or a mistyped OTP). Read back at the success point below.
+        piContext.setRememberMe("1".equals(request.getParameter("pidea_remember_me")));
 
         String standalone = request.getParameter("standalone");
         if (StringUtil.isNotBlank(standalone))
@@ -343,6 +346,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             {
                 LOGGER.info("{} Authentication successful, building success event...", this.getLogPrefix());
             }
+            maybeIssueRememberMeCookie(piContext);
             ActionSupport.buildEvent(profileRequestContext, "success");
         }
     }

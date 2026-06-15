@@ -36,10 +36,19 @@
           p:disablePasskey="%{privacyidea.disable_passkey:false}"
           p:pluginVersion="%{privacyidea.plugin_version:#{null}}"
           p:debug="%{privacyidea.debug:false}"
-          p:skipFirstStep="%{privacyidea.skip_first_step:true}"/>
+          p:skipFirstStep="%{privacyidea.skip_first_step:true}"
+          p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier"
+          p:dataSealer-ref="shibboleth.DataSealer"
+          p:rememberMeEnabled="%{privacyidea.remember_me_enabled:false}"
+          p:rememberMeCookieName="%{privacyidea.remember_me_cookie_name:#{'shib_idp_pidea_rememberme'}}"/>
 
     <bean id="piAuthenticator" class="org.privacyidea.action.PrivacyIDEAAuthenticator" scope="prototype"
-          p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier"/>
+          p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier"
+          p:httpServletResponseSupplier-ref="shibboleth.HttpServletResponseSupplier"
+          p:dataSealer-ref="shibboleth.DataSealer"
+          p:rememberMeEnabled="%{privacyidea.remember_me_enabled:false}"
+          p:rememberMeDays="%{privacyidea.remember_me_days:30}"
+          p:rememberMeCookieName="%{privacyidea.remember_me_cookie_name:#{'shib_idp_pidea_rememberme'}}"/>
 
     <bean id="validateResponseStandalone" scope="prototype" class="org.privacyidea.action.ValidateResponseStandalone"/>
 

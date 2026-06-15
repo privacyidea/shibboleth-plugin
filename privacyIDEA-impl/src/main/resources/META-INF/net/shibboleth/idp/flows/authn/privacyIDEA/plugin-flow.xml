@@ -9,6 +9,7 @@
 
         <transition on="displayUsernamePasswordForm" to="displayUsernamePasswordForm"/>
         <transition on="reset" to="RestartAuthentication"/>
+        <transition on="rememberedDevice" to="proceed"/>
         <transition on="proceed" to="checkAuthenticationFlow"/>
     </action-state>
 

@@ -1,3 +1,12 @@
+## Unreleased
+
+### Features
+* "Remember this device": optional checkbox that skips the privacyIDEA second factor on a trusted
+  device for a configurable number of days, using an encrypted DataSealer-backed cookie bound to the
+  user. Configure via `privacyidea.remember_me_enabled`, `privacyidea.remember_me_days` and
+  `privacyidea.remember_me_cookie_name`. Applies only when a preceding first factor authenticated the
+  user (ignored in standalone mode).
+
 ## 1.3.0 05/2026
 Update features to be on par with privacyIDEA 3.13. Support for the following policies:
 * passkey_trigger_by_pin

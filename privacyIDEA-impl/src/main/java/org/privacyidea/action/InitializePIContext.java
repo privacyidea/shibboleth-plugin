@@ -15,10 +15,12 @@
  */
 package org.privacyidea.action;
 
+import jakarta.servlet.http.HttpServletRequest;
 import net.shibboleth.idp.authn.AbstractAuthenticationAction;
 import net.shibboleth.idp.authn.context.AuthenticationContext;
 import net.shibboleth.idp.authn.context.MultiFactorAuthenticationContext;
 import net.shibboleth.idp.session.context.navigate.CanonicalUsernameLookupStrategy;
+import net.shibboleth.shared.security.DataSealer;
 import org.jetbrains.annotations.NotNull;
 import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.context.ProfileRequestContext;
@@ -26,6 +28,7 @@ import org.privacyidea.context.Config;
 import org.privacyidea.context.PIContext;
 import org.privacyidea.context.PIFormContext;
 import org.privacyidea.context.PIServerConfigContext;
+import org.privacyidea.context.RememberMeUtil;
 import org.privacyidea.context.StringUtil;
 import org.privacyidea.context.User;
 import org.slf4j.Logger;
@@ -71,6 +74,11 @@ public class InitializePIContext extends AbstractAuthenticationAction
     private String pollInBrowserUrl;
     private boolean debug;
     private boolean skipFirstStep = true;
+    @Nullable
+    private DataSealer dataSealer;
+    private boolean rememberMeEnabled = false;
+    @Nonnull
+    private String rememberMeCookieName = "shib_idp_pidea_rememberme";
 
     public InitializePIContext()
     {
@@ -93,9 +101,23 @@ public class InitializePIContext extends AbstractAuthenticationAction
         authenticationContext.addSubcontext(piContext);
 
         PIFormContext piFormContext = new PIFormContext(defaultMessage, otpFieldHint, getOtpLength(),
-                                                        pollingInterval, pollInBrowser, pollInBrowserUrl, disablePasskey);
+                                                        pollingInterval, pollInBrowser, pollInBrowserUrl, disablePasskey,
+                                                        rememberMeEnabled);
         log.info("{} Create PIFormContext {}", this.getLogPrefix(), piFormContext);
         authenticationContext.addSubcontext(piFormContext);
+
+        // Remember-me: if this device holds a valid cookie for the user that a prior factor (e.g.
+        // authn/Password) just authenticated, skip the privacyIDEA second factor entirely. Requires a
+        // fresh first-factor result, so it never applies in standalone mode (privacyIDEA-only) where
+        // there is no preceding identity to trust.
+        if (rememberMeEnabled && user != null && hasFreshAuthenticationResult(authenticationContext)
+                && isRememberedDevice(user.getUsername()))
+        {
+            log.info("{} Valid remember-me cookie for '{}'. Skipping privacyIDEA second factor.", getLogPrefix(), user.getUsername());
+            ActionSupport.buildEvent(profileRequestContext, "rememberedDevice");
+            return;
+        }
+
         if (user == null)
         {
             log.info("{} No principal name available. Displaying username-password-form.", getLogPrefix());
@@ -122,6 +144,26 @@ public class InitializePIContext extends AbstractAuthenticationAction
     {
         MultiFactorAuthenticationContext mfaCtx = authenticationContext.getSubcontext(MultiFactorAuthenticationContext.class);
         return mfaCtx != null && !mfaCtx.getActiveResults().isEmpty();
+    }
+
+    /**
+     * Check whether the request carries a valid remember-me cookie bound to {@code expectedUsername}.
+     * The cookie is only honored when the bound username matches the principal that just
+     * authenticated, so a stolen or copied cookie cannot bypass the second factor for another account.
+     *
+     * @param expectedUsername the username established by the preceding first factor
+     * @return {@code true} if a valid, unexpired, matching cookie is present
+     */
+    private boolean isRememberedDevice(@Nullable String expectedUsername)
+    {
+        if (dataSealer == null || StringUtil.isBlank(expectedUsername) || getHttpServletRequestSupplier() == null)
+        {
+            return false;
+        }
+        HttpServletRequest request = getHttpServletRequestSupplier().get();
+        String cookieValue = RememberMeUtil.readCookie(request, rememberMeCookieName);
+        String rememberedUsername = RememberMeUtil.unseal(dataSealer, cookieValue);
+        return expectedUsername.equals(rememberedUsername);
     }
 
     @Nullable
@@ -232,4 +274,10 @@ public class InitializePIContext extends AbstractAuthenticationAction
     public void setDebug(boolean debug)                                   {this.debug = debug;}
 
     public void setSkipFirstStep(boolean skipFirstStep)                   {this.skipFirstStep = skipFirstStep;}
+
+    public void setDataSealer(@Nullable DataSealer dataSealer)            {this.dataSealer = dataSealer;}
+
+    public void setRememberMeEnabled(boolean rememberMeEnabled)           {this.rememberMeEnabled = rememberMeEnabled;}
+
+    public void setRememberMeCookieName(@Nonnull String rememberMeCookieName) {this.rememberMeCookieName = rememberMeCookieName;}
 }
