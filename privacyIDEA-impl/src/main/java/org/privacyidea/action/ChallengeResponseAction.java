@@ -16,12 +16,9 @@
 package org.privacyidea.action;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import net.shibboleth.idp.Version;
 import net.shibboleth.idp.authn.context.AuthenticationContext;
 import net.shibboleth.idp.profile.AbstractProfileAction;
-import net.shibboleth.shared.security.DataSealer;
-import net.shibboleth.shared.security.DataSealerException;
 import org.opensaml.messaging.context.navigate.ChildContextLookup;
 import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.context.ProfileRequestContext;
@@ -32,7 +29,7 @@ import org.privacyidea.PrivacyIDEA;
 import org.privacyidea.context.PIContext;
 import org.privacyidea.context.PIFormContext;
 import org.privacyidea.context.PIServerConfigContext;
-import org.privacyidea.context.RememberMeUtil;
+import org.privacyidea.context.RememberMeManager;
 import org.privacyidea.context.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,13 +52,9 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
     private PIFormContext piFormContext;
     protected PrivacyIDEA privacyIDEA;
     protected boolean debug = false;
-    // Remember-me ("trust this device") config, injected from privacyidea.properties.
+    // Remember-me ("trust this device") manager, shared with InitializePIContext via Spring.
     @Nullable
-    private DataSealer dataSealer;
-    private boolean rememberMeEnabled = false;
-    private int rememberMeDays = 30;
-    @Nonnull
-    private String rememberMeCookieName = "shib_idp_pidea_rememberme";
+    private RememberMeManager rememberMeManager;
     @Nonnull
     private final Function<ProfileRequestContext, PIContext> piContextLookupStrategy = (
             new ChildContextLookup(PIContext.class, false)).compose(
@@ -294,16 +287,15 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
 
     /**
      * Issue the remember-me cookie when the user opted in on a successful, non-standalone
-     * authentication. The cookie binds to the authenticated username and lets this device skip the
-     * privacyIDEA second factor for the configured number of days. No-op when the feature is
-     * disabled, in standalone mode (there is no preceding first factor to trust), or when the user
-     * did not tick the box.
+     * authentication, delegating the sealing and cookie write to {@link RememberMeManager}. No-op when
+     * the feature is disabled, in standalone mode (there is no preceding first factor to trust), or when
+     * the user did not tick the box.
      *
      * @param piContext the current privacyIDEA context (source of the username and opt-in flag)
      */
     protected void maybeIssueRememberMeCookie(@Nonnull PIContext piContext)
     {
-        if (!rememberMeEnabled || !piContext.isRememberMe())
+        if (rememberMeManager == null || !rememberMeManager.isEnabled() || !piContext.isRememberMe())
         {
             return;
         }
@@ -312,37 +304,7 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
         {
             return;
         }
-        if (dataSealer == null)
-        {
-            LOGGER.error("{} Remember-me is enabled but no DataSealer is configured; cannot issue cookie.", this.getLogPrefix());
-            return;
-        }
-        String username = piContext.getUsername();
-        if (StringUtil.isBlank(username))
-        {
-            return;
-        }
-        HttpServletRequest request = getHttpServletRequestSupplier() != null ? getHttpServletRequestSupplier().get() : null;
-        HttpServletResponse response = getHttpServletResponseSupplier() != null ? getHttpServletResponseSupplier().get() : null;
-        if (response == null)
-        {
-            LOGGER.error("{} Cannot issue remember-me cookie: no HttpServletResponse available.", this.getLogPrefix());
-            return;
-        }
-        try
-        {
-            String sealed = RememberMeUtil.seal(dataSealer, username, rememberMeDays);
-            String path = request != null ? request.getContextPath() : null;
-            RememberMeUtil.writeCookie(response, rememberMeCookieName, sealed, rememberMeDays * 86400, path);
-            if (debug)
-            {
-                LOGGER.info("{} Issued remember-me cookie for '{}', valid {} day(s).", this.getLogPrefix(), username, rememberMeDays);
-            }
-        }
-        catch (DataSealerException e)
-        {
-            LOGGER.error("{} Failed to seal remember-me cookie: {}", this.getLogPrefix(), e.getMessage());
-        }
+        rememberMeManager.issue(piContext.getUsername());
     }
 
     // Logger implementation
@@ -382,12 +344,6 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
         }
     }
 
-    // Spring bean property setters for the remember-me feature
-    public void setDataSealer(@Nullable DataSealer dataSealer)                {this.dataSealer = dataSealer;}
-
-    public void setRememberMeEnabled(boolean rememberMeEnabled)              {this.rememberMeEnabled = rememberMeEnabled;}
-
-    public void setRememberMeDays(int rememberMeDays)                        {this.rememberMeDays = rememberMeDays;}
-
-    public void setRememberMeCookieName(@Nonnull String rememberMeCookieName) {this.rememberMeCookieName = rememberMeCookieName;}
+    // Spring bean property setter for the remember-me feature
+    public void setRememberMeManager(@Nullable RememberMeManager rememberMeManager) {this.rememberMeManager = rememberMeManager;}
 }

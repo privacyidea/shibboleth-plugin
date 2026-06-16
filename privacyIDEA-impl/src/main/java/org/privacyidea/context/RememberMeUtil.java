@@ -15,9 +15,6 @@
  */
 package org.privacyidea.context;
 
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import net.shibboleth.shared.security.DataSealer;
 import net.shibboleth.shared.security.DataSealerException;
 
@@ -39,8 +36,9 @@ import java.time.temporal.ChronoUnit;
 public final class RememberMeUtil
 {
     /**
-     * Payload format marker. {@code <version>|<username>}. Split with a limit of 2 so usernames
-     * that themselves contain '|' survive the round-trip intact.
+     * Payload format marker: the {@code "<version>|"} prefix prepended to the username before sealing.
+     * {@link #unseal} verifies this prefix and strips it via {@code substring} (it does not split on
+     * '|'), so usernames that themselves contain '|' survive the round-trip intact.
      */
     private static final String PAYLOAD_PREFIX = "1|";
 
@@ -92,51 +90,5 @@ public final class RememberMeUtil
             // Tampered, expired or sealed with a now-removed key: treat as no remember-me cookie.
         }
         return null;
-    }
-
-    /**
-     * Read the value of the named cookie from the request.
-     *
-     * @param request the servlet request
-     * @param name    the cookie name
-     * @return the cookie value, or {@code null} if not present
-     */
-    @Nullable
-    public static String readCookie(@Nonnull HttpServletRequest request, @Nonnull String name)
-    {
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null)
-        {
-            for (Cookie cookie : cookies)
-            {
-                if (name.equals(cookie.getName()))
-                {
-                    return cookie.getValue();
-                }
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Write the remember-me cookie. The cookie is marked HttpOnly and Secure; its SameSite attribute
-     * is governed by the IdP's global cookie handling. The path is scoped to the IdP context so it is
-     * only ever sent back to the IdP.
-     *
-     * @param response      the servlet response
-     * @param name          the cookie name
-     * @param value         the sealed cookie value
-     * @param maxAgeSeconds  the cookie max age in seconds
-     * @param path          the cookie path (typically the IdP context path)
-     */
-    public static void writeCookie(@Nonnull HttpServletResponse response, @Nonnull String name, @Nonnull String value,
-                                   int maxAgeSeconds, @Nullable String path)
-    {
-        Cookie cookie = new Cookie(name, value);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);
-        cookie.setMaxAge(maxAgeSeconds);
-        cookie.setPath(StringUtil.isNotBlank(path) ? path : "/");
-        response.addCookie(cookie);
     }
 }

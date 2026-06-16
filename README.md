@@ -58,9 +58,10 @@ When `privacyidea.remember_me_enabled=true`, a "remember this device" checkbox i
 
 How it works and why it is safe:
 - The cookie value is produced by the IdP's `shibboleth.DataSealer` (the same authenticated-encryption mechanism the IdP uses elsewhere). It provides confidentiality, tamper-protection, and an embedded expiration — no extra keys to configure.
-- The cookie is bound to the username and is only honored when a **preceding first factor** (e.g. `authn/Password`) just authenticated that same user. A stolen cookie alone therefore cannot bypass authentication: the user still proves the first factor on every login, and remember-me only skips the second factor.
-- Because it requires a preceding first factor, it is **ignored in standalone / passkey-only mode** (where privacyIDEA is the only factor) — the checkbox is not shown there.
-- The cookie is set with `HttpOnly` and `Secure`. Its `SameSite` attribute is governed by the IdP's global cookie handling.
+- The cookie is bound to the username and is only honored when a **first-factor authentication result for that same user is active** in the current login — either because a preceding factor (e.g. `authn/Password`) ran in this MFA run, or because a still-valid IdP SSO session supplies that result. A stolen remember-me cookie on its own can never grant access: with no active first-factor result the cookie is ignored and the user is challenged normally. Remember-me only ever skips the **second** factor.
+- As with any SSO login, when an IdP session is already active and the relying party does not request re-authentication, the first factor is satisfied by that existing session rather than re-prompted — so a returning user on a remembered device may be let in without an interactive prompt. If you need the first factor to be re-proven for a sensitive service, request `forceAuthn` (or set an authentication `maxAge`) for that relying party: under forced re-authentication there is no active first-factor result to reuse, so the remember-me skip does not apply and the second factor is enforced as well.
+- Because it requires an active first-factor result, it is **ignored in standalone / passkey-only mode** (where privacyIDEA is the only factor) — the checkbox is not shown there.
+- The cookie is set with `HttpOnly` and `Secure` (so it is only ever sent back over HTTPS). Its `SameSite` attribute follows the servlet container's global cookie configuration (e.g. Tomcat's `CookieProcessor`).
 - To revoke all outstanding remember-me cookies at once, rotate the IdP's DataSealer keys.
 
 Configure it with `privacyidea.remember_me_enabled`, `privacyidea.remember_me_days`, and (optionally) `privacyidea.remember_me_cookie_name` — see the table below.
