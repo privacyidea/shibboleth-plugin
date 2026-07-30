@@ -20,21 +20,29 @@ import jakarta.servlet.http.HttpServletResponse;
 import net.shibboleth.shared.component.ComponentInitializationException;
 import net.shibboleth.shared.net.CookieManager;
 import net.shibboleth.shared.primitive.NonnullSupplier;
-import net.shibboleth.shared.security.DataSealer;
-import net.shibboleth.shared.security.DataSealerException;
+import org.privacyidea.PIResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.List;
+import java.util.Map;
 
 /**
- * Central component for the "remember this device" feature. It holds the configuration once for both the
- * issuing action ({@link org.privacyidea.action.PrivacyIDEAAuthenticator}) and the reading action
- * ({@link org.privacyidea.action.InitializePIContext}), and performs the actual cookie I/O through the
- * IdP's {@link CookieManager} so the cookie's path, {@code Secure} and {@code HttpOnly} flags follow the
- * same conventions as every other IdP cookie. The sealed payload (the username) is produced and consumed
- * by {@link RememberMeUtil}.
+ * Central component for the "remember this device" feature.
+ * <p>
+ * The rotating persistent-session token is owned by privacyIDEA (see the {@code /validate/check}
+ * {@code request_persistent_cookie} / {@code Set-Cookie: pi_remember_device=<series>:<counter>}
+ * contract). This plugin is only the transport: the browser talks to the IdP, not to privacyIDEA, so
+ * we keep an IdP-domain cookie of the same name that mirrors privacyIDEA's rotating value. On each
+ * {@code /validate/check} we send the stored value up as a {@code Cookie} header (plus the client's
+ * {@code X-API-Key}), and we write privacyIDEA's returned {@code Set-Cookie} value back down.
+ * <p>
+ * This bean holds the config once and is shared by {@link org.privacyidea.action.InitializePIContext}
+ * and {@link org.privacyidea.action.PrivacyIDEAAuthenticator}. It performs the browser-facing cookie
+ * I/O through the IdP's {@link CookieManager} so path / {@code Secure} / {@code HttpOnly} follow IdP
+ * conventions.
  */
 public class RememberMeManager
 {
@@ -42,13 +50,15 @@ public class RememberMeManager
 
     private static final int DEFAULT_DAYS = 30;
     private static final int SECONDS_PER_DAY = 86400;
+    private static final String HEADER_API_KEY = "X-API-Key";
+    private static final String HEADER_COOKIE = "Cookie";
 
     private boolean rememberMeEnabled = false;
     private int rememberMeDays = DEFAULT_DAYS;
     @Nonnull
-    private String rememberMeCookieName = "shib_idp_pidea_rememberme";
+    private String rememberMeCookieName = "pi_remember_device";
     @Nullable
-    private DataSealer dataSealer;
+    private String apiKey;
     @Nullable
     private NonnullSupplier<HttpServletRequest> httpServletRequestSupplier;
     @Nullable
@@ -71,9 +81,9 @@ public class RememberMeManager
         {
             return;
         }
-        if (dataSealer == null)
+        if (StringUtil.isBlank(apiKey))
         {
-            LOGGER.warn("Remember-me is enabled but no DataSealer is configured; the feature will be inactive.");
+            LOGGER.warn("Remember-me is enabled but no privacyIDEA API key is configured; the feature will be inactive.");
         }
         CookieManager manager = new CookieManager();
         manager.setHttpServletRequestSupplier(httpServletRequestSupplier);
@@ -81,7 +91,8 @@ public class RememberMeManager
         manager.setSecure(true);
         manager.setHttpOnly(true);
         // Cookie max-age is an int number of seconds (~68 years max). Compute in long and cap it so a
-        // large remember_me_days cannot overflow to a negative/short max-age.
+        // large remember_me_days cannot overflow to a negative/short max-age. privacyIDEA remains the
+        // authority on real expiry; if it expires/clears the session, relayResponse() clears our cookie.
         manager.setMaxAge((int) Math.min((long) rememberMeDays * SECONDS_PER_DAY, Integer.MAX_VALUE));
         manager.initialize();
         cookieManager = manager;
@@ -96,44 +107,114 @@ public class RememberMeManager
     }
 
     /**
-     * Issue a remember-me cookie bound to the given username. No-op when the feature is disabled, when no
-     * DataSealer is configured, or when the username is blank.
-     *
-     * @param username the authenticated username to bind the cookie to
+     * @return whether the feature is enabled <em>and</em> usable (initialized cookie manager and an
+     * API key present). Only when this is {@code true} is it worth sending remember-me data.
      */
-    public void issue(@Nullable String username)
+    public boolean isConfigured()
     {
-        if (!rememberMeEnabled || cookieManager == null || dataSealer == null || StringUtil.isBlank(username))
+        return rememberMeEnabled && cookieManager != null && StringUtil.isNotBlank(apiKey);
+    }
+
+    /**
+     * @return the raw stored cookie value ({@code <series>:<counter>}) for the current request, or
+     * {@code null} if there is no cookie / the feature is disabled.
+     */
+    @Nullable
+    public String readCookie()
+    {
+        return cookieManager == null ? null : cookieManager.getCookieValue(rememberMeCookieName, null);
+    }
+
+    /**
+     * Add the remember-me request data to a header map bound for {@code /validate/check}, but only when
+     * remember-me is actually in play — the user opted in (issuance) or a stored cookie exists
+     * (consumption/rotation). In those cases the {@code X-API-Key} is added, plus a {@code Cookie}
+     * header when a cookie is stored.
+     * <p>
+     * When neither applies, nothing is added: the call goes out with no {@code X-API-Key}, which
+     * privacyIDEA treats as an anonymous/legacy request that proceeds normally. This deliberately keeps
+     * a misconfigured or revoked key from turning an ordinary login into an {@code HTTP 401} — only
+     * calls that opt into remember-me carry the (fatal-if-invalid) key.
+     *
+     * @param headers the mutable header map the java-client will send
+     * @param optIn   whether the user ticked "remember this device" on this submit
+     */
+    public void applyRequestData(@Nonnull Map<String, String> headers, boolean optIn)
+    {
+        if (!isConfigured())
         {
             return;
         }
-        try
+        String stored = readCookie();
+        boolean cookiePresent = StringUtil.isNotBlank(stored);
+        if (!optIn && !cookiePresent)
         {
-            cookieManager.addCookie(rememberMeCookieName, RememberMeUtil.seal(dataSealer, username, rememberMeDays));
-            LOGGER.debug("Issued remember-me cookie for '{}', valid {} day(s).", username, rememberMeDays);
+            // No remember-me involvement on this call — stay on the anonymous/legacy path.
+            return;
         }
-        catch (DataSealerException e)
+        headers.put(HEADER_API_KEY, apiKey);
+        if (cookiePresent)
         {
-            LOGGER.error("Failed to seal remember-me cookie: {}", e.getMessage());
+            headers.put(HEADER_COOKIE, rememberMeCookieName + "=" + stored);
         }
     }
 
     /**
-     * Check whether the request carries a valid remember-me cookie bound to {@code expectedUsername}. The
-     * cookie is only honored when the sealed username matches exactly, so a stolen or copied cookie cannot
-     * skip the second factor for another account.
+     * Apply privacyIDEA's {@code Set-Cookie} response to the IdP-domain cookie: store a rotated value,
+     * or clear the cookie when privacyIDEA cleared it (blank value or {@code Max-Age=0} — the hallmark
+     * of expiry or theft-triggered series deletion). No-op when the feature is not usable or the
+     * response carried no {@code pi_remember_device} cookie.
      *
-     * @param expectedUsername the username established by the preceding first factor
-     * @return {@code true} if a valid, unexpired cookie bound to that exact username is present
+     * @param piResponse the response from the java-client (its {@code setCookieHeaders})
      */
-    public boolean isRemembered(@Nullable String expectedUsername)
+    public void relayResponse(@Nullable PIResponse piResponse)
     {
-        if (!rememberMeEnabled || cookieManager == null || dataSealer == null || StringUtil.isBlank(expectedUsername))
+        if (!isConfigured() || piResponse == null)
         {
-            return false;
+            return;
         }
-        String cookieValue = cookieManager.getCookieValue(rememberMeCookieName, null);
-        return expectedUsername.equals(RememberMeUtil.unseal(dataSealer, cookieValue));
+        List<String> setCookies = piResponse.setCookieHeaders;
+        if (setCookies == null)
+        {
+            return;
+        }
+        String prefix = rememberMeCookieName + "=";
+        for (String header : setCookies)
+        {
+            if (header == null || !header.startsWith(prefix))
+            {
+                continue;
+            }
+            String afterName = header.substring(prefix.length());
+            int semicolon = afterName.indexOf(';');
+            String value = (semicolon >= 0 ? afterName.substring(0, semicolon) : afterName).trim();
+            boolean cleared = value.isEmpty() || header.toLowerCase().contains("max-age=0");
+            if (cleared)
+            {
+                clearCookie();
+                LOGGER.info("Remember-device: privacyIDEA cleared the cookie (expired, or series reset after a counter mismatch); removing it from the browser.");
+            }
+            else
+            {
+                cookieManager.addCookie(rememberMeCookieName, value);
+                int colon = value.lastIndexOf(':');
+                String counter = colon >= 0 ? value.substring(colon + 1) : "?";
+                LOGGER.info("Remember-device: stored {} cookie (counter {}).",
+                            "1".equals(counter) ? "newly issued" : "rotated", counter);
+            }
+            return;
+        }
+    }
+
+    /**
+     * Remove the IdP-domain remember-me cookie from the browser. No-op when disabled.
+     */
+    public void clearCookie()
+    {
+        if (cookieManager != null)
+        {
+            cookieManager.unsetCookie(rememberMeCookieName);
+        }
     }
 
     // Spring bean property setters
@@ -141,8 +222,9 @@ public class RememberMeManager
     public void setRememberMeEnabled(boolean rememberMeEnabled) {this.rememberMeEnabled = rememberMeEnabled;}
 
     /**
-     * Set the cookie validity in days. Parsed defensively: a blank, non-numeric or non-positive value is
-     * ignored (the default of {@value #DEFAULT_DAYS} days is kept) rather than failing flow startup.
+     * Set the IdP-domain cookie validity in days. Parsed defensively: a blank, non-numeric or
+     * non-positive value is ignored (the default of {@value #DEFAULT_DAYS} days is kept) rather than
+     * failing flow startup.
      *
      * @param rememberMeDays the configured value (digits only)
      */
@@ -172,7 +254,7 @@ public class RememberMeManager
 
     public void setRememberMeCookieName(@Nonnull String rememberMeCookieName) {this.rememberMeCookieName = rememberMeCookieName;}
 
-    public void setDataSealer(@Nullable DataSealer dataSealer) {this.dataSealer = dataSealer;}
+    public void setApiKey(@Nullable String apiKey) {this.apiKey = apiKey;}
 
     public void setHttpServletRequestSupplier(@Nullable NonnullSupplier<HttpServletRequest> httpServletRequestSupplier)
     {

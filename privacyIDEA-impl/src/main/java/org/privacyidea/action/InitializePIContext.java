@@ -22,6 +22,9 @@ import net.shibboleth.idp.session.context.navigate.CanonicalUsernameLookupStrate
 import org.jetbrains.annotations.NotNull;
 import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.context.ProfileRequestContext;
+import org.privacyidea.IPILogger;
+import org.privacyidea.PIResponse;
+import org.privacyidea.PrivacyIDEA;
 import org.privacyidea.context.Config;
 import org.privacyidea.context.PIContext;
 import org.privacyidea.context.PIFormContext;
@@ -34,9 +37,11 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.function.Function;
 
-public class InitializePIContext extends AbstractAuthenticationAction
+public class InitializePIContext extends AbstractAuthenticationAction implements IPILogger
 {
     private static final Logger log = LoggerFactory.getLogger(InitializePIContext.class);
     @Nonnull
@@ -97,21 +102,35 @@ public class InitializePIContext extends AbstractAuthenticationAction
 
         PIFormContext piFormContext = new PIFormContext(defaultMessage, otpFieldHint, getOtpLength(),
                                                         pollingInterval, pollInBrowser, pollInBrowserUrl, disablePasskey,
-                                                        rememberMeManager != null && rememberMeManager.isEnabled());
+                                                        rememberMeManager != null && rememberMeManager.isConfigured());
         log.info("{} Create PIFormContext {}", this.getLogPrefix(), piFormContext);
         authenticationContext.addSubcontext(piFormContext);
 
-        // Remember-me: if this device holds a valid cookie for the user that a prior factor (e.g.
-        // authn/Password) just authenticated, skip the privacyIDEA second factor entirely. Requires a
-        // fresh first-factor result, so it never applies in standalone mode (privacyIDEA-only) where
-        // there is no preceding identity to trust.
-        if (rememberMeManager != null && rememberMeManager.isEnabled() && user != null
+        // Remember-me: if this device presents a pi_remember_device cookie that privacyIDEA honours for
+        // this user, skip the privacyIDEA second factor. Requires a fresh first-factor result, so it
+        // never applies in standalone mode (privacyIDEA-only) where there is no preceding identity to
+        // trust. We present the stored cookie + X-API-Key on a /validate/check with an empty pass: when
+        // the device is trusted the server authenticates it outright (authentication=ACCEPT,
+        // "Accepted by remembered device.") and rotates the cookie, so we key the skip off
+        // authenticationSuccessful() rather than the informational detail.remembered_device flag.
+        if (rememberMeManager != null && rememberMeManager.isConfigured() && user != null
                 && hasFreshAuthenticationResult(authenticationContext)
-                && rememberMeManager.isRemembered(user.getUsername()))
+                && StringUtil.isNotBlank(rememberMeManager.readCookie()))
         {
-            log.info("{} Valid remember-me cookie for '{}'. Skipping privacyIDEA second factor.", getLogPrefix(), user.getUsername());
-            ActionSupport.buildEvent(profileRequestContext, "rememberedDevice");
-            return;
+            Map<String, String> headers = new LinkedHashMap<>();
+            // A cookie is present (guard above), so the key + cookie are attached; opt-in is irrelevant here.
+            rememberMeManager.applyRequestData(headers, false);
+            PIResponse probe = buildPrivacyIDEA().validateCheck(user.getUsername(), "", null, headers);
+            rememberMeManager.relayResponse(probe);
+            if (probe != null && probe.authenticationSuccessful())
+            {
+                log.info("{} privacyIDEA accepted the remembered device for '{}' (remembered_device={}). Skipping second factor.",
+                         getLogPrefix(), user.getUsername(), probe.rememberedDevice);
+                ActionSupport.buildEvent(profileRequestContext, "rememberedDevice");
+                return;
+            }
+            log.info("{} Remember-device cookie present but not accepted for '{}' (remembered_device={}); continuing with normal flow.",
+                     getLogPrefix(), user.getUsername(), probe != null && probe.rememberedDevice);
         }
 
         if (user == null)
@@ -211,6 +230,40 @@ public class InitializePIContext extends AbstractAuthenticationAction
         }
         return null;
     }
+
+    /**
+     * Build a privacyIDEA client for the remember-me recognition probe. Mirrors the builder in
+     * {@link ChallengeResponseAction}; only constructed when a remember-device cookie is actually
+     * present, so it is not created on every request.
+     *
+     * @return a configured privacyIDEA client
+     */
+    @Nonnull
+    private PrivacyIDEA buildPrivacyIDEA()
+    {
+        String userAgent = "privacyIDEA-Shibboleth/" + org.privacyidea.Version.getVersion()
+                + " ShibbolethIdP/" + net.shibboleth.idp.Version.getVersion();
+        return PrivacyIDEA.newBuilder(serverURL, userAgent)
+                          .verifySSL(verifySSL)
+                          .realm(realm)
+                          .serviceAccount(serviceName, servicePass)
+                          .serviceRealm(serviceRealm)
+                          .logger(this)
+                          .build();
+    }
+
+    // IPILogger implementation (debug-gated, mirrors ChallengeResponseAction)
+    @Override
+    public void log(String message) {if (debug) {log.info("{}", message);}}
+
+    @Override
+    public void error(String message) {if (debug) {log.error("{}", message);}}
+
+    @Override
+    public void log(Throwable throwable) {if (debug) {log.info("{}", getLogPrefix(), throwable);}}
+
+    @Override
+    public void error(Throwable throwable) {if (debug) {log.error("{}", getLogPrefix(), throwable);}}
 
     // Spring bean property setters
     public void setServerURL(@Nonnull String serverURL) {this.serverURL = serverURL;}

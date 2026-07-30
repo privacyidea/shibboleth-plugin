@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
@@ -66,6 +65,14 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         if (StringUtil.isNotBlank(standalone))
         {
             piContext.setStandalone(standalone);
+        }
+        // Opt-in params: request_persistent_cookie=1 when the box was ticked (and not standalone).
+        Map<String, String> rememberParams = rememberMeParams(piContext);
+        // Attach X-API-Key (+ stored cookie) only when remember-me is in play — opt-in or a stored
+        // cookie — so a bad/expired key can never 401 an ordinary login (no header = legacy path).
+        if (rememberMeManager != null)
+        {
+            rememberMeManager.applyRequestData(headers, !rememberParams.isEmpty());
         }
         PIResponse piResponse = null;
 
@@ -201,7 +208,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             if (pollTransStatus == ChallengeStatus.accept)
             {
                 // If the challenge has been answered, finalize with a call to validate check
-                piResponse = privacyIDEA.validateCheck(piContext.getUsername(), "", piContext.getTransactionID(), headers);
+                piResponse = privacyIDEA.validateCheck(piContext.getUsername(), "", piContext.getTransactionID(), rememberParams, headers);
                 piContext.setMode("otp");
             }
             else if (pollTransStatus == ChallengeStatus.pending)
@@ -246,7 +253,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                                                                piContext.getTransactionID(),
                                                                piContext.getWebauthnSignResponse(),
                                                                piContext.getOrigin(),
-                                                               Collections.emptyMap(),
+                                                               rememberParams,
                                                                headers);
             }
         }
@@ -255,7 +262,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             String otp = request.getParameter("otp");
             if (StringUtil.isNotBlank(otp))
             {
-                piResponse = privacyIDEA.validateCheck(piContext.getUsername(), otp, piContext.getTransactionID(), headers);
+                piResponse = privacyIDEA.validateCheck(piContext.getUsername(), otp, piContext.getTransactionID(), rememberParams, headers);
             }
             else
             {
@@ -281,6 +288,11 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             if (debug)
             {
                 LOGGER.info("{} Extracting data from the response...", this.getLogPrefix());
+            }
+            // Store/rotate/clear the IdP-domain remember-device cookie from privacyIDEA's Set-Cookie.
+            if (rememberMeManager != null)
+            {
+                rememberMeManager.relayResponse(piResponse);
             }
             extractMessage(piResponse);
 
@@ -346,7 +358,6 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             {
                 LOGGER.info("{} Authentication successful, building success event...", this.getLogPrefix());
             }
-            maybeIssueRememberMeCookie(piContext);
             ActionSupport.buildEvent(profileRequestContext, "success");
         }
     }

@@ -1,9 +1,12 @@
 ## Unreleased
 
 ### Features
-* "Remember this device": optional checkbox that skips the privacyIDEA second factor on a trusted
-  device for a configurable number of days, using an encrypted DataSealer-backed cookie bound to the
-  user. Configure via `privacyidea.remember_me_enabled`, `privacyidea.remember_me_days` and
+* "Remember this device": optional checkbox that lets a trusted device skip the privacyIDEA second
+  factor. The plugin acts as a privacyIDEA API client (`privacyidea.api_key`): on opt-in the server
+  issues a rotating `pi_remember_device` cookie, and on later logins the plugin presents it so the
+  server can recognise the device. The token rotates on every use (theft detection) and privacyIDEA
+  owns the policy. Requires privacyIDEA 3.14+ with a `remember_device` policy. Configure via
+  `privacyidea.api_key`, `privacyidea.remember_me_enabled`, `privacyidea.remember_me_days` and
   `privacyidea.remember_me_cookie_name`. Applies only when a preceding first factor authenticated the
   user (ignored in standalone mode).
 

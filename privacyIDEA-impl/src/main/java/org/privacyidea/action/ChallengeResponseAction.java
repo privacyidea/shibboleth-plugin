@@ -54,7 +54,7 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
     protected boolean debug = false;
     // Remember-me ("trust this device") manager, shared with InitializePIContext via Spring.
     @Nullable
-    private RememberMeManager rememberMeManager;
+    protected RememberMeManager rememberMeManager;
     @Nonnull
     private final Function<ProfileRequestContext, PIContext> piContextLookupStrategy = (
             new ChildContextLookup(PIContext.class, false)).compose(
@@ -286,25 +286,24 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
     }
 
     /**
-     * Issue the remember-me cookie when the user opted in on a successful, non-standalone
-     * authentication, delegating the sealing and cookie write to {@link RememberMeManager}. No-op when
-     * the feature is disabled, in standalone mode (there is no preceding first factor to trust), or when
-     * the user did not tick the box.
+     * Build the {@code request_persistent_cookie} opt-in parameters for a {@code /validate/check}
+     * call: {@code request_persistent_cookie=1} when the feature is usable, the user ticked the
+     * "remember this device" box, and this is not standalone mode (there is no first factor to trust in
+     * standalone). Otherwise an empty map, so nothing changes for the normal flow.
      *
-     * @param piContext the current privacyIDEA context (source of the username and opt-in flag)
+     * @param piContext the current privacyIDEA context (source of the opt-in flag and standalone flag)
+     * @return additional request parameters (possibly empty, never null)
      */
-    protected void maybeIssueRememberMeCookie(@Nonnull PIContext piContext)
+    @Nonnull
+    protected Map<String, String> rememberMeParams(@Nonnull PIContext piContext)
     {
-        if (rememberMeManager == null || !rememberMeManager.isEnabled() || !piContext.isRememberMe())
+        Map<String, String> params = new LinkedHashMap<>();
+        if (rememberMeManager != null && rememberMeManager.isConfigured() && piContext.isRememberMe()
+                && !"1".equals(piContext.getStandalone()))
         {
-            return;
+            params.put("request_persistent_cookie", "1");
         }
-        // Remember-me only makes sense as a second-factor skip; never honor it in standalone mode.
-        if ("1".equals(piContext.getStandalone()))
-        {
-            return;
-        }
-        rememberMeManager.issue(piContext.getUsername());
+        return params;
     }
 
     // Logger implementation
