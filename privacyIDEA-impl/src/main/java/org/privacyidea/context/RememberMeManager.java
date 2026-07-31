@@ -196,7 +196,7 @@ public class RememberMeManager
             if (cleared)
             {
                 clearCookie();
-                LOGGER.info("Remember-device: privacyIDEA cleared the cookie (expired, or series reset after a counter mismatch); removing it from the browser.");
+                LOGGER.info("Remember-device: privacyIDEA did not recognise the cookie; removing it from the browser.");
             }
             else
             {
