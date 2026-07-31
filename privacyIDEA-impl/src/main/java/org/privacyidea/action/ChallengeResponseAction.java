@@ -287,19 +287,21 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
 
     /**
      * Build the {@code request_persistent_cookie} opt-in parameters for a {@code /validate/check}
-     * call: {@code request_persistent_cookie=1} when the feature is usable, the user ticked the
-     * "remember this device" box, and this is not standalone mode (there is no first factor to trust in
-     * standalone). Otherwise an empty map, so nothing changes for the normal flow.
+     * call: {@code request_persistent_cookie=1} when remember-me was actually offered in this run
+     * ({@link PIFormContext#isRememberMeEnabled()} — usable feature AND a fresh first factor to trust)
+     * and the user ticked the "remember this device" box. Otherwise an empty map, so nothing changes for
+     * the normal flow. Gating on the form-context flag (not the {@code standalone} request param) means a
+     * cookie is never issued when privacyIDEA is the first/only factor (standalone or passkey-only),
+     * mirroring the recognition/skip gate in {@link org.privacyidea.action.InitializePIContext}.
      *
-     * @param piContext the current privacyIDEA context (source of the opt-in flag and standalone flag)
+     * @param piContext the current privacyIDEA context (source of the opt-in flag)
      * @return additional request parameters (possibly empty, never null)
      */
     @Nonnull
     protected Map<String, String> rememberMeParams(@Nonnull PIContext piContext)
     {
         Map<String, String> params = new LinkedHashMap<>();
-        if (rememberMeManager != null && rememberMeManager.isConfigured() && piContext.isRememberMe()
-                && !"1".equals(piContext.getStandalone()))
+        if (piFormContext != null && piFormContext.isRememberMeEnabled() && piContext.isRememberMe())
         {
             params.put("request_persistent_cookie", "1");
         }

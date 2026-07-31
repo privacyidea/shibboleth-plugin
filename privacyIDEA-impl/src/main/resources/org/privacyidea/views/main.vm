@@ -114,26 +114,31 @@
 
                             </div>
 
-                            ## OTP & SUBMIT ##
+                            ## OTP, REMEMBER-ME & SUBMIT ##
                             <div class="form-element-wrapper" id="one-time-password">
                                 #if ($piContext.getMode() != "push" && $piContext.getMode() != "passkey" && $passkeyRegistrationEmpty == true)
                                     <label for="otp">$piFormContext.getOtpFieldHint()</label>
                                     <input id="otp" class="form-element form-field" name="otp" type="password" autocomplete="new-password" autofocus value="">
                                     <br>
+                                #end
+
+                                ## REMEMBER THIS DEVICE — placed between the OTP field and Submit so the user decides
+                                ## before submitting. isRememberMeEnabled() is already gated on a fresh first-factor
+                                ## result, so it is false when privacyIDEA is the first/only factor (standalone or
+                                ## passkey-only) — no separate standalone check needed here.
+                                #if ($piFormContext.isRememberMeEnabled())
+                                    <div id="rememberMe">
+                                        <input id="pidea_remember_me" name="pidea_remember_me" value="1" type="checkbox"#if($piContext.isRememberMe()) checked#end>
+                                        <label for="pidea_remember_me">#springMessageText("privacyidea.rememberMe", "Remember this device")</label>
+                                    </div>
+                                #end
+
+                                #if ($piContext.getMode() != "push" && $piContext.getMode() != "passkey" && $passkeyRegistrationEmpty == true)
                                     <button class="form-element-button" id="pi-form-submit-button" type="submit"
                                             name="_eventId_proceed">#springMessageText("privacyidea.submit", "Submit")</button>
                                 #end
                                 <br>
                             </div>
-
-                            ## REMEMBER THIS DEVICE ##
-                            ## Shown only when enabled and not in standalone mode (standalone has no first factor to trust).
-                            #if ($piFormContext.isRememberMeEnabled() && $piContext.getStandalone() != "1")
-                                <div class="form-element-wrapper" id="rememberMe">
-                                    <input id="pidea_remember_me" name="pidea_remember_me" value="1" type="checkbox"#if($piContext.isRememberMe()) checked#end>
-                                    <label for="pidea_remember_me">#springMessageText("privacyidea.rememberMe", "Remember this device")</label>
-                                </div>
-                            #end
 
                             ## FORM OPTIONS ##
                             <div class="form-options">

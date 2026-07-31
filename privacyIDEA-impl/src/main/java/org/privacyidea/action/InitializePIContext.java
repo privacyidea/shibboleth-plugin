@@ -100,9 +100,16 @@ public class InitializePIContext extends AbstractAuthenticationAction implements
         log.info("{} Create PIContext {}", this.getLogPrefix(), piContext);
         authenticationContext.addSubcontext(piContext);
 
+        // Remember-me is only offered when it can actually work: the feature is usable AND there is a
+        // genuine first factor to trust in this MFA run (a preceding sub-flow such as authn/Password
+        // produced a fresh result). When privacyIDEA is the first/only factor (standalone or passkey-only)
+        // there is no such result, so the checkbox is not shown and no cookie is issued — matching the
+        // skip gate below, which likewise requires hasFreshAuthenticationResult().
+        boolean rememberMeOffered = rememberMeManager != null && rememberMeManager.isConfigured()
+                && hasFreshAuthenticationResult(authenticationContext);
         PIFormContext piFormContext = new PIFormContext(defaultMessage, otpFieldHint, getOtpLength(),
                                                         pollingInterval, pollInBrowser, pollInBrowserUrl, disablePasskey,
-                                                        rememberMeManager != null && rememberMeManager.isConfigured());
+                                                        rememberMeOffered);
         log.info("{} Create PIFormContext {}", this.getLogPrefix(), piFormContext);
         authenticationContext.addSubcontext(piFormContext);
 
