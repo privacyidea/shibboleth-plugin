@@ -95,6 +95,25 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                 {
                     if (piResponse.authenticationSuccessful())
                     {
+                        // Passkeys are usernameless: validateCheckPasskey resolves to whoever owns the
+                        // credential. If this login already established an identity in a prior step (e.g.
+                        // username+password, then "Sign in with Passkey" as the second factor), the passkey
+                        // MUST resolve to that same user — otherwise the two factors would authenticate
+                        // different people and the MFA binding would be meaningless (or bypassable). privacyIDEA
+                        // returns a plain username (no realm), and the backing AD is case-insensitive, so we
+                        // compare case-insensitively. Only when no identity was established yet (true
+                        // usernameless / standalone passkey) do we adopt the passkey's username.
+                        String established = piContext.getUsername();
+                        if (StringUtil.isNotBlank(established) && StringUtil.isNotBlank(piResponse.username)
+                                && !established.equalsIgnoreCase(piResponse.username))
+                        {
+                            LOGGER.error("{} Passkey resolved to '{}' but the login was started as '{}'. Rejecting.",
+                                         this.getLogPrefix(), piResponse.username, established);
+                            piContext.setFormErrorMessage("Passkey does not match the signed-in user.");
+                            piContext.setMode("otp");
+                            ActionSupport.buildEvent(profileRequestContext, "reload");
+                            return;
+                        }
                         if (StringUtil.isNotBlank(piResponse.username))
                         {
                             piContext.setUsername(piResponse.username);
