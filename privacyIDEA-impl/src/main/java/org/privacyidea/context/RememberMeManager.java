@@ -126,35 +126,39 @@ public class RememberMeManager
     }
 
     /**
-     * Add the remember-me request data to a header map bound for {@code /validate/check}, but only when
-     * remember-me is actually in play — the user opted in (issuance) or a stored cookie exists
-     * (consumption/rotation). In those cases the {@code X-API-Key} is added, plus a {@code Cookie}
-     * header when a cookie is stored.
-     * <p>
-     * When neither applies, nothing is added: the call goes out with no {@code X-API-Key}, which
-     * privacyIDEA treats as an anonymous/legacy request that proceeds normally. This deliberately keeps
-     * a misconfigured or revoked key from turning an ordinary login into an {@code HTTP 401} — only
-     * calls that opt into remember-me carry the (fatal-if-invalid) key.
+     * Add the {@code X-API-Key} for a {@code /validate/check} issuance request. Call this only when the
+     * user opted in (issuance): the key identifies the client so privacyIDEA can issue the cookie. On a
+     * plain login the key is <em>not</em> sent, so the call stays on the anonymous/legacy path and a
+     * misconfigured or revoked key can never turn an ordinary login into an {@code HTTP 401}. No cookie
+     * is sent — {@code /validate/check} does not consume it; recognition is a separate endpoint.
      *
      * @param headers the mutable header map the java-client will send
-     * @param optIn   whether the user ticked "remember this device" on this submit
      */
-    public void applyRequestData(@Nonnull Map<String, String> headers, boolean optIn)
+    public void addApiKey(@Nonnull Map<String, String> headers)
+    {
+        if (isConfigured())
+        {
+            headers.put(HEADER_API_KEY, apiKey);
+        }
+    }
+
+    /**
+     * Add the request data for the {@code /validate/remember_device} recognition call: the
+     * {@code X-API-Key} and the stored {@code pi_remember_device} cookie. No-op when the feature is not
+     * usable or no cookie is stored (in which case the caller should not make the recognition call).
+     *
+     * @param headers the mutable header map the java-client will send
+     */
+    public void addRecognitionData(@Nonnull Map<String, String> headers)
     {
         if (!isConfigured())
         {
             return;
         }
         String stored = readCookie();
-        boolean cookiePresent = StringUtil.isNotBlank(stored);
-        if (!optIn && !cookiePresent)
+        if (StringUtil.isNotBlank(stored))
         {
-            // No remember-me involvement on this call — stay on the anonymous/legacy path.
-            return;
-        }
-        headers.put(HEADER_API_KEY, apiKey);
-        if (cookiePresent)
-        {
+            headers.put(HEADER_API_KEY, apiKey);
             headers.put(HEADER_COOKIE, rememberMeCookieName + "=" + stored);
         }
     }

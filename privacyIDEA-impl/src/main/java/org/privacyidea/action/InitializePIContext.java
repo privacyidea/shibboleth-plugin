@@ -106,31 +106,31 @@ public class InitializePIContext extends AbstractAuthenticationAction implements
         log.info("{} Create PIFormContext {}", this.getLogPrefix(), piFormContext);
         authenticationContext.addSubcontext(piFormContext);
 
-        // Remember-me: if this device presents a pi_remember_device cookie that privacyIDEA honours for
-        // this user, skip the privacyIDEA second factor. Requires a fresh first-factor result, so it
+        // Remember-me: if this device presents a pi_remember_device cookie that privacyIDEA recognises
+        // for this user, skip the privacyIDEA second factor. Requires a fresh first-factor result, so it
         // never applies in standalone mode (privacyIDEA-only) where there is no preceding identity to
-        // trust. We present the stored cookie + X-API-Key on a /validate/check with an empty pass: when
-        // the device is trusted the server authenticates it outright (authentication=ACCEPT,
-        // "Accepted by remembered device.") and rotates the cookie, so we key the skip off
-        // authenticationSuccessful() rather than the informational detail.remembered_device flag.
+        // trust. Recognition uses the dedicated POST /validate/remember_device endpoint (X-API-Key +
+        // cookie, no pass): it is not an authentication, triggers no challenge, and reports recognition
+        // in result.value (mirrored in detail.remembered_device). On a hit the server rotates the cookie
+        // (new Set-Cookie); a grace-window duplicate answers value=true with no Set-Cookie; a miss may
+        // clear the cookie. relayResponse handles all three (store / keep / clear).
         if (rememberMeManager != null && rememberMeManager.isConfigured() && user != null
                 && hasFreshAuthenticationResult(authenticationContext)
                 && StringUtil.isNotBlank(rememberMeManager.readCookie()))
         {
             Map<String, String> headers = new LinkedHashMap<>();
-            // A cookie is present (guard above), so the key + cookie are attached; opt-in is irrelevant here.
-            rememberMeManager.applyRequestData(headers, false);
-            PIResponse probe = buildPrivacyIDEA().validateCheck(user.getUsername(), "", null, headers);
+            rememberMeManager.addRecognitionData(headers);
+            PIResponse probe = buildPrivacyIDEA().rememberDeviceCheck(user.getUsername(), headers);
             rememberMeManager.relayResponse(probe);
-            if (probe != null && probe.authenticationSuccessful())
+            if (probe != null && probe.value)
             {
-                log.info("{} privacyIDEA accepted the remembered device for '{}' (remembered_device={}). Skipping second factor.",
+                log.info("{} privacyIDEA recognised the remembered device for '{}' (remembered_device={}). Skipping second factor.",
                          getLogPrefix(), user.getUsername(), probe.rememberedDevice);
                 ActionSupport.buildEvent(profileRequestContext, "rememberedDevice");
                 return;
             }
-            log.info("{} Remember-device cookie present but not accepted for '{}' (remembered_device={}); continuing with normal flow.",
-                     getLogPrefix(), user.getUsername(), probe != null && probe.rememberedDevice);
+            log.info("{} Remember-device cookie present but not recognised for '{}'; continuing with normal flow.",
+                     getLogPrefix(), user.getUsername());
         }
 
         if (user == null)

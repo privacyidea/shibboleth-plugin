@@ -68,11 +68,12 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         }
         // Opt-in params: request_persistent_cookie=1 when the box was ticked (and not standalone).
         Map<String, String> rememberParams = rememberMeParams(piContext);
-        // Attach X-API-Key (+ stored cookie) only when remember-me is in play — opt-in or a stored
-        // cookie — so a bad/expired key can never 401 an ordinary login (no header = legacy path).
-        if (rememberMeManager != null)
+        // Attach the X-API-Key only for issuance (opt-in), so a bad/expired key can never 401 an
+        // ordinary login (no header = anonymous/legacy path). The cookie is NOT sent here: /validate/check
+        // no longer consumes it — recognition is the separate /validate/remember_device endpoint.
+        if (rememberMeManager != null && !rememberParams.isEmpty())
         {
-            rememberMeManager.applyRequestData(headers, !rememberParams.isEmpty());
+            rememberMeManager.addApiKey(headers);
         }
         PIResponse piResponse = null;
 
