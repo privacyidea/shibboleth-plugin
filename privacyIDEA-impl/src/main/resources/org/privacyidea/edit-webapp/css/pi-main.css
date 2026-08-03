@@ -36,6 +36,19 @@ body {
     box-shadow: 0 2px 8px rgba(0,0,0,0.07);
 }
 
+/* Default styling for form error messages (wrong OTP, passkey rejected/mismatch, ...).
+   A sensible red default so an error reads as one out of the box; deployers can override. */
+.pi-error {
+    max-width: 700px;
+    margin-bottom: 10px;
+    padding: 14px 20px;
+    background: #fff1f0;
+    border: 1px solid #ffa39e;
+    border-radius: 8px;
+    color: #a8071a;
+    font-weight: 600;
+}
+
 .pi-tokenImage {
     max-width: 300px;
     display: block;

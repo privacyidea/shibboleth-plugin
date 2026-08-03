@@ -93,7 +93,7 @@
                                 ## Encoded — formErrorMessage may originate from request params or server error text.
                                 #if ($piContext.getFormErrorMessage())
                                     <br>
-                                    <p>$encoder.encodeForHTML($piContext.getFormErrorMessage())</p>
+                                    <p class="pi-error" role="alert">$encoder.encodeForHTML($piContext.getFormErrorMessage())</p>
                                 #end
                                 <br>
                                 #if ($piContext.getMode() == "push" && $passkeyRegistrationEmpty)
