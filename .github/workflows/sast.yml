@@ -47,6 +47,9 @@ jobs:
   dependency-check:
     name: OWASP Dependency-Check
     runs-on: ubuntu-latest
+    # NVD_API_KEY is scoped to the "ci" environment, so this job must opt into it
+    # to see the secret.
+    environment: ci
     steps:
       - uses: actions/checkout@v4
         with:
