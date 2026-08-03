@@ -369,7 +369,8 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
      * @param username the username to normalize (must not be null)
      * @return the local part
      */
-    private static String localPart(@Nonnull String username)
+    // package-private for unit testing
+    static String localPart(@Nonnull String username)
     {
         String result = username;
         int backslash = result.indexOf('\\');

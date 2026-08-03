@@ -291,7 +291,8 @@ public class RememberMeManager
      *
      * @param header the raw {@code Set-Cookie} header value
      */
-    private static boolean hasNonPositiveMaxAge(@Nonnull String header)
+    // package-private for unit testing
+    static boolean hasNonPositiveMaxAge(@Nonnull String header)
     {
         for (String attribute : header.split(";"))
         {
