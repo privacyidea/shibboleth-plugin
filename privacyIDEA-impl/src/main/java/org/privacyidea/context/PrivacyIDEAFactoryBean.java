@@ -52,6 +52,8 @@ public class PrivacyIDEAFactoryBean implements FactoryBean<PrivacyIDEA>, IPILogg
     private String servicePass;
     @Nullable
     private String serviceRealm;
+    /** HTTP timeout in ms for all privacyIDEA calls; defaults to the java-client default (10s). */
+    private int httpTimeoutMs = 10000;
     private boolean debug = false;
 
     @Nullable
@@ -70,6 +72,7 @@ public class PrivacyIDEAFactoryBean implements FactoryBean<PrivacyIDEA>, IPILogg
                                  .realm(realm)
                                  .serviceAccount(serviceName, servicePass)
                                  .serviceRealm(serviceRealm)
+                                 .httpTimeoutMs(httpTimeoutMs)
                                  .logger(this)
                                  .build();
     }
@@ -163,6 +166,36 @@ public class PrivacyIDEAFactoryBean implements FactoryBean<PrivacyIDEA>, IPILogg
     public void setServicePass(@Nullable String servicePass) {this.servicePass = servicePass;}
 
     public void setServiceRealm(@Nullable String serviceRealm) {this.serviceRealm = serviceRealm;}
+
+    /**
+     * Set the HTTP timeout (milliseconds) for privacyIDEA calls. Parsed defensively: a blank, non-numeric
+     * or non-positive value is ignored (the default of 10000 ms is kept) rather than failing flow startup.
+     *
+     * @param httpTimeoutMs the configured value (digits only)
+     */
+    public void setHttpTimeoutMs(@Nullable String httpTimeoutMs)
+    {
+        if (StringUtil.isBlank(httpTimeoutMs))
+        {
+            return;
+        }
+        try
+        {
+            int parsed = Integer.parseInt(httpTimeoutMs.trim());
+            if (parsed > 0)
+            {
+                this.httpTimeoutMs = parsed;
+            }
+            else
+            {
+                LOGGER.warn("Config option \"http_timeout_ms\": must be a positive number. Using default {}.", this.httpTimeoutMs);
+            }
+        }
+        catch (NumberFormatException e)
+        {
+            LOGGER.warn("Config option \"http_timeout_ms\": Wrong format. Only digits allowed. Using default {}.", this.httpTimeoutMs);
+        }
+    }
 
     public void setDebug(boolean debug) {this.debug = debug;}
 }

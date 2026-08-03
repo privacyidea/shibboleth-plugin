@@ -27,6 +27,7 @@
           p:serviceName="%{privacyidea2.service_name:#{null}}"
           p:servicePass="%{privacyidea2.service_pass:#{null}}"
           p:serviceRealm="%{privacyidea2.service_realm:#{null}}"
+          p:httpTimeoutMs="%{privacyidea2.http_timeout_ms:#{null}}"
           p:debug="%{privacyidea2.debug:false}"/>
 
     <bean id="initPIContext" class="org.privacyidea.action.InitializePIContext" scope="prototype"
