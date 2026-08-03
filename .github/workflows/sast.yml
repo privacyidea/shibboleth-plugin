@@ -1,0 +1,79 @@
+name: SAST
+
+# Fast static analysis on every push/PR:
+#   - SpotBugs + FindSecBugs : Java security bug patterns (taint/crypto/injection)
+#   - zizmor                 : audits the GitHub Actions workflows themselves
+# OWASP Dependency-Check lives in its own schedule-only workflow (dependency-check.yml)
+# because its full NVD download is far too slow to run per commit.
+# Each uploads SARIF to GitHub code scanning under its own category. Scans are
+# report-only (they do not fail the build); gate via the repo's code-scanning rules.
+on:
+  # push only on main (post-merge baseline); PRs are covered by pull_request, so
+  # feature-branch commits run once, not twice.
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Least privilege at the top; each job adds security-events:write only where it
+# actually uploads SARIF.
+permissions:
+  contents: read
+
+jobs:
+  spotbugs:
+    name: SpotBugs + FindSecBugs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - uses: actions/setup-java@d7793b545071e98d581d3bf084a51c3213318a07 # v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Build java-client submodule (dependency)
+        run: mvn -B -ntp -f java-client/pom.xml install -DskipTests
+      - name: Compile plugin and run SpotBugs/FindSecBugs
+        run: mvn -B -ntp -DskipTests compile spotbugs:spotbugs
+      - name: Upload SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@e60ea984bd3baa95954f2856bcf24f9eaba46637 # v3
+        with:
+          sarif_file: privacyIDEA-impl/target/spotbugsSarif.json
+          category: findsecbugs
+
+  zizmor:
+    name: zizmor (Actions audit)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - name: Install zizmor
+        run: pip install zizmor
+      - name: Run zizmor
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: zizmor --format sarif . > zizmor.sarif
+      - name: Upload SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@e60ea984bd3baa95954f2856bcf24f9eaba46637 # v3
+        with:
+          sarif_file: zizmor.sarif
+          category: zizmor

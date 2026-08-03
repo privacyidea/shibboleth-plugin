@@ -1,0 +1,50 @@
+name: CodeQL
+
+# Static analysis (SAST) for the Java sources. Uses build-mode "none" so CodeQL
+# analyses the source directly without a Maven build — this sidesteps the
+# java-client submodule / non-reactor dependency dance the CI build handles.
+on:
+  # push only on main (post-merge baseline for code scanning); PRs are covered by
+  # pull_request, so feature-branch commits run once, not twice.
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '30 4 * * 1'   # weekly, Monday 04:30 UTC
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze (java)
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+      actions: read
+
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@e60ea984bd3baa95954f2856bcf24f9eaba46637 # v3
+        with:
+          languages: java-kotlin
+          build-mode: none
+          # security-and-quality adds maintainability queries on top of the
+          # default security set; drop to "security-extended" for security-only.
+          queries: security-and-quality
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@e60ea984bd3baa95954f2856bcf24f9eaba46637 # v3
+        with:
+          category: "/language:java-kotlin"

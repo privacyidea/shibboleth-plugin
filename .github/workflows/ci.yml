@@ -1,0 +1,42 @@
+name: CI
+
+# Build + test on every push and PR. The java-client submodule is NOT a reactor
+# module and is not published to Maven Central — it IS the source of the
+# privacyidea-java-client dependency, so it must be built and installed into the
+# local ~/.m2 first, then the plugin reactor (api/impl/dist) resolves it.
+on:
+  # push only on main (post-merge); PR branches are covered by pull_request, so
+  # feature-branch commits run once, not twice.
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@d7793b545071e98d581d3bf084a51c3213318a07 # v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Build & install java-client submodule
+        run: mvn -B -ntp -f java-client/pom.xml install
+
+      - name: Build & test plugin (api / impl / dist)
+        run: mvn -B -ntp install

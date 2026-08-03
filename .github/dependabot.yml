@@ -1,0 +1,12 @@
+version: 2
+updates:
+  # Keep the GitHub Actions pinned in the workflows above up to date (low noise).
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    # Wait for a newly published version to "age" before proposing it, so a
+    # compromised release that gets yanked within days is never auto-bumped.
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5

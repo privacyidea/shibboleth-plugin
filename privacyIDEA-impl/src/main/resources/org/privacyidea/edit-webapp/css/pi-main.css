@@ -133,3 +133,24 @@ input:focus {
     outline: 2px solid #1976d2;
     background: #e3f2fd;
 }
+
+/* Remember-me: keep the checkbox and its label on one line, checkbox first. */
+#rememberMe {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0 12px;
+}
+
+#rememberMe input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+    flex: none;
+}
+
+#rememberMe label {
+    display: inline;
+    margin: 0;
+    font-weight: 400;
+    cursor: pointer;
+}

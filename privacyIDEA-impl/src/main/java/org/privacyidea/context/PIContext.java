@@ -52,6 +52,7 @@ public class PIContext extends BaseContext
     @Nonnull
     private String standalone = "0";
     private boolean isPushAvailable = false;
+    private boolean rememberMe = false;
     @Nonnull
     private String mode = "otp";
     @Nullable
@@ -80,6 +81,11 @@ public class PIContext extends BaseContext
     public void setIsPushAvailable(boolean pushAvailable) {isPushAvailable = pushAvailable;}
 
     public boolean isPushAvailable() {return isPushAvailable;}
+
+    /** Whether the user ticked the "remember this device" box. Persisted across form reloads. */
+    public boolean isRememberMe() {return rememberMe;}
+
+    public void setRememberMe(boolean rememberMe) {this.rememberMe = rememberMe;}
 
     @Nullable
     public String getWebauthnSignResponse() {return webauthnSignResponse;}

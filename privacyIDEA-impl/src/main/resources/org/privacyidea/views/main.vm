@@ -114,12 +114,27 @@
 
                             </div>
 
-                            ## OTP & SUBMIT ##
+                            ## OTP, REMEMBER-ME & SUBMIT ##
                             <div class="form-element-wrapper" id="one-time-password">
                                 #if ($piContext.getMode() != "push" && $piContext.getMode() != "passkey" && $passkeyRegistrationEmpty == true)
                                     <label for="otp">$piFormContext.getOtpFieldHint()</label>
                                     <input id="otp" class="form-element form-field" name="otp" type="password" autocomplete="new-password" autofocus value="">
                                     <br>
+                                #end
+
+                                ## REMEMBER THIS DEVICE — placed between the OTP field and Submit so the user decides
+                                ## before submitting. isRememberMeEnabled() is already gated on a fresh first-factor
+                                ## result, so it is false when privacyIDEA is the first/only factor (standalone or
+                                ## passkey-only). Also gate on the same mode condition as the OTP field / Submit
+                                ## button above, so the checkbox is not left orphaned in push / passkey mode.
+                                #if ($piFormContext.isRememberMeEnabled() && $piContext.getMode() != "push" && $piContext.getMode() != "passkey" && $passkeyRegistrationEmpty == true)
+                                    <div id="rememberMe">
+                                        <input id="pidea_remember_me" name="pidea_remember_me" value="1" type="checkbox"#if($piContext.isRememberMe()) checked#end>
+                                        <label for="pidea_remember_me">#springMessageText("privacyidea.rememberMe", "Remember this device")</label>
+                                    </div>
+                                #end
+
+                                #if ($piContext.getMode() != "push" && $piContext.getMode() != "passkey" && $passkeyRegistrationEmpty == true)
                                     <button class="form-element-button" id="pi-form-submit-button" type="submit"
                                             name="_eventId_proceed">#springMessageText("privacyidea.submit", "Submit")</button>
                                 #end

@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
@@ -58,11 +57,23 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         piContext.setPasskeyChallenge(request.getParameter("passkeyChallenge"));
         piContext.setOrigin(request.getParameter("origin"));
         piContext.setFormErrorMessage(request.getParameter("errorMessage"));
+        // Capture the "remember this device" checkbox on every submit so its state survives form
+        // reloads (e.g. push polling or a mistyped OTP). Read back at the success point below.
+        piContext.setRememberMe("1".equals(request.getParameter("pidea_remember_me")));
 
         String standalone = request.getParameter("standalone");
         if (StringUtil.isNotBlank(standalone))
         {
             piContext.setStandalone(standalone);
+        }
+        // Opt-in params: request_persistent_cookie=1 when the box was ticked (and not standalone).
+        Map<String, String> rememberParams = rememberMeParams(piContext);
+        // Attach the X-API-Key only for issuance (opt-in), so a bad/expired key can never 401 an
+        // ordinary login (no header = anonymous/legacy path). The cookie is NOT sent here: /validate/check
+        // no longer consumes it — recognition is the separate /validate/remember_device endpoint.
+        if (rememberMeManager != null && !rememberParams.isEmpty())
+        {
+            rememberMeManager.addApiKey(headers);
         }
         PIResponse piResponse = null;
 
@@ -79,13 +90,41 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                 piResponse = privacyIDEA.validateCheckPasskey(passkeyTransactionID,
                                                               piContext.getPasskeySignResponse(),
                                                               piContext.getOrigin(),
+                                                              rememberParams,
                                                               headers);
                 if (piResponse != null)
                 {
                     if (piResponse.authenticationSuccessful())
                     {
-                        if (StringUtil.isNotBlank(piResponse.username))
+                        // Passkeys are usernameless: validateCheckPasskey resolves to whoever owns the
+                        // credential. If this login already established an identity in a prior step (e.g.
+                        // username+password, then "Sign in with Passkey" as the second factor), the passkey
+                        // MUST resolve to that same user — otherwise the two factors would authenticate
+                        // different people and the MFA binding would be meaningless (or bypassable).
+                        String established = piContext.getUsername();
+                        if (StringUtil.isNotBlank(established))
                         {
+                            // privacyIDEA returns a bare username; the established (IdP canonical) principal
+                            // may be realm/scope-qualified (e.g. user@realm, or a Windows-style domain
+                            // prefix), so compare on the local part, case-insensitively (AD is
+                            // case-insensitive).
+                            if (StringUtil.isNotBlank(piResponse.username)
+                                    && !localPart(established).equalsIgnoreCase(piResponse.username))
+                            {
+                                LOGGER.error("{} Passkey resolved to '{}' but the login was started as '{}'. Rejecting.",
+                                             this.getLogPrefix(), piResponse.username, established);
+                                piContext.setFormErrorMessage("Passkey does not match the signed-in user.");
+                                piContext.setMode("otp");
+                                ActionSupport.buildEvent(profileRequestContext, "reload");
+                                return;
+                            }
+                            // Match: keep the established canonical principal. Do NOT overwrite it with the
+                            // bare passkey username, which could break downstream c14n / attribute resolution.
+                        }
+                        else if (StringUtil.isNotBlank(piResponse.username))
+                        {
+                            // No prior identity (true usernameless / standalone passkey): adopt what the
+                            // passkey resolved to.
                             piContext.setUsername(piResponse.username);
                         }
                         finalizeAuthentication(profileRequestContext, piContext);
@@ -198,7 +237,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             if (pollTransStatus == ChallengeStatus.accept)
             {
                 // If the challenge has been answered, finalize with a call to validate check
-                piResponse = privacyIDEA.validateCheck(piContext.getUsername(), "", piContext.getTransactionID(), headers);
+                piResponse = privacyIDEA.validateCheck(piContext.getUsername(), "", piContext.getTransactionID(), rememberParams, headers);
                 piContext.setMode("otp");
             }
             else if (pollTransStatus == ChallengeStatus.pending)
@@ -243,7 +282,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                                                                piContext.getTransactionID(),
                                                                piContext.getWebauthnSignResponse(),
                                                                piContext.getOrigin(),
-                                                               Collections.emptyMap(),
+                                                               rememberParams,
                                                                headers);
             }
         }
@@ -252,7 +291,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             String otp = request.getParameter("otp");
             if (StringUtil.isNotBlank(otp))
             {
-                piResponse = privacyIDEA.validateCheck(piContext.getUsername(), otp, piContext.getTransactionID(), headers);
+                piResponse = privacyIDEA.validateCheck(piContext.getUsername(), otp, piContext.getTransactionID(), rememberParams, headers);
             }
             else
             {
@@ -278,6 +317,11 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             if (debug)
             {
                 LOGGER.info("{} Extracting data from the response...", this.getLogPrefix());
+            }
+            // Store/rotate/clear the IdP-domain remember-device cookie from privacyIDEA's Set-Cookie.
+            if (rememberMeManager != null)
+            {
+                rememberMeManager.relayResponse(piResponse);
             }
             extractMessage(piResponse);
 
@@ -314,6 +358,31 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             LOGGER.error("{} privacyIDEA response was null. Please check the config and try again.", this.getLogPrefix());
             ActionSupport.buildEvent(profileRequestContext, "reload");
         }
+    }
+
+    /**
+     * Reduce a username to its bare local part for comparison: strip a Windows-style domain prefix
+     * (everything up to and including a backslash) and an {@code @realm} suffix. Used to compare an IdP
+     * canonical principal (which may be realm/scope-qualified) against the bare username privacyIDEA
+     * returns for a passkey.
+     *
+     * @param username the username to normalize (must not be null)
+     * @return the local part
+     */
+    private static String localPart(@Nonnull String username)
+    {
+        String result = username;
+        int backslash = result.indexOf('\\');
+        if (backslash >= 0)
+        {
+            result = result.substring(backslash + 1);
+        }
+        int at = result.indexOf('@');
+        if (at >= 0)
+        {
+            result = result.substring(0, at);
+        }
+        return result;
     }
 
     /**

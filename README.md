@@ -52,6 +52,34 @@ To ensure that only valid local users can log in, you should rely on the standar
 1.  **Attribute Resolution**: Ensure your Attribute Resolver is configured to look up the user in your backend. If the user does not exist, no attributes will be resolved. You can configure the IdP to fail the request if essential attributes are missing.
 2.  **Subject Canonicalization (c14n)**: Configure a c14n flow that verifies the principal against your user store.
 
+### Remember Me:
+**You can let users skip the privacyIDEA second factor on a trusted device.**<br>
+When `privacyidea.remember_me_enabled=true` (and a `privacyidea.api_key` is configured), a "remember this device" checkbox is shown on the privacyIDEA form. If the user ticks it and authentication succeeds, privacyIDEA issues a persistent-device cookie. On later logins from that browser the plugin presents the cookie to privacyIDEA, which recognises the device so the second factor can be skipped — for as long as the **server-side** policy allows.
+
+The logic lives in privacyIDEA, not in the plugin: the plugin is only the transport. This requires **privacyIDEA 3.14+** with a `remember_device` policy (scope `authentication`) enabled for this client. See privacyIDEA's own documentation for the policy, validity and counter options.
+
+How it works and why it is safe:
+- **API client identity.** The feature is tied to an API key (`privacyidea.api_key`) that identifies this plugin to privacyIDEA and gates the feature per client. The key is sent as the `X-API-Key` header; it is never placed in the cookie. An admin can revoke or rotate it server-side at any time.
+- **Rotating token, not a bearer secret.** The cookie (`pi_remember_device`) is a rotating `series:counter` token. privacyIDEA advances it on every use and returns the new value, which the plugin stores. If a cookie is cloned, the stale copy is detected on next use and privacyIDEA destroys the whole session series — cutting off attacker and legitimate device alike and forcing a fresh full login. (Rotation makes theft *detectable*; it is not a device-bound credential, so it does not by itself make theft impossible — see the security note below.)
+- **Only ever the second factor.** Recognition can, at most, skip the privacyIDEA step. It requires an **active first-factor result for the same user** in the current login (e.g. a preceding `authn/Password`, or a still-valid IdP SSO session). With no active first factor the cookie is ignored and the user is challenged normally, so it is **ignored in standalone / passkey-only mode** (where privacyIDEA is the only factor) — the checkbox is not shown there.
+- **SSO / forced re-auth.** As with any SSO login, when an IdP session is already active and the relying party does not request re-authentication, the first factor is satisfied by that existing session rather than re-prompted. If you need the first factor re-proven for a sensitive service, request `forceAuthn` (or set an authentication `maxAge`) on that relying party: there is then no active first-factor result to reuse, so the remember-me skip does not apply and the second factor is enforced as well.
+- **Cookie attributes.** The plugin sets the cookie `HttpOnly` and `Secure`. Its `SameSite` attribute is governed by the IdP's global cookie policy (`idp.cookie.sameSite`, default `None`), not set per-cookie by the plugin — set that property to `Strict`/`Lax` if you want to constrain it. Its lifetime is bounded by privacyIDEA's policy; `privacyidea.remember_me_days` only bounds the IdP-side cookie.
+
+> **Security note.** A remembered device is a deliberate, bounded relaxation of MFA, not a free one. Token rotation gives you *detection* of a stolen cookie, but between rotations the cookie is still a bearer token — it is not bound to the device the way a passkey is. Enable it where reducing second-factor friction is worth that trade-off, and rely on the server-side policy (max age, counters) and per-client key revocation to bound the exposure.
+
+Configure it with `privacyidea.api_key`, `privacyidea.remember_me_enabled`, `privacyidea.remember_me_days`, and (optionally) `privacyidea.remember_me_cookie_name` — see the table below.
+
+### Requested authentication context (AuthnContextClassRef):
+By default the privacyIDEA flow advertises no specific SAML `AuthnContextClassRef`. If a service provider sends a `RequestedAuthnContext` — or you need the IdP to assert a particular context class, e.g. the REFEDS MFA profile for eduGAIN / DFN-AAI — declare the values the flow can satisfy via `idp.authn.privacyIDEA.supportedPrincipals` in `privacyidea.properties`:
+
+```
+idp.authn.privacyIDEA.supportedPrincipals = https://refeds.org/profile/mfa,https://refeds.org/profile/sfa
+```
+
+Shibboleth then selects the privacyIDEA flow when an SP requests one of these classes and asserts the matched class back in the response. The value is comma-separated; leave it unset for no specific context class.
+
+The `privacyIDEA2` flow inherits this (and the other flow-descriptor settings — `order`, `lifetime`, `reuseCondition`, …) from the `privacyIDEA` keys by default. To give the second flow a different context class, set its own `idp.authn.privacyIDEA2.supportedPrincipals` in `privacyidea2.properties`; each `idp.authn.privacyIDEA2.*` key falls back to the matching `idp.authn.privacyIDEA.*` value.
+
 ### Configuration Parameters for privacyIDEA Plugin:
 An example of the privacyIDEA plugin configuration can be found in *privacyidea.properties* (`$idp_install_path/conf/authn/privacyidea.properties`).
 The different configuration parameters are explained in the following table:
@@ -75,7 +103,21 @@ The different configuration parameters are explained in the following table:
 | `privacyidea.polling_in_browser_url` | If 'poll in browser' should use a deviating URL, set it here. Otherwise, the general URL will be used.                                                                                                                                                                                                                                                                                                                                                                                 |
 | `privacyidea.disable_passkey`        | Set to 'true' to disable passkey authentication.                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `privacyidea.skip_first_step`        | Default `true`. When `true`, the plugin's own username/password form is skipped if a prior MFA sub-flow (e.g. `authn/Password`) produced a fresh authentication result in the current MFA run, and that result's principal is used. If no fresh result exists (e.g. privacyIDEA is the first factor, or only a stale session principal is available), the form is displayed regardless — prefilled with the principal if one is known. Set to `false` to always display the form.      |
+| `privacyidea.api_key`                | API key identifying this plugin to privacyIDEA (`pi_<key_id>_<secret>`), obtained from the privacyIDEA admin. **Required** for remember-me; sent as the `X-API-Key` header. Keep it secret (see [Securing the configuration](#securing-the-configuration)).                                                                                                                                                                                                                              |
+| `privacyidea.remember_me_enabled`    | Default `false`. Set to `true` (with `api_key` set) to show a "remember this device" checkbox on the privacyIDEA form. When checked and authentication succeeds, privacyIDEA issues a rotating `pi_remember_device` cookie; on later logins the plugin presents it and privacyIDEA can skip the second factor per its `remember_device` policy. Requires **privacyIDEA 3.14+**. Only applies when a preceding first factor authenticated the user — **ignored in standalone mode**. See the [Remember Me](#remember-me) section. |
+| `privacyidea.remember_me_days`       | Validity (days) of the IdP-side cookie; privacyIDEA remains the authority on real expiry. Only digits allowed. Default `30`.                                                                                                                                                                                                                                                                                                                                                            |
+| `privacyidea.remember_me_cookie_name`| Cookie name. Must match privacyIDEA's cookie — change only if the server was reconfigured. Default `pi_remember_device`.                                                                                                                                                                                                                                                                                                                                                                |
 | `privacyidea.debug`                  | Set this parameter to true to see the debug messages in the `idp-process.log`.                                                                                                                                                                                                                                                                                                                                                                                                         |
+
+### Securing the configuration:
+`privacyidea.properties` can contain secrets — the service-account password (`privacyidea.service_pass`) and, for the remember-me feature, the client API key (`privacyidea.api_key`). Restrict it so only the IdP service account can read it, e.g. on Linux:
+
+```
+chown root:<idp-group> conf/authn/privacyidea.properties
+chmod 640 conf/authn/privacyidea.properties
+```
+
+Adjust owner/group to match how your IdP runs (e.g. the Tomcat/Jetty service user). The API key is revocable/rotatable server-side in privacyIDEA (`/clients/<id>/rotate`) if it is ever exposed.
 
 ### Log check:
 - **Main log: `$idp_install_path/logs/idp-process.log`.**

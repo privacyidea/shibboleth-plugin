@@ -36,10 +36,23 @@
           p:disablePasskey="%{privacyidea.disable_passkey:false}"
           p:pluginVersion="%{privacyidea.plugin_version:#{null}}"
           p:debug="%{privacyidea.debug:false}"
-          p:skipFirstStep="%{privacyidea.skip_first_step:true}"/>
+          p:skipFirstStep="%{privacyidea.skip_first_step:true}"
+          p:rememberMeManager-ref="piRememberMe"/>
+
+    <!-- Remember-me ("trust this device"): single config + cookie relay shared by both actions.
+         The cookie name must match privacyIDEA's pi_remember_device cookie so the Cookie header the
+         plugin forwards is read by the server. -->
+    <bean id="piRememberMe" class="org.privacyidea.context.RememberMeManager"
+          p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier"
+          p:httpServletResponseSupplier-ref="shibboleth.HttpServletResponseSupplier"
+          p:apiKey="%{privacyidea.api_key:#{null}}"
+          p:rememberMeEnabled="%{privacyidea.remember_me_enabled:false}"
+          p:rememberMeDays="%{privacyidea.remember_me_days:30}"
+          p:rememberMeCookieName="%{privacyidea.remember_me_cookie_name:#{'pi_remember_device'}}"/>
 
     <bean id="piAuthenticator" class="org.privacyidea.action.PrivacyIDEAAuthenticator" scope="prototype"
-          p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier"/>
+          p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier"
+          p:rememberMeManager-ref="piRememberMe"/>
 
     <bean id="validateResponseStandalone" scope="prototype" class="org.privacyidea.action.ValidateResponseStandalone"/>
 

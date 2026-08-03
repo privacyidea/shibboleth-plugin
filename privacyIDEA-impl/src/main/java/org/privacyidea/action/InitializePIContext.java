@@ -16,16 +16,22 @@
 package org.privacyidea.action;
 
 import net.shibboleth.idp.authn.AbstractAuthenticationAction;
+import net.shibboleth.idp.authn.AuthenticationResult;
 import net.shibboleth.idp.authn.context.AuthenticationContext;
 import net.shibboleth.idp.authn.context.MultiFactorAuthenticationContext;
+import net.shibboleth.idp.authn.principal.UsernamePrincipal;
 import net.shibboleth.idp.session.context.navigate.CanonicalUsernameLookupStrategy;
 import org.jetbrains.annotations.NotNull;
 import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.context.ProfileRequestContext;
+import org.privacyidea.IPILogger;
+import org.privacyidea.PIResponse;
+import org.privacyidea.PrivacyIDEA;
 import org.privacyidea.context.Config;
 import org.privacyidea.context.PIContext;
 import org.privacyidea.context.PIFormContext;
 import org.privacyidea.context.PIServerConfigContext;
+import org.privacyidea.context.RememberMeManager;
 import org.privacyidea.context.StringUtil;
 import org.privacyidea.context.User;
 import org.slf4j.Logger;
@@ -33,11 +39,19 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
-public class InitializePIContext extends AbstractAuthenticationAction
+public class InitializePIContext extends AbstractAuthenticationAction implements IPILogger
 {
     private static final Logger log = LoggerFactory.getLogger(InitializePIContext.class);
+
+    /** Timeout for the remember-me capability / recognition probes, which run before the form renders. */
+    private static final int PROBE_HTTP_TIMEOUT_MS = 5000;
+
     @Nonnull
     private final Function<ProfileRequestContext, String> usernameLookupStrategy;
     private String serverURL;
@@ -71,6 +85,8 @@ public class InitializePIContext extends AbstractAuthenticationAction
     private String pollInBrowserUrl;
     private boolean debug;
     private boolean skipFirstStep = true;
+    @Nullable
+    private RememberMeManager rememberMeManager;
 
     public InitializePIContext()
     {
@@ -92,10 +108,110 @@ public class InitializePIContext extends AbstractAuthenticationAction
         log.info("{} Create PIContext {}", this.getLogPrefix(), piContext);
         authenticationContext.addSubcontext(piContext);
 
+        // Resolve the server capability once (cached for the JVM). GET /validate/capabilities is a
+        // client-level discovery hint gated by the X-API-Key: it tells us whether privacyIDEA offers
+        // remember_device to this client at all (version present AND policy configured). We ask lazily on
+        // the first configured login and cache a definitive answer; an inconclusive probe (server too old
+        // for the endpoint, or unreachable) is not cached, so it is retried next login. Feature gating
+        // fails closed — remember-me stays inactive until the server confirms it. A TRUE answer only means
+        // "worth attempting"; the per-user decision is still made at issuance / recognition.
+        if (rememberMeManager != null && rememberMeManager.isConfigured() && !rememberMeManager.isCapabilityResolved())
+        {
+            Map<String, String> capHeaders = new LinkedHashMap<>();
+            rememberMeManager.addApiKey(capHeaders);
+            PrivacyIDEA client = buildPrivacyIDEA();
+            try
+            {
+                Boolean capability = client.getRememberDeviceCapability(capHeaders);
+                rememberMeManager.cacheServerCapability(capability);
+                if (capability == null)
+                {
+                    log.warn("{} Could not determine the remember-device capability from privacyIDEA (endpoint unreachable or server too old for /validate/capabilities); remember-me stays inactive this login.", getLogPrefix());
+                }
+                else if (!capability)
+                {
+                    log.warn("{} privacyIDEA does not offer remember-device to this API client; remember-me stays inactive. Enable a 'remember_device' policy (scope authentication) for this client on privacyIDEA 3.14+.", getLogPrefix());
+                }
+                else
+                {
+                    log.info("{} privacyIDEA advertises the remember-device capability for this client; remember-me is active.", getLogPrefix());
+                }
+            }
+            finally
+            {
+                closeQuietly(client);
+            }
+        }
+
+        // Remember-me is only offered when it can actually work: the feature is usable, the server
+        // advertises it for this client, AND there is a genuine first factor to trust in this MFA run (a
+        // preceding sub-flow such as authn/Password produced a fresh result). When privacyIDEA is the
+        // first/only factor (standalone or passkey-only) there is no such result, so the checkbox is not
+        // shown and no cookie is issued — matching the skip gate below, which likewise requires
+        // hasFreshAuthenticationResult().
+        boolean rememberMeOffered = rememberMeManager != null && rememberMeManager.isConfigured()
+                && rememberMeManager.isServerCapable()
+                && hasFreshAuthenticationResult(authenticationContext);
         PIFormContext piFormContext = new PIFormContext(defaultMessage, otpFieldHint, getOtpLength(),
-                                                        pollingInterval, pollInBrowser, pollInBrowserUrl, disablePasskey);
+                                                        pollingInterval, pollInBrowser, pollInBrowserUrl, disablePasskey,
+                                                        rememberMeOffered);
         log.info("{} Create PIFormContext {}", this.getLogPrefix(), piFormContext);
         authenticationContext.addSubcontext(piFormContext);
+
+        // Remember-me: if this device presents a pi_remember_device cookie that privacyIDEA recognises
+        // for this user, skip the privacyIDEA second factor. Requires a fresh first-factor result, so it
+        // never applies in standalone mode (privacyIDEA-only) where there is no preceding identity to
+        // trust. Recognition uses the dedicated POST /validate/remember_device endpoint (X-API-Key +
+        // cookie, no pass): it is not an authentication, triggers no challenge, and reports recognition
+        // in result.value (mirrored in detail.remembered_device). On a hit the server rotates the cookie
+        // (new Set-Cookie); a grace-window duplicate answers value=true with no Set-Cookie; a miss may
+        // clear the cookie. relayResponse handles all three (store / keep / clear).
+        if (rememberMeManager != null && rememberMeManager.isConfigured() && rememberMeManager.isServerCapable()
+                && user != null
+                && hasFreshAuthenticationResult(authenticationContext)
+                && StringUtil.isNotBlank(rememberMeManager.readCookie()))
+        {
+            // Bind recognition to the identity the first factor actually authenticated in this run, not the
+            // (possibly stale) CanonicalUsernameLookupStrategy principal — otherwise the cookie could be
+            // validated against, and the second factor skipped for, a different user than was authenticated.
+            String freshUser = freshResultUsername(authenticationContext);
+            if (StringUtil.isBlank(freshUser))
+            {
+                log.info("{} Remember-device: could not determine the first-factor principal; not skipping the second factor.", getLogPrefix());
+            }
+            else if (authenticationContext.isForceAuthn())
+            {
+                // A remembered device must never bypass an explicit re-authentication demand. Logged
+                // loudly so admins understand why the skip did not happen when they expected it to.
+                log.info("{} Remember-device cookie present for '{}', but the relying party requested ForceAuthn; the second factor is enforced and the remember-device skip is suppressed.",
+                         getLogPrefix(), freshUser);
+            }
+            else
+            {
+                Map<String, String> headers = new LinkedHashMap<>();
+                rememberMeManager.addRecognitionData(headers);
+                PrivacyIDEA client = buildPrivacyIDEA();
+                try
+                {
+                    PIResponse probe = client.rememberDeviceCheck(freshUser, headers);
+                    rememberMeManager.relayResponse(probe);
+                    if (probe != null && probe.value)
+                    {
+                        log.info("{} privacyIDEA recognised the remembered device for '{}' (remembered_device={}). Skipping second factor.",
+                                 getLogPrefix(), freshUser, probe.rememberedDevice);
+                        ActionSupport.buildEvent(profileRequestContext, "rememberedDevice");
+                        return;
+                    }
+                    log.info("{} Remember-device cookie present but not recognised for '{}'; continuing with normal flow.",
+                             getLogPrefix(), freshUser);
+                }
+                finally
+                {
+                    closeQuietly(client);
+                }
+            }
+        }
+
         if (user == null)
         {
             log.info("{} No principal name available. Displaying username-password-form.", getLogPrefix());
@@ -122,6 +238,31 @@ public class InitializePIContext extends AbstractAuthenticationAction
     {
         MultiFactorAuthenticationContext mfaCtx = authenticationContext.getSubcontext(MultiFactorAuthenticationContext.class);
         return mfaCtx != null && !mfaCtx.getActiveResults().isEmpty();
+    }
+
+    /**
+     * @return the username of the first-factor result that authenticated this MFA run (the first active
+     * result carrying a {@link UsernamePrincipal}), or {@code null} if none can be determined. This is the
+     * authoritative identity for the remember-device recognition, as opposed to the possibly-stale
+     * principal from {@link CanonicalUsernameLookupStrategy}.
+     */
+    @Nullable
+    private String freshResultUsername(@Nonnull AuthenticationContext authenticationContext)
+    {
+        MultiFactorAuthenticationContext mfaCtx = authenticationContext.getSubcontext(MultiFactorAuthenticationContext.class);
+        if (mfaCtx == null)
+        {
+            return null;
+        }
+        for (AuthenticationResult result : mfaCtx.getActiveResults().values())
+        {
+            Set<UsernamePrincipal> principals = result.getSubject().getPrincipals(UsernamePrincipal.class);
+            if (!principals.isEmpty())
+            {
+                return principals.iterator().next().getName();
+            }
+        }
+        return null;
     }
 
     @Nullable
@@ -194,6 +335,66 @@ public class InitializePIContext extends AbstractAuthenticationAction
         return null;
     }
 
+    /**
+     * Build a privacyIDEA client for the remember-me recognition probe. Mirrors the builder in
+     * {@link ChallengeResponseAction}; only constructed when a remember-device cookie is actually
+     * present, so it is not created on every request.
+     *
+     * @return a configured privacyIDEA client
+     */
+    @Nonnull
+    private PrivacyIDEA buildPrivacyIDEA()
+    {
+        String userAgent = "privacyIDEA-Shibboleth/" + org.privacyidea.Version.getVersion()
+                + " ShibbolethIdP/" + net.shibboleth.idp.Version.getVersion();
+        return PrivacyIDEA.newBuilder(serverURL, userAgent)
+                          .verifySSL(verifySSL)
+                          .realm(realm)
+                          .serviceAccount(serviceName, servicePass)
+                          .serviceRealm(serviceRealm)
+                          // Short timeout: these probes run before the login form renders, so a slow or
+                          // unreachable server must not stall it for the full default (10s) timeout.
+                          .httpTimeoutMs(PROBE_HTTP_TIMEOUT_MS)
+                          .logger(this)
+                          .build();
+    }
+
+    /**
+     * Close a privacyIDEA client built by {@link #buildPrivacyIDEA()}, swallowing any error. Each client
+     * holds a thread pool and scheduler ({@link PrivacyIDEA} is {@link java.io.Closeable}); the probes
+     * here build one per use, so it must be closed afterwards to avoid leaking executors on the login path.
+     *
+     * @param client the client to close (may be {@code null})
+     */
+    private void closeQuietly(@Nullable PrivacyIDEA client)
+    {
+        if (client == null)
+        {
+            return;
+        }
+        try
+        {
+            client.close();
+        }
+        catch (IOException e)
+        {
+            log.debug("{} Error closing privacyIDEA client: {}", getLogPrefix(), e.getMessage());
+        }
+    }
+
+    // IPILogger implementation (debug-gated, mirrors ChallengeResponseAction)
+    @Override
+    public void log(String message) {if (debug) {log.info("{}", message);}}
+
+    @Override
+    public void error(String message) {if (debug) {log.error("{}", message);}}
+
+    @Override
+    public void log(Throwable throwable) {if (debug) {log.info("{}", getLogPrefix(), throwable);}}
+
+    @Override
+    public void error(Throwable throwable) {if (debug) {log.error("{}", getLogPrefix(), throwable);}}
+
     // Spring bean property setters
     public void setServerURL(@Nonnull String serverURL) {this.serverURL = serverURL;}
 
@@ -232,4 +433,6 @@ public class InitializePIContext extends AbstractAuthenticationAction
     public void setDebug(boolean debug)                                   {this.debug = debug;}
 
     public void setSkipFirstStep(boolean skipFirstStep)                   {this.skipFirstStep = skipFirstStep;}
+
+    public void setRememberMeManager(@Nullable RememberMeManager rememberMeManager) {this.rememberMeManager = rememberMeManager;}
 }
