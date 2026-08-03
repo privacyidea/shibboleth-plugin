@@ -5,7 +5,10 @@ name: CI
 # privacyidea-java-client dependency, so it must be built and installed into the
 # local ~/.m2 first, then the plugin reactor (api/impl/dist) resolves it.
 on:
+  # push only on main (post-merge); PR branches are covered by pull_request, so
+  # feature-branch commits run once, not twice.
   push:
+    branches: [main]
   pull_request:
 
 concurrency:
