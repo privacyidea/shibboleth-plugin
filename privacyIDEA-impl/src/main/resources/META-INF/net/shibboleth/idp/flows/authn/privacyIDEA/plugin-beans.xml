@@ -72,5 +72,6 @@
     <bean id="validateResponseStandalone" scope="prototype" class="org.privacyidea.action.ValidateResponseStandalone"/>
 
     <bean id="alternativeAuthenticationFlows" class="org.privacyidea.action.AlternativeAuthenticationFlows" scope="prototype"
-          p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier"/>
+          p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier"
+          p:privacyIDEA-ref="privacyIDEAClient"/>
 </beans>
