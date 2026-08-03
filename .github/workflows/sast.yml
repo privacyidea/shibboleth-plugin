@@ -1,16 +1,15 @@
 name: SAST
 
-# Extra static analysis beyond CodeQL:
+# Fast static analysis on every push/PR:
 #   - SpotBugs + FindSecBugs : Java security bug patterns (taint/crypto/injection)
-#   - OWASP Dependency-Check : known CVEs in dependencies
 #   - zizmor                 : audits the GitHub Actions workflows themselves
+# OWASP Dependency-Check lives in its own schedule-only workflow (dependency-check.yml)
+# because its full NVD download is far too slow to run per commit.
 # Each uploads SARIF to GitHub code scanning under its own category. Scans are
 # report-only (they do not fail the build); gate via the repo's code-scanning rules.
 on:
   push:
   pull_request:
-  schedule:
-    - cron: '30 5 * * 1'   # weekly, Monday 05:30 UTC (picks up newly-published CVEs)
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -48,49 +47,6 @@ jobs:
         with:
           sarif_file: privacyIDEA-impl/target/spotbugsSarif.json
           category: findsecbugs
-
-  dependency-check:
-    name: OWASP Dependency-Check
-    runs-on: ubuntu-latest
-    # NVD_API_KEY is scoped to the "ci" environment, so this job must opt into it
-    # to see the secret.
-    environment: ci
-    permissions:
-      contents: read
-      security-events: write
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with:
-          submodules: recursive
-          persist-credentials: false
-      - uses: actions/setup-java@d7793b545071e98d581d3bf084a51c3213318a07 # v4
-        with:
-          distribution: temurin
-          java-version: '21'
-          cache: maven
-      # NVD data is large; cache it so runs after the first are fast. A NVD_API_KEY
-      # secret is strongly recommended (without it the NVD feed is heavily rate-limited).
-      - name: Cache NVD database
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
-        with:
-          path: ~/.m2/repository/org/owasp/dependency-check-data
-          key: dependency-check-data-${{ github.run_id }}
-          restore-keys: dependency-check-data-
-      - name: Build java-client submodule (dependency)
-        run: mvn -B -ntp -f java-client/pom.xml install -DskipTests
-      - name: Run OWASP Dependency-Check (report-only)
-        continue-on-error: true
-        run: >
-          mvn -B -ntp org.owasp:dependency-check-maven:aggregate
-          -DfailBuildOnCVSS=11
-          -Dformat=SARIF
-          -DnvdApiKey=${{ secrets.NVD_API_KEY }}
-      - name: Upload SARIF
-        if: always()
-        uses: github/codeql-action/upload-sarif@e60ea984bd3baa95954f2856bcf24f9eaba46637 # v3
-        with:
-          sarif_file: target/dependency-check-report.sarif
-          category: owasp-dependency-check
 
   zizmor:
     name: zizmor (Actions audit)
