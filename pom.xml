@@ -149,26 +149,6 @@
                     </archive>
                 </configuration>
             </plugin>
-            <!-- SpotBugs + FindSecBugs (Java SAST). Deliberately NOT bound to a lifecycle phase, so
-                 normal/dev/release builds never run it. CI invokes it explicitly with
-                 `mvn spotbugs:spotbugs` and uploads the per-module SARIF to GitHub code scanning. -->
-            <plugin>
-                <groupId>com.github.spotbugs</groupId>
-                <artifactId>spotbugs-maven-plugin</artifactId>
-                <version>4.8.6.6</version>
-                <configuration>
-                    <effort>Max</effort>
-                    <threshold>Low</threshold>
-                    <sarifOutput>true</sarifOutput>
-                    <plugins>
-                        <plugin>
-                            <groupId>com.h3xstream.findsecbugs</groupId>
-                            <artifactId>findsecbugs-plugin</artifactId>
-                            <version>1.13.0</version>
-                        </plugin>
-                    </plugins>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
 

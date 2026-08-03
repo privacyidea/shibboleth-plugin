@@ -1,0 +1,46 @@
+name: Actions Audit
+
+# zizmor audits the GitHub Actions workflows themselves (unpinned actions, over-broad
+# permissions, credential persistence, etc.) and uploads SARIF to code scanning.
+# (Java SAST is handled by CodeQL; dependency CVEs by dependency-check.yml.)
+on:
+  # push only on main (post-merge baseline); PRs are covered by pull_request, so
+  # feature-branch commits run once, not twice.
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  zizmor:
+    name: zizmor
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - name: Install zizmor
+        run: pip install zizmor
+      - name: Run zizmor
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: zizmor --format sarif . > zizmor.sarif
+      - name: Upload SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@e60ea984bd3baa95954f2856bcf24f9eaba46637 # v3
+        with:
+          sarif_file: zizmor.sarif
+          category: zizmor
