@@ -113,7 +113,8 @@ public class InitializePIContext extends AbstractAuthenticationAction
         // for the endpoint, or unreachable) is not cached, so it is retried next login. Feature gating
         // fails closed — remember-me stays inactive until the server confirms it. A TRUE answer only means
         // "worth attempting"; the per-user decision is still made at issuance / recognition.
-        if (rememberMeManager != null && rememberMeManager.isConfigured() && !rememberMeManager.isCapabilityResolved())
+        if (rememberMeManager != null && rememberMeManager.isConfigured() && privacyIDEA != null
+                && !rememberMeManager.isCapabilityResolved())
         {
             Map<String, String> capHeaders = new LinkedHashMap<>();
             rememberMeManager.addApiKey(capHeaders);
@@ -157,6 +158,7 @@ public class InitializePIContext extends AbstractAuthenticationAction
         // (new Set-Cookie); a grace-window duplicate answers value=true with no Set-Cookie; a miss may
         // clear the cookie. relayResponse handles all three (store / keep / clear).
         if (rememberMeManager != null && rememberMeManager.isConfigured() && rememberMeManager.isServerCapable()
+                && privacyIDEA != null
                 && user != null
                 && hasFreshAuthenticationResult(authenticationContext)
                 && StringUtil.isNotBlank(rememberMeManager.readCookie()))

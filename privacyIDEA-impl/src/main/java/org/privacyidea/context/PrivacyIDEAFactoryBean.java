@@ -91,15 +91,21 @@ public class PrivacyIDEAFactoryBean implements FactoryBean<PrivacyIDEA>, IPILogg
             }
             catch (Exception e)
             {
-                LOGGER.debug("Error closing the shared privacyIDEA client: {}", e.getMessage());
+                LOGGER.debug("Error closing the shared privacyIDEA client", e);
             }
         }
     }
 
     @Override
-    @Nullable
     public PrivacyIDEA getObject()
     {
+        if (privacyIDEA == null)
+        {
+            // Fail fast: initialize() runs before getObject() (Spring init-method), so a null here means
+            // the client was never built — surface it at context startup instead of injecting null and
+            // NPE-ing at request time.
+            throw new IllegalStateException("privacyIDEA client was not initialized; check the server configuration.");
+        }
         return privacyIDEA;
     }
 
