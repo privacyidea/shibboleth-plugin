@@ -69,6 +69,17 @@ How it works and why it is safe:
 
 Configure it with `privacyidea.api_key`, `privacyidea.remember_me_enabled`, `privacyidea.remember_me_days`, and (optionally) `privacyidea.remember_me_cookie_name` — see the table below.
 
+### Requested authentication context (AuthnContextClassRef):
+By default the privacyIDEA flow advertises no specific SAML `AuthnContextClassRef`. If a service provider sends a `RequestedAuthnContext` — or you need the IdP to assert a particular context class, e.g. the REFEDS MFA profile for eduGAIN / DFN-AAI — declare the values the flow can satisfy via `idp.authn.privacyIDEA.supportedPrincipals` in `privacyidea.properties`:
+
+```
+idp.authn.privacyIDEA.supportedPrincipals = https://refeds.org/profile/mfa,https://refeds.org/profile/sfa
+```
+
+Shibboleth then selects the privacyIDEA flow when an SP requests one of these classes and asserts the matched class back in the response. The value is comma-separated; leave it unset for no specific context class.
+
+The `privacyIDEA2` flow inherits this (and the other flow-descriptor settings — `order`, `lifetime`, `reuseCondition`, …) from the `privacyIDEA` keys by default. To give the second flow a different context class, set its own `idp.authn.privacyIDEA2.supportedPrincipals` in `privacyidea2.properties`; each `idp.authn.privacyIDEA2.*` key falls back to the matching `idp.authn.privacyIDEA.*` value.
+
 ### Configuration Parameters for privacyIDEA Plugin:
 An example of the privacyIDEA plugin configuration can be found in *privacyidea.properties* (`$idp_install_path/conf/authn/privacyidea.properties`).
 The different configuration parameters are explained in the following table:

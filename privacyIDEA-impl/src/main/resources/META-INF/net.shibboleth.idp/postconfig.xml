@@ -27,21 +27,24 @@
         </property>
     </bean>
 
+    <!-- The privacyIDEA2 flow can be tuned independently via idp.authn.privacyIDEA2.* keys; each one
+         falls back to the corresponding idp.authn.privacyIDEA.* value (and then the built-in default),
+         so an install that only sets the privacyIDEA.* keys keeps the previous shared behaviour. -->
     <bean id="authn/privacyIDEA2" parent="shibboleth.AuthenticationFlow"
-          p:order="%{idp.authn.privacyIDEA.order:1000}"
-          p:nonBrowserSupported="%{idp.authn.privacyIDEA.nonBrowserSupported:true}"
-          p:passiveAuthenticationSupported="%{idp.authn.privacyIDEA.passiveAuthenticationSupported:true}"
-          p:forcedAuthenticationSupported="%{idp.authn.privacyIDEA.forcedAuthenticationSupported:true}"
-          p:proxyRestrictionsEnforced="%{idp.authn.privacyIDEA.proxyRestrictionsEnforced:%{idp.authn.enforceProxyRestrictions:true}}"
-          p:proxyScopingEnforced="%{idp.authn.privacyIDEA.proxyScopingEnforced:false}"
-          p:discoveryRequired="%{idp.authn.privacyIDEA.discoveryRequired:false}"
-          p:lifetime="%{idp.authn.privacyIDEA.lifetime:%{idp.authn.defaultLifetime:PT1H}}"
-          p:inactivityTimeout="%{idp.authn.privacyIDEA.inactivityTimeout:%{idp.authn.defaultTimeout:PT30M}}"
-          p:reuseCondition-ref="#{'%{idp.authn.privacyIDEA.reuseCondition:shibboleth.Conditions.TRUE}'.trim()}"
-          p:activationCondition-ref="#{'%{idp.authn.privacyIDEA.activationCondition:shibboleth.Conditions.TRUE}'.trim()}">
+          p:order="%{idp.authn.privacyIDEA2.order:%{idp.authn.privacyIDEA.order:1000}}"
+          p:nonBrowserSupported="%{idp.authn.privacyIDEA2.nonBrowserSupported:%{idp.authn.privacyIDEA.nonBrowserSupported:true}}"
+          p:passiveAuthenticationSupported="%{idp.authn.privacyIDEA2.passiveAuthenticationSupported:%{idp.authn.privacyIDEA.passiveAuthenticationSupported:true}}"
+          p:forcedAuthenticationSupported="%{idp.authn.privacyIDEA2.forcedAuthenticationSupported:%{idp.authn.privacyIDEA.forcedAuthenticationSupported:true}}"
+          p:proxyRestrictionsEnforced="%{idp.authn.privacyIDEA2.proxyRestrictionsEnforced:%{idp.authn.privacyIDEA.proxyRestrictionsEnforced:%{idp.authn.enforceProxyRestrictions:true}}}"
+          p:proxyScopingEnforced="%{idp.authn.privacyIDEA2.proxyScopingEnforced:%{idp.authn.privacyIDEA.proxyScopingEnforced:false}}"
+          p:discoveryRequired="%{idp.authn.privacyIDEA2.discoveryRequired:%{idp.authn.privacyIDEA.discoveryRequired:false}}"
+          p:lifetime="%{idp.authn.privacyIDEA2.lifetime:%{idp.authn.privacyIDEA.lifetime:%{idp.authn.defaultLifetime:PT1H}}}"
+          p:inactivityTimeout="%{idp.authn.privacyIDEA2.inactivityTimeout:%{idp.authn.privacyIDEA.inactivityTimeout:%{idp.authn.defaultTimeout:PT30M}}}"
+          p:reuseCondition-ref="#{'%{idp.authn.privacyIDEA2.reuseCondition:%{idp.authn.privacyIDEA.reuseCondition:shibboleth.Conditions.TRUE}}'.trim()}"
+          p:activationCondition-ref="#{'%{idp.authn.privacyIDEA2.activationCondition:%{idp.authn.privacyIDEA.activationCondition:shibboleth.Conditions.TRUE}}'.trim()}">
         <property name="supportedPrincipalsByString">
             <bean parent="shibboleth.CommaDelimStringArray"
-                  c:_0="#{'%{idp.authn.privacyIDEA.supportedPrincipals:}'.trim()}"/>
+                  c:_0="#{'%{idp.authn.privacyIDEA2.supportedPrincipals:%{idp.authn.privacyIDEA.supportedPrincipals:}}'.trim()}"/>
         </property>
     </bean>
 </beans>
