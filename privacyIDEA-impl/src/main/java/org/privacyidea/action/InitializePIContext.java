@@ -100,12 +100,41 @@ public class InitializePIContext extends AbstractAuthenticationAction implements
         log.info("{} Create PIContext {}", this.getLogPrefix(), piContext);
         authenticationContext.addSubcontext(piContext);
 
-        // Remember-me is only offered when it can actually work: the feature is usable AND there is a
-        // genuine first factor to trust in this MFA run (a preceding sub-flow such as authn/Password
-        // produced a fresh result). When privacyIDEA is the first/only factor (standalone or passkey-only)
-        // there is no such result, so the checkbox is not shown and no cookie is issued — matching the
-        // skip gate below, which likewise requires hasFreshAuthenticationResult().
+        // Resolve the server capability once (cached for the JVM). GET /validate/capabilities is a
+        // client-level discovery hint gated by the X-API-Key: it tells us whether privacyIDEA offers
+        // remember_device to this client at all (version present AND policy configured). We ask lazily on
+        // the first configured login and cache a definitive answer; an inconclusive probe (server too old
+        // for the endpoint, or unreachable) is not cached, so it is retried next login. Feature gating
+        // fails closed — remember-me stays inactive until the server confirms it. A TRUE answer only means
+        // "worth attempting"; the per-user decision is still made at issuance / recognition.
+        if (rememberMeManager != null && rememberMeManager.isConfigured() && !rememberMeManager.isCapabilityResolved())
+        {
+            Map<String, String> capHeaders = new LinkedHashMap<>();
+            rememberMeManager.addApiKey(capHeaders);
+            Boolean capability = buildPrivacyIDEA().getRememberDeviceCapability(capHeaders);
+            rememberMeManager.cacheServerCapability(capability);
+            if (capability == null)
+            {
+                log.warn("{} Could not determine the remember-device capability from privacyIDEA (endpoint unreachable or server too old for /validate/capabilities); remember-me stays inactive this login.", getLogPrefix());
+            }
+            else if (!capability)
+            {
+                log.warn("{} privacyIDEA does not offer remember-device to this API client; remember-me stays inactive. Enable a 'remember_device' policy (scope authentication) for this client on privacyIDEA 3.14+.", getLogPrefix());
+            }
+            else
+            {
+                log.info("{} privacyIDEA advertises the remember-device capability for this client; remember-me is active.", getLogPrefix());
+            }
+        }
+
+        // Remember-me is only offered when it can actually work: the feature is usable, the server
+        // advertises it for this client, AND there is a genuine first factor to trust in this MFA run (a
+        // preceding sub-flow such as authn/Password produced a fresh result). When privacyIDEA is the
+        // first/only factor (standalone or passkey-only) there is no such result, so the checkbox is not
+        // shown and no cookie is issued — matching the skip gate below, which likewise requires
+        // hasFreshAuthenticationResult().
         boolean rememberMeOffered = rememberMeManager != null && rememberMeManager.isConfigured()
+                && rememberMeManager.isServerCapable()
                 && hasFreshAuthenticationResult(authenticationContext);
         PIFormContext piFormContext = new PIFormContext(defaultMessage, otpFieldHint, getOtpLength(),
                                                         pollingInterval, pollInBrowser, pollInBrowserUrl, disablePasskey,
@@ -121,7 +150,8 @@ public class InitializePIContext extends AbstractAuthenticationAction implements
         // in result.value (mirrored in detail.remembered_device). On a hit the server rotates the cookie
         // (new Set-Cookie); a grace-window duplicate answers value=true with no Set-Cookie; a miss may
         // clear the cookie. relayResponse handles all three (store / keep / clear).
-        if (rememberMeManager != null && rememberMeManager.isConfigured() && user != null
+        if (rememberMeManager != null && rememberMeManager.isConfigured() && rememberMeManager.isServerCapable()
+                && user != null
                 && hasFreshAuthenticationResult(authenticationContext)
                 && StringUtil.isNotBlank(rememberMeManager.readCookie()))
         {

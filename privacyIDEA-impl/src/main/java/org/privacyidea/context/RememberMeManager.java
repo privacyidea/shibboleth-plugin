@@ -68,6 +68,23 @@ public class RememberMeManager
     @Nullable
     private CookieManager cookieManager;
 
+    /** How long a definitive {@code /validate/capabilities} answer is trusted before it is re-probed. */
+    private static final long CAPABILITY_TTL_MILLIS = 15 * 60 * 1000L;
+
+    /**
+     * Cached client-level answer to {@code GET /validate/capabilities} ({@code remember_device}). This bean
+     * is a singleton, so the cache lives for the JVM. {@code null} = not yet resolved; a definitive
+     * {@code TRUE}/{@code FALSE} from the server is cached with a {@value #CAPABILITY_TTL_MILLIS}ms TTL (see
+     * {@link #capabilityResolvedAt}), but an inconclusive probe (server unreachable / too old) is
+     * <em>not</em> — so one transient failure cannot disable the feature. The TTL lets a server-side policy
+     * change (e.g. the {@code remember_device} policy being added) be picked up without an IdP restart.
+     */
+    @Nullable
+    private volatile Boolean serverCapable;
+
+    /** {@code System.currentTimeMillis()} when {@link #serverCapable} was last set to a definitive answer. */
+    private volatile long capabilityResolvedAt;
+
     /**
      * Spring init-method (invoked via the bean file's {@code default-init-method}). When the feature is
      * enabled it builds and initializes the backing {@link CookieManager}; when disabled it is a no-op,
@@ -113,6 +130,43 @@ public class RememberMeManager
     public boolean isConfigured()
     {
         return rememberMeEnabled && cookieManager != null && StringUtil.isNotBlank(apiKey);
+    }
+
+    /**
+     * @return whether a definitive server-capability answer is cached <em>and</em> still within its TTL, so
+     * the caller can skip the {@code /validate/capabilities} probe. Returns {@code false} once the cached
+     * answer has aged past {@value #CAPABILITY_TTL_MILLIS}ms, triggering a re-probe that picks up a
+     * server-side policy change without an IdP restart.
+     */
+    public boolean isCapabilityResolved()
+    {
+        return serverCapable != null && (System.currentTimeMillis() - capabilityResolvedAt) < CAPABILITY_TTL_MILLIS;
+    }
+
+    /**
+     * @return whether privacyIDEA has advertised the {@code remember_device} capability for this client.
+     * {@code false} until resolved to a definitive {@code true}, so gating on this fails closed.
+     */
+    public boolean isServerCapable()
+    {
+        return Boolean.TRUE.equals(serverCapable);
+    }
+
+    /**
+     * Cache a {@code /validate/capabilities} result and stamp it for the TTL. Only definitive answers are
+     * stored; a {@code null} (inconclusive probe) is ignored so it is retried on the next login rather than
+     * latching the feature off — and it leaves any prior answer (and its timestamp) untouched, so a stale
+     * value keeps being re-probed until the server responds definitively again.
+     *
+     * @param capability the server's answer, or {@code null} if it could not be determined
+     */
+    public void cacheServerCapability(@Nullable Boolean capability)
+    {
+        if (capability != null)
+        {
+            serverCapable = capability;
+            capabilityResolvedAt = System.currentTimeMillis();
+        }
     }
 
     /**
