@@ -132,6 +132,12 @@
                                         <input id="pidea_remember_me" name="pidea_remember_me" value="1" type="checkbox"#if($piContext.isRememberMe()) checked#end>
                                         <label for="pidea_remember_me">#springMessageText("privacyidea.rememberMe", "Remember this device")</label>
                                     </div>
+                                #elseif ($piFormContext.isRememberMeEnabled() && $piContext.isRememberMe())
+                                    ## The visible checkbox is suppressed in this mode (push / passkey), but the user
+                                    ## already opted in on a previous step. Carry the choice through as a hidden field so
+                                    ## this submit (e.g. the passkey WebAuthn response) still requests the cookie —
+                                    ## otherwise re-reading the absent checkbox would reset remember-me to false.
+                                    <input name="pidea_remember_me" value="1" type="hidden">
                                 #end
 
                                 #if ($piContext.getMode() != "push" && $piContext.getMode() != "passkey" && $passkeyRegistrationEmpty == true)
