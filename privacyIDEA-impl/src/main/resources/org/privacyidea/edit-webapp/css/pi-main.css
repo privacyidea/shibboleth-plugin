@@ -25,7 +25,10 @@ body {
 }
 
 .pi-message {
-    max-width: 700px;
+    display: inline-block;       /* shrink the box to its text... */
+    min-width: 280px;            /* ...but not narrower than the buttons */
+    max-width: 700px;            /* ...and wrap long messages */
+    box-sizing: border-box;
     margin-bottom: 10px;
     padding: 18px 28px;
     background: #fffbe6;
