@@ -46,7 +46,7 @@ jobs:
         run: mvn -B -ntp -DskipTests compile spotbugs:spotbugs
       - name: Upload SARIF
         if: always()
-        uses: github/codeql-action/upload-sarif@e60ea984bd3baa95954f2856bcf24f9eaba46637 # v3
+        uses: github/codeql-action/upload-sarif@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
         with:
           sarif_file: privacyIDEA-impl/target/spotbugsSarif.json
           category: findsecbugs
@@ -73,7 +73,7 @@ jobs:
         run: zizmor --format sarif . > zizmor.sarif
       - name: Upload SARIF
         if: always()
-        uses: github/codeql-action/upload-sarif@e60ea984bd3baa95954f2856bcf24f9eaba46637 # v3
+        uses: github/codeql-action/upload-sarif@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
         with:
           sarif_file: zizmor.sarif
           category: zizmor
