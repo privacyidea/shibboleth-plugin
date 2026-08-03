@@ -17,6 +17,18 @@
     <bean class="net.shibboleth.shared.spring.config.IdentifiableBeanPostProcessor"/>
     <bean class="net.shibboleth.idp.profile.impl.ProfileActionBeanPostProcessor"/>
 
+    <!-- Shared privacyIDEA java-client for the privacyIDEA2 flow: built once per flow context and injected
+         into the actions (issue #83). Its own idp/privacyidea2.* config, since flow 2 may point at a
+         different server. destroy-method (close) shuts its executors down on teardown / redeploy. -->
+    <bean id="privacyIDEAClient" class="org.privacyidea.context.PrivacyIDEAFactoryBean"
+          p:serverURL="%{privacyidea2.server_url:#{'https://localhost'}}"
+          p:verifySSL="%{privacyidea2.verify_ssl:true}"
+          p:realm="%{privacyidea2.realm:#{null}}"
+          p:serviceName="%{privacyidea2.service_name:#{null}}"
+          p:servicePass="%{privacyidea2.service_pass:#{null}}"
+          p:serviceRealm="%{privacyidea2.service_realm:#{null}}"
+          p:debug="%{privacyidea2.debug:false}"/>
+
     <bean id="initPIContext" class="org.privacyidea.action.InitializePIContext" scope="prototype"
           p:serverURL="%{privacyidea2.server_url:#{'https://localhost'}}"
           p:realm="%{privacyidea2.realm:#{null}}"
@@ -37,7 +49,8 @@
           p:pluginVersion="%{privacyidea2.plugin_version:#{null}}"
           p:debug="%{privacyidea2.debug:false}"
           p:skipFirstStep="%{privacyidea2.skip_first_step:true}"
-          p:rememberMeManager-ref="piRememberMe"/>
+          p:rememberMeManager-ref="piRememberMe"
+          p:privacyIDEA-ref="privacyIDEAClient"/>
 
     <!-- Remember-me ("trust this device"): single config + cookie relay shared by both actions.
          The cookie name must match privacyIDEA's pi_remember_device cookie so the Cookie header the
@@ -52,7 +65,8 @@
 
     <bean id="piAuthenticator" class="org.privacyidea.action.PrivacyIDEAAuthenticator" scope="prototype"
           p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier"
-          p:rememberMeManager-ref="piRememberMe"/>
+          p:rememberMeManager-ref="piRememberMe"
+          p:privacyIDEA-ref="privacyIDEAClient"/>
 
     <bean id="validateResponseStandalone" scope="prototype" class="org.privacyidea.action.ValidateResponseStandalone"/>
 
