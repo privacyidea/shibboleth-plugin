@@ -72,6 +72,13 @@ public class RememberMeManager
     private static final long CAPABILITY_TTL_MILLIS = 15 * 60 * 1000L;
 
     /**
+     * How long an <em>inconclusive</em> probe (server unreachable / too old) suppresses re-probing. Short,
+     * so the feature recovers quickly once the server is reachable, but long enough that a down/old server
+     * is not re-probed on every single login (each probe blocks the login form on the HTTP timeout).
+     */
+    private static final long CAPABILITY_UNKNOWN_TTL_MILLIS = 2 * 60 * 1000L;
+
+    /**
      * Cached client-level answer to {@code GET /validate/capabilities} ({@code remember_device}). This bean
      * is a singleton, so the cache lives for the JVM. {@code null} = not yet resolved; a definitive
      * {@code TRUE}/{@code FALSE} from the server is cached with a {@value #CAPABILITY_TTL_MILLIS}ms TTL (see
@@ -84,6 +91,9 @@ public class RememberMeManager
 
     /** {@code System.currentTimeMillis()} when {@link #serverCapable} was last set to a definitive answer. */
     private volatile long capabilityResolvedAt;
+
+    /** {@code System.currentTimeMillis()} of the most recent capability probe, whatever its outcome. */
+    private volatile long capabilityProbedAt;
 
     /**
      * Spring init-method (invoked via the bean file's {@code default-init-method}). When the feature is
@@ -140,7 +150,14 @@ public class RememberMeManager
      */
     public boolean isCapabilityResolved()
     {
-        return serverCapable != null && (System.currentTimeMillis() - capabilityResolvedAt) < CAPABILITY_TTL_MILLIS;
+        long now = System.currentTimeMillis();
+        if (serverCapable != null && (now - capabilityResolvedAt) < CAPABILITY_TTL_MILLIS)
+        {
+            return true;
+        }
+        // An inconclusive probe is remembered only briefly (fails closed via isServerCapable()), so a
+        // down/old server is retried soon but does not block every login on the probe's HTTP timeout.
+        return capabilityProbedAt > 0 && (now - capabilityProbedAt) < CAPABILITY_UNKNOWN_TTL_MILLIS;
     }
 
     /**
@@ -162,10 +179,12 @@ public class RememberMeManager
      */
     public void cacheServerCapability(@Nullable Boolean capability)
     {
+        long now = System.currentTimeMillis();
+        capabilityProbedAt = now;
         if (capability != null)
         {
             serverCapable = capability;
-            capabilityResolvedAt = System.currentTimeMillis();
+            capabilityResolvedAt = now;
         }
     }
 

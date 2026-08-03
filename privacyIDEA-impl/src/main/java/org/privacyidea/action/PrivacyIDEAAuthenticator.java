@@ -100,23 +100,31 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                         // credential. If this login already established an identity in a prior step (e.g.
                         // username+password, then "Sign in with Passkey" as the second factor), the passkey
                         // MUST resolve to that same user — otherwise the two factors would authenticate
-                        // different people and the MFA binding would be meaningless (or bypassable). privacyIDEA
-                        // returns a plain username (no realm), and the backing AD is case-insensitive, so we
-                        // compare case-insensitively. Only when no identity was established yet (true
-                        // usernameless / standalone passkey) do we adopt the passkey's username.
+                        // different people and the MFA binding would be meaningless (or bypassable).
                         String established = piContext.getUsername();
-                        if (StringUtil.isNotBlank(established) && StringUtil.isNotBlank(piResponse.username)
-                                && !established.equalsIgnoreCase(piResponse.username))
+                        if (StringUtil.isNotBlank(established))
                         {
-                            LOGGER.error("{} Passkey resolved to '{}' but the login was started as '{}'. Rejecting.",
-                                         this.getLogPrefix(), piResponse.username, established);
-                            piContext.setFormErrorMessage("Passkey does not match the signed-in user.");
-                            piContext.setMode("otp");
-                            ActionSupport.buildEvent(profileRequestContext, "reload");
-                            return;
+                            // privacyIDEA returns a bare username; the established (IdP canonical) principal
+                            // may be realm/scope-qualified (e.g. user@realm, or a Windows-style domain
+                            // prefix), so compare on the local part, case-insensitively (AD is
+                            // case-insensitive).
+                            if (StringUtil.isNotBlank(piResponse.username)
+                                    && !localPart(established).equalsIgnoreCase(piResponse.username))
+                            {
+                                LOGGER.error("{} Passkey resolved to '{}' but the login was started as '{}'. Rejecting.",
+                                             this.getLogPrefix(), piResponse.username, established);
+                                piContext.setFormErrorMessage("Passkey does not match the signed-in user.");
+                                piContext.setMode("otp");
+                                ActionSupport.buildEvent(profileRequestContext, "reload");
+                                return;
+                            }
+                            // Match: keep the established canonical principal. Do NOT overwrite it with the
+                            // bare passkey username, which could break downstream c14n / attribute resolution.
                         }
-                        if (StringUtil.isNotBlank(piResponse.username))
+                        else if (StringUtil.isNotBlank(piResponse.username))
                         {
+                            // No prior identity (true usernameless / standalone passkey): adopt what the
+                            // passkey resolved to.
                             piContext.setUsername(piResponse.username);
                         }
                         finalizeAuthentication(profileRequestContext, piContext);
@@ -350,6 +358,31 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             LOGGER.error("{} privacyIDEA response was null. Please check the config and try again.", this.getLogPrefix());
             ActionSupport.buildEvent(profileRequestContext, "reload");
         }
+    }
+
+    /**
+     * Reduce a username to its bare local part for comparison: strip a Windows-style domain prefix
+     * (everything up to and including a backslash) and an {@code @realm} suffix. Used to compare an IdP
+     * canonical principal (which may be realm/scope-qualified) against the bare username privacyIDEA
+     * returns for a passkey.
+     *
+     * @param username the username to normalize (must not be null)
+     * @return the local part
+     */
+    private static String localPart(@Nonnull String username)
+    {
+        String result = username;
+        int backslash = result.indexOf('\\');
+        if (backslash >= 0)
+        {
+            result = result.substring(backslash + 1);
+        }
+        int at = result.indexOf('@');
+        if (at >= 0)
+        {
+            result = result.substring(0, at);
+        }
+        return result;
     }
 
     /**

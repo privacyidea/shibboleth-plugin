@@ -16,8 +16,10 @@
 package org.privacyidea.action;
 
 import net.shibboleth.idp.authn.AbstractAuthenticationAction;
+import net.shibboleth.idp.authn.AuthenticationResult;
 import net.shibboleth.idp.authn.context.AuthenticationContext;
 import net.shibboleth.idp.authn.context.MultiFactorAuthenticationContext;
+import net.shibboleth.idp.authn.principal.UsernamePrincipal;
 import net.shibboleth.idp.session.context.navigate.CanonicalUsernameLookupStrategy;
 import org.jetbrains.annotations.NotNull;
 import org.opensaml.profile.action.ActionSupport;
@@ -40,11 +42,16 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 public class InitializePIContext extends AbstractAuthenticationAction implements IPILogger
 {
     private static final Logger log = LoggerFactory.getLogger(InitializePIContext.class);
+
+    /** Timeout for the remember-me capability / recognition probes, which run before the form renders. */
+    private static final int PROBE_HTTP_TIMEOUT_MS = 5000;
+
     @Nonnull
     private final Function<ProfileRequestContext, String> usernameLookupStrategy;
     private String serverURL;
@@ -164,26 +171,44 @@ public class InitializePIContext extends AbstractAuthenticationAction implements
                 && hasFreshAuthenticationResult(authenticationContext)
                 && StringUtil.isNotBlank(rememberMeManager.readCookie()))
         {
-            Map<String, String> headers = new LinkedHashMap<>();
-            rememberMeManager.addRecognitionData(headers);
-            PrivacyIDEA client = buildPrivacyIDEA();
-            try
+            // Bind recognition to the identity the first factor actually authenticated in this run, not the
+            // (possibly stale) CanonicalUsernameLookupStrategy principal — otherwise the cookie could be
+            // validated against, and the second factor skipped for, a different user than was authenticated.
+            String freshUser = freshResultUsername(authenticationContext);
+            if (StringUtil.isBlank(freshUser))
             {
-                PIResponse probe = client.rememberDeviceCheck(user.getUsername(), headers);
-                rememberMeManager.relayResponse(probe);
-                if (probe != null && probe.value)
-                {
-                    log.info("{} privacyIDEA recognised the remembered device for '{}' (remembered_device={}). Skipping second factor.",
-                             getLogPrefix(), user.getUsername(), probe.rememberedDevice);
-                    ActionSupport.buildEvent(profileRequestContext, "rememberedDevice");
-                    return;
-                }
-                log.info("{} Remember-device cookie present but not recognised for '{}'; continuing with normal flow.",
-                         getLogPrefix(), user.getUsername());
+                log.info("{} Remember-device: could not determine the first-factor principal; not skipping the second factor.", getLogPrefix());
             }
-            finally
+            else if (authenticationContext.isForceAuthn())
             {
-                closeQuietly(client);
+                // A remembered device must never bypass an explicit re-authentication demand. Logged
+                // loudly so admins understand why the skip did not happen when they expected it to.
+                log.info("{} Remember-device cookie present for '{}', but the relying party requested ForceAuthn; the second factor is enforced and the remember-device skip is suppressed.",
+                         getLogPrefix(), freshUser);
+            }
+            else
+            {
+                Map<String, String> headers = new LinkedHashMap<>();
+                rememberMeManager.addRecognitionData(headers);
+                PrivacyIDEA client = buildPrivacyIDEA();
+                try
+                {
+                    PIResponse probe = client.rememberDeviceCheck(freshUser, headers);
+                    rememberMeManager.relayResponse(probe);
+                    if (probe != null && probe.value)
+                    {
+                        log.info("{} privacyIDEA recognised the remembered device for '{}' (remembered_device={}). Skipping second factor.",
+                                 getLogPrefix(), freshUser, probe.rememberedDevice);
+                        ActionSupport.buildEvent(profileRequestContext, "rememberedDevice");
+                        return;
+                    }
+                    log.info("{} Remember-device cookie present but not recognised for '{}'; continuing with normal flow.",
+                             getLogPrefix(), freshUser);
+                }
+                finally
+                {
+                    closeQuietly(client);
+                }
             }
         }
 
@@ -213,6 +238,31 @@ public class InitializePIContext extends AbstractAuthenticationAction implements
     {
         MultiFactorAuthenticationContext mfaCtx = authenticationContext.getSubcontext(MultiFactorAuthenticationContext.class);
         return mfaCtx != null && !mfaCtx.getActiveResults().isEmpty();
+    }
+
+    /**
+     * @return the username of the first-factor result that authenticated this MFA run (the first active
+     * result carrying a {@link UsernamePrincipal}), or {@code null} if none can be determined. This is the
+     * authoritative identity for the remember-device recognition, as opposed to the possibly-stale
+     * principal from {@link CanonicalUsernameLookupStrategy}.
+     */
+    @Nullable
+    private String freshResultUsername(@Nonnull AuthenticationContext authenticationContext)
+    {
+        MultiFactorAuthenticationContext mfaCtx = authenticationContext.getSubcontext(MultiFactorAuthenticationContext.class);
+        if (mfaCtx == null)
+        {
+            return null;
+        }
+        for (AuthenticationResult result : mfaCtx.getActiveResults().values())
+        {
+            Set<UsernamePrincipal> principals = result.getSubject().getPrincipals(UsernamePrincipal.class);
+            if (!principals.isEmpty())
+            {
+                return principals.iterator().next().getName();
+            }
+        }
+        return null;
     }
 
     @Nullable
@@ -302,6 +352,9 @@ public class InitializePIContext extends AbstractAuthenticationAction implements
                           .realm(realm)
                           .serviceAccount(serviceName, servicePass)
                           .serviceRealm(serviceRealm)
+                          // Short timeout: these probes run before the login form renders, so a slow or
+                          // unreachable server must not stall it for the full default (10s) timeout.
+                          .httpTimeoutMs(PROBE_HTTP_TIMEOUT_MS)
                           .logger(this)
                           .build();
     }
