@@ -125,8 +125,9 @@
                                 ## REMEMBER THIS DEVICE — placed between the OTP field and Submit so the user decides
                                 ## before submitting. isRememberMeEnabled() is already gated on a fresh first-factor
                                 ## result, so it is false when privacyIDEA is the first/only factor (standalone or
-                                ## passkey-only) — no separate standalone check needed here.
-                                #if ($piFormContext.isRememberMeEnabled())
+                                ## passkey-only). Also gate on the same mode condition as the OTP field / Submit
+                                ## button above, so the checkbox is not left orphaned in push / passkey mode.
+                                #if ($piFormContext.isRememberMeEnabled() && $piContext.getMode() != "push" && $piContext.getMode() != "passkey" && $passkeyRegistrationEmpty == true)
                                     <div id="rememberMe">
                                         <input id="pidea_remember_me" name="pidea_remember_me" value="1" type="checkbox"#if($piContext.isRememberMe()) checked#end>
                                         <label for="pidea_remember_me">#springMessageText("privacyidea.rememberMe", "Remember this device")</label>

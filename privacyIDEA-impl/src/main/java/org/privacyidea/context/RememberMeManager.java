@@ -246,7 +246,7 @@ public class RememberMeManager
             String afterName = header.substring(prefix.length());
             int semicolon = afterName.indexOf(';');
             String value = (semicolon >= 0 ? afterName.substring(0, semicolon) : afterName).trim();
-            boolean cleared = value.isEmpty() || header.toLowerCase().contains("max-age=0");
+            boolean cleared = value.isEmpty() || hasNonPositiveMaxAge(header);
             if (cleared)
             {
                 clearCookie();
@@ -262,6 +262,35 @@ public class RememberMeManager
             }
             return;
         }
+    }
+
+    /**
+     * @return whether the {@code Set-Cookie} header carries a {@code Max-Age} attribute whose value is
+     * {@code <= 0} (the hallmark of a delete). Parses the attribute token rather than a substring match,
+     * so a valid {@code Max-Age} that merely starts with a zero digit (e.g. {@code Max-Age=03600}) is not
+     * mistaken for a clear.
+     *
+     * @param header the raw {@code Set-Cookie} header value
+     */
+    private static boolean hasNonPositiveMaxAge(@Nonnull String header)
+    {
+        for (String attribute : header.split(";"))
+        {
+            String token = attribute.trim();
+            if (token.regionMatches(true, 0, "Max-Age=", 0, "Max-Age=".length()))
+            {
+                String maxAge = token.substring("Max-Age=".length()).trim();
+                try
+                {
+                    return Integer.parseInt(maxAge) <= 0;
+                }
+                catch (NumberFormatException e)
+                {
+                    return false;
+                }
+            }
+        }
+        return false;
     }
 
     /**

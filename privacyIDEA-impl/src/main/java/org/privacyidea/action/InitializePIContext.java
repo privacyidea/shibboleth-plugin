@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -111,19 +112,27 @@ public class InitializePIContext extends AbstractAuthenticationAction implements
         {
             Map<String, String> capHeaders = new LinkedHashMap<>();
             rememberMeManager.addApiKey(capHeaders);
-            Boolean capability = buildPrivacyIDEA().getRememberDeviceCapability(capHeaders);
-            rememberMeManager.cacheServerCapability(capability);
-            if (capability == null)
+            PrivacyIDEA client = buildPrivacyIDEA();
+            try
             {
-                log.warn("{} Could not determine the remember-device capability from privacyIDEA (endpoint unreachable or server too old for /validate/capabilities); remember-me stays inactive this login.", getLogPrefix());
+                Boolean capability = client.getRememberDeviceCapability(capHeaders);
+                rememberMeManager.cacheServerCapability(capability);
+                if (capability == null)
+                {
+                    log.warn("{} Could not determine the remember-device capability from privacyIDEA (endpoint unreachable or server too old for /validate/capabilities); remember-me stays inactive this login.", getLogPrefix());
+                }
+                else if (!capability)
+                {
+                    log.warn("{} privacyIDEA does not offer remember-device to this API client; remember-me stays inactive. Enable a 'remember_device' policy (scope authentication) for this client on privacyIDEA 3.14+.", getLogPrefix());
+                }
+                else
+                {
+                    log.info("{} privacyIDEA advertises the remember-device capability for this client; remember-me is active.", getLogPrefix());
+                }
             }
-            else if (!capability)
+            finally
             {
-                log.warn("{} privacyIDEA does not offer remember-device to this API client; remember-me stays inactive. Enable a 'remember_device' policy (scope authentication) for this client on privacyIDEA 3.14+.", getLogPrefix());
-            }
-            else
-            {
-                log.info("{} privacyIDEA advertises the remember-device capability for this client; remember-me is active.", getLogPrefix());
+                closeQuietly(client);
             }
         }
 
@@ -157,17 +166,25 @@ public class InitializePIContext extends AbstractAuthenticationAction implements
         {
             Map<String, String> headers = new LinkedHashMap<>();
             rememberMeManager.addRecognitionData(headers);
-            PIResponse probe = buildPrivacyIDEA().rememberDeviceCheck(user.getUsername(), headers);
-            rememberMeManager.relayResponse(probe);
-            if (probe != null && probe.value)
+            PrivacyIDEA client = buildPrivacyIDEA();
+            try
             {
-                log.info("{} privacyIDEA recognised the remembered device for '{}' (remembered_device={}). Skipping second factor.",
-                         getLogPrefix(), user.getUsername(), probe.rememberedDevice);
-                ActionSupport.buildEvent(profileRequestContext, "rememberedDevice");
-                return;
+                PIResponse probe = client.rememberDeviceCheck(user.getUsername(), headers);
+                rememberMeManager.relayResponse(probe);
+                if (probe != null && probe.value)
+                {
+                    log.info("{} privacyIDEA recognised the remembered device for '{}' (remembered_device={}). Skipping second factor.",
+                             getLogPrefix(), user.getUsername(), probe.rememberedDevice);
+                    ActionSupport.buildEvent(profileRequestContext, "rememberedDevice");
+                    return;
+                }
+                log.info("{} Remember-device cookie present but not recognised for '{}'; continuing with normal flow.",
+                         getLogPrefix(), user.getUsername());
             }
-            log.info("{} Remember-device cookie present but not recognised for '{}'; continuing with normal flow.",
-                     getLogPrefix(), user.getUsername());
+            finally
+            {
+                closeQuietly(client);
+            }
         }
 
         if (user == null)
@@ -287,6 +304,29 @@ public class InitializePIContext extends AbstractAuthenticationAction implements
                           .serviceRealm(serviceRealm)
                           .logger(this)
                           .build();
+    }
+
+    /**
+     * Close a privacyIDEA client built by {@link #buildPrivacyIDEA()}, swallowing any error. Each client
+     * holds a thread pool and scheduler ({@link PrivacyIDEA} is {@link java.io.Closeable}); the probes
+     * here build one per use, so it must be closed afterwards to avoid leaking executors on the login path.
+     *
+     * @param client the client to close (may be {@code null})
+     */
+    private void closeQuietly(@Nullable PrivacyIDEA client)
+    {
+        if (client == null)
+        {
+            return;
+        }
+        try
+        {
+            client.close();
+        }
+        catch (IOException e)
+        {
+            log.debug("{} Error closing privacyIDEA client: {}", getLogPrefix(), e.getMessage());
+        }
     }
 
     // IPILogger implementation (debug-gated, mirrors ChallengeResponseAction)

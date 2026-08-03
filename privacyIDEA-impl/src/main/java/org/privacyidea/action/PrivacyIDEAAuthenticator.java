@@ -90,6 +90,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                 piResponse = privacyIDEA.validateCheckPasskey(passkeyTransactionID,
                                                               piContext.getPasskeySignResponse(),
                                                               piContext.getOrigin(),
+                                                              rememberParams,
                                                               headers);
                 if (piResponse != null)
                 {
