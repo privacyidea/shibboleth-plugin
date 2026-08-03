@@ -171,6 +171,18 @@
                                 <input id="cancelEnrollment" name="cancelEnrollment" value="0" type="hidden">
                             </div>
 
+                            ## ACTIVE PASSKEY LOGIN (ceremony in progress / retry after a cancelled PIN) ##
+                            ## This is the method currently being used, so it is shown above the alternatives,
+                            ## not inside "Other Login Options".
+                            #if ($piContext.getPasskeyChallenge() && $piContext.getPasskeyChallenge() != "")
+                                <div class="form-element-wrapper" id="passkeyActive">
+                                    <script>passkeyAuthentication()</script>
+                                    <input class="form-element-button" id="passkeyButton" type="button" name="passkeyButton"
+                                           onclick="passkeyAuthentication()" value="#springMessageText("privacyidea.passkeyLogin", "Passkey Login")">
+                                    <br>
+                                </div>
+                            #end
+
                             ## OTHER LOGIN OPTIONS ##
                             <div class="form-element-wrapper" id="otherLoginOptions">
                                 <h3 id="otherLoginOptionsHeader">#springMessageText("privacyidea.otherLoginOptions", "Other Login Options")</h3>
@@ -194,16 +206,11 @@
                                 <br>
                             </div>
 
-                            ## PASSKEY ##
+                            ## PASSKEY (offered as an alternative login option) ##
                             <div class="form-element-wrapper" id="passkey">
-                                ## PASSKEY AUTHENTICATION ##
-                                #if ($piContext.getPasskeyChallenge() && $piContext.getPasskeyChallenge() != "")
-                                    <script>passkeyAuthentication()</script>
-                                    <input class="form-element-button" id="passkeyButton" type="button" name="passkeyButton"
-                                           onclick="passkeyAuthentication()" value="#springMessageText("privacyidea.passkeyLogin", "Passkey Login")">
-                                    <br>
-                                #elseif ($passkeyRegistrationEmpty == true && !$piFormContext.isEnrollViaMultichallenge() && $piFormContext.isDisablePasskey() != true)
-                                    ## PASSKEY INIT ##
+                                ## PASSKEY INIT — only when no passkey ceremony is already in progress
+                                ## (the active/retry case is rendered above the alternatives).
+                                #if ($passkeyRegistrationEmpty == true && !$piFormContext.isEnrollViaMultichallenge() && $piFormContext.isDisablePasskey() != true && !($piContext.getPasskeyChallenge() && $piContext.getPasskeyChallenge() != ""))
                                     <button class="form-element-button" id="initPasskeyLogin" type="submit"
                                             onclick="document.getElementById('passkeyLoginRequested').value = '1'"
                                             name="_eventId_proceed">#springMessageText("privacyidea.passkeyButton", "Sign in with Passkey")</button>
