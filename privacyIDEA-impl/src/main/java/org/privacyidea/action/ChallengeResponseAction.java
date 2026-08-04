@@ -16,14 +16,12 @@
 package org.privacyidea.action;
 
 import jakarta.servlet.http.HttpServletRequest;
-import net.shibboleth.idp.Version;
 import net.shibboleth.idp.authn.context.AuthenticationContext;
 import net.shibboleth.idp.profile.AbstractProfileAction;
 import org.opensaml.messaging.context.navigate.ChildContextLookup;
 import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.context.ProfileRequestContext;
 import org.privacyidea.Challenge;
-import org.privacyidea.IPILogger;
 import org.privacyidea.PIResponse;
 import org.privacyidea.PrivacyIDEA;
 import org.privacyidea.context.PIContext;
@@ -44,7 +42,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class ChallengeResponseAction extends AbstractProfileAction implements IPILogger
+public class ChallengeResponseAction extends AbstractProfileAction
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(ChallengeResponseAction.class);
     private PIServerConfigContext piServerConfigContext;
@@ -106,18 +104,9 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
 
                         if (privacyIDEA == null)
                         {
-                            String shibbVersion = Version.getVersion();
-                            String pluginVersion = org.privacyidea.Version.getVersion();
-                            String userAgent = "privacyIDEA-Shibboleth/" + pluginVersion + " ShibbolethIdP/" + shibbVersion;
-
-                            privacyIDEA = PrivacyIDEA.newBuilder(piServerConfigContext.getConfigParams().getServerURL(), userAgent)
-                                                     .verifySSL(piServerConfigContext.getConfigParams().getVerifySSL())
-                                                     .realm(piServerConfigContext.getConfigParams().getRealm())
-                                                     .serviceAccount(piServerConfigContext.getConfigParams().getServiceName(),
-                                                                     piServerConfigContext.getConfigParams().getServicePass())
-                                                     .serviceRealm(piServerConfigContext.getConfigParams().getServiceRealm())
-                                                     .logger(this)
-                                                     .build();
+                            LOGGER.error("{} Shared privacyIDEA client is not available.", this.getLogPrefix());
+                            ActionSupport.buildEvent(profileRequestContext, "InvalidProfileContext");
+                            return false;
                         }
                         return true;
                     }
@@ -308,43 +297,9 @@ public class ChallengeResponseAction extends AbstractProfileAction implements IP
         return params;
     }
 
-    // Logger implementation
-    @Override
-    public void log(String message)
-    {
-        if (debug)
-        {
-            LOGGER.info("{}", message);
-        }
-    }
-
-    @Override
-    public void error(String message)
-    {
-        if (debug)
-        {
-            LOGGER.error("{}", message);
-        }
-    }
-
-    @Override
-    public void log(Throwable throwable)
-    {
-        if (debug)
-        {
-            LOGGER.info("{}", this.getLogPrefix(), throwable);
-        }
-    }
-
-    @Override
-    public void error(Throwable throwable)
-    {
-        if (debug)
-        {
-            LOGGER.error("{}", this.getLogPrefix(), throwable);
-        }
-    }
-
-    // Spring bean property setter for the remember-me feature
+    // Spring bean property setters
     public void setRememberMeManager(@Nullable RememberMeManager rememberMeManager) {this.rememberMeManager = rememberMeManager;}
+
+    /** Inject the shared privacyIDEA client (singleton bean, built once per flow context). */
+    public void setPrivacyIDEA(PrivacyIDEA privacyIDEA) {this.privacyIDEA = privacyIDEA;}
 }

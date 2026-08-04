@@ -17,6 +17,19 @@
     <bean class="net.shibboleth.shared.spring.config.IdentifiableBeanPostProcessor"/>
     <bean class="net.shibboleth.idp.profile.impl.ProfileActionBeanPostProcessor"/>
 
+    <!-- Shared privacyIDEA java-client: built once per flow context and injected into the actions
+         (issue #83), instead of rebuilding it per request. destroy-method (close) shuts its executors
+         down on context teardown / redeploy. -->
+    <bean id="privacyIDEAClient" class="org.privacyidea.context.PrivacyIDEAFactoryBean"
+          p:serverURL="%{privacyidea.server_url:#{'https://localhost'}}"
+          p:verifySSL="%{privacyidea.verify_ssl:true}"
+          p:realm="%{privacyidea.realm:#{null}}"
+          p:serviceName="%{privacyidea.service_name:#{null}}"
+          p:servicePass="%{privacyidea.service_pass:#{null}}"
+          p:serviceRealm="%{privacyidea.service_realm:#{null}}"
+          p:httpTimeoutMs="%{privacyidea.http_timeout_ms:#{null}}"
+          p:debug="%{privacyidea.debug:false}"/>
+
     <bean id="initPIContext" class="org.privacyidea.action.InitializePIContext" scope="prototype"
           p:serverURL="%{privacyidea.server_url:#{'https://localhost'}}"
           p:realm="%{privacyidea.realm:#{null}}"
@@ -37,7 +50,8 @@
           p:pluginVersion="%{privacyidea.plugin_version:#{null}}"
           p:debug="%{privacyidea.debug:false}"
           p:skipFirstStep="%{privacyidea.skip_first_step:true}"
-          p:rememberMeManager-ref="piRememberMe"/>
+          p:rememberMeManager-ref="piRememberMe"
+          p:privacyIDEA-ref="privacyIDEAClient"/>
 
     <!-- Remember-me ("trust this device"): single config + cookie relay shared by both actions.
          The cookie name must match privacyIDEA's pi_remember_device cookie so the Cookie header the
@@ -46,16 +60,16 @@
           p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier"
           p:httpServletResponseSupplier-ref="shibboleth.HttpServletResponseSupplier"
           p:apiKey="%{privacyidea.api_key:#{null}}"
-          p:rememberMeEnabled="%{privacyidea.remember_me_enabled:false}"
-          p:rememberMeDays="%{privacyidea.remember_me_days:30}"
-          p:rememberMeCookieName="%{privacyidea.remember_me_cookie_name:#{'pi_remember_device'}}"/>
+          p:rememberMeEnabled="%{privacyidea.remember_me_enabled:false}"/>
 
     <bean id="piAuthenticator" class="org.privacyidea.action.PrivacyIDEAAuthenticator" scope="prototype"
           p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier"
-          p:rememberMeManager-ref="piRememberMe"/>
+          p:rememberMeManager-ref="piRememberMe"
+          p:privacyIDEA-ref="privacyIDEAClient"/>
 
     <bean id="validateResponseStandalone" scope="prototype" class="org.privacyidea.action.ValidateResponseStandalone"/>
 
     <bean id="alternativeAuthenticationFlows" class="org.privacyidea.action.AlternativeAuthenticationFlows" scope="prototype"
-          p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier"/>
+          p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier"
+          p:privacyIDEA-ref="privacyIDEAClient"/>
 </beans>

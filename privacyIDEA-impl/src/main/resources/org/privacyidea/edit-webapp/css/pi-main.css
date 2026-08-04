@@ -25,7 +25,10 @@ body {
 }
 
 .pi-message {
-    max-width: 700px;
+    display: inline-block;       /* shrink the box to its text... */
+    min-width: 280px;            /* ...but not narrower than the buttons */
+    max-width: 700px;            /* ...and wrap long messages */
+    box-sizing: border-box;
     margin-bottom: 10px;
     padding: 18px 28px;
     background: #fffbe6;
@@ -34,6 +37,19 @@ body {
     color: #664d03;
     font-size: 1.1em;
     box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+
+/* Default styling for form error messages (wrong OTP, passkey rejected/mismatch, ...).
+   A sensible red default so an error reads as one out of the box; deployers can override. */
+.pi-error {
+    max-width: 700px;
+    margin-bottom: 10px;
+    padding: 14px 20px;
+    background: #fff1f0;
+    border: 1px solid #ffa39e;
+    border-radius: 8px;
+    color: #a8071a;
+    font-weight: 600;
 }
 
 .pi-tokenImage {
@@ -90,8 +106,8 @@ body {
     border-color: #622c2c;
     color: #fff;
     border-radius: 5px;
-    padding: 10px 0;
-    width: 180px;
+    padding: 12px 0;
+    width: 280px;
     margin-top: 10px;
     font-weight: 500;
     transition: background 0.2s;
