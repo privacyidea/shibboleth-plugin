@@ -52,8 +52,8 @@ public class RememberMeManager
     private static final String HEADER_COOKIE = "Cookie";
     /** privacyIDEA's fixed remember-device cookie name (matches its Set-Cookie and the Cookie we send up). */
     private static final String COOKIE_NAME = "pi_remember_device";
-    /** Max-age used when privacyIDEA's Set-Cookie carries no Max-Age: a session cookie (browser default). */
-    private static final int SESSION_COOKIE = -1;
+    /** Fallback cookie max-age (seconds) used only when privacyIDEA's Set-Cookie carries no Max-Age: 7 days. */
+    private static final int DEFAULT_MAX_AGE_SECONDS = 7 * 24 * 60 * 60;
 
     private boolean rememberMeEnabled = false;
     @Nullable
@@ -265,7 +265,8 @@ public class RememberMeManager
             Integer maxAge = parseMaxAge(header);
             // A blank value or Max-Age<=0 is privacyIDEA clearing the cookie (expiry / theft-triggered
             // series deletion). Otherwise store the rotated value with privacyIDEA's own Max-Age, so the
-            // browser cookie expires exactly per the server-side policy (no local day setting).
+            // browser cookie expires exactly per the server-side policy; if the server sends no Max-Age,
+            // fall back to DEFAULT_MAX_AGE_SECONDS so the cookie is still persistent.
             boolean cleared = value.isEmpty() || (maxAge != null && maxAge <= 0);
             if (cleared)
             {
@@ -274,7 +275,7 @@ public class RememberMeManager
             }
             else
             {
-                cookieManager.addCookie(COOKIE_NAME, value, maxAge != null ? maxAge : SESSION_COOKIE);
+                cookieManager.addCookie(COOKIE_NAME, value, maxAge != null ? maxAge : DEFAULT_MAX_AGE_SECONDS);
                 int colon = value.lastIndexOf(':');
                 String counter = colon >= 0 ? value.substring(colon + 1) : "?";
                 LOGGER.info("Remember-device: stored {} cookie (counter {}).",
