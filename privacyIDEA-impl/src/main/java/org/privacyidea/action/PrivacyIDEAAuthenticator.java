@@ -75,6 +75,18 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         {
             rememberMeManager.addApiKey(headers);
         }
+
+        // tokenSelection: the user clicked "Use" on a specific token row — trigger that token, then
+        // re-render into the resulting challenge (push poll / WebAuthn / passkey). Only the Use button
+        // sets these, and they reset to empty on every re-render, so this fires once per selection.
+        String selectedType = request.getParameter("selectedType");
+        String selectedSerial = request.getParameter("selectedSerial");
+        if (StringUtil.isNotBlank(selectedType) && StringUtil.isNotBlank(selectedSerial))
+        {
+            triggerSelectedToken(profileRequestContext, piContext, selectedType, selectedSerial, headers);
+            return;
+        }
+
         PIResponse piResponse = null;
 
         // Passkey: Sets the username collected from the privacyIDEA server and ends the authentication on success.
@@ -358,6 +370,58 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             LOGGER.error("{} privacyIDEA response was null. Please check the config and try again.", this.getLogPrefix());
             ActionSupport.buildEvent(profileRequestContext, "reload");
         }
+    }
+
+    /**
+     * Trigger the token the user picked in the tokenSelection list, then reload into its challenge:
+     * a passkey uses {@code /validate/initialize} (usernameless challenge, like "Sign in with Passkey");
+     * push / WebAuthn (and any other challenge token) use {@code /validate/triggerchallenge} scoped to the
+     * serial. {@link #extractChallengeData}/{@link #extractMessage} set the mode, transaction id and
+     * challenge data so the re-rendered form drives the right ceremony (push poll / WebAuthn / passkey).
+     *
+     * @param profileRequestContext the current profile request context
+     * @param piContext             the current privacyIDEA context
+     * @param type                  the selected token's type
+     * @param serial                the selected token's serial
+     * @param headers               headers to forward to privacyIDEA
+     */
+    private void triggerSelectedToken(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext,
+                                      @Nonnull String type, @Nonnull String serial, @Nonnull Map<String, String> headers)
+    {
+        if ("passkey".equalsIgnoreCase(type))
+        {
+            PIResponse response = privacyIDEA.validateInitialize("passkey");
+            if (response != null && StringUtil.isNotBlank(response.passkeyChallenge))
+            {
+                piContext.setPasskeyMessage(StringUtil.isNotBlank(response.passkeyMessage) ? response.passkeyMessage : response.message);
+                piContext.setPasskeyChallenge(response.passkeyChallenge);
+                piContext.setMode("passkey");
+                piContext.setPasskeyTransactionID(response.transactionID);
+            }
+            else
+            {
+                LOGGER.error("{} tokenSelection: could not initialize a passkey challenge.", this.getLogPrefix());
+            }
+        }
+        else
+        {
+            PIResponse response = privacyIDEA.triggerChallenges(piContext.getUsername(), Map.of("serial", serial), headers);
+            if (response == null)
+            {
+                LOGGER.error("{} tokenSelection: triggering token '{}' returned no response.", this.getLogPrefix(), serial);
+            }
+            else if (response.error != null)
+            {
+                LOGGER.error("{} tokenSelection: triggering token '{}' failed: {}!", this.getLogPrefix(), serial, response.error.message);
+                piContext.setFormErrorMessage(response.error.message);
+            }
+            else
+            {
+                extractChallengeData(response);
+                extractMessage(response);
+            }
+        }
+        ActionSupport.buildEvent(profileRequestContext, "reload");
     }
 
     /**
