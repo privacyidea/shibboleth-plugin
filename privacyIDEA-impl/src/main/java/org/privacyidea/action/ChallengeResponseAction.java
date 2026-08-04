@@ -47,7 +47,7 @@ public class ChallengeResponseAction extends AbstractProfileAction
     private static final Logger LOGGER = LoggerFactory.getLogger(ChallengeResponseAction.class);
     private PIServerConfigContext piServerConfigContext;
     private PIContext piContext;
-    private PIFormContext piFormContext;
+    protected PIFormContext piFormContext;
     protected PrivacyIDEA privacyIDEA;
     protected boolean debug = false;
     // Remember-me ("trust this device") manager, shared with InitializePIContext via Spring.

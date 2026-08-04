@@ -280,6 +280,10 @@ public class InitializePIContext extends AbstractAuthenticationAction
                 staticPass = this.staticPass;
             }
         }
+        else if ("tokenSelection".equals(this.authenticationFlow))
+        {
+            authenticationFlow = "tokenSelection";
+        }
         else
         {
             authenticationFlow = "default";
