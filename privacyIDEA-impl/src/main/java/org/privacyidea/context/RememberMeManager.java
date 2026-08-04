@@ -48,15 +48,14 @@ public class RememberMeManager
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(RememberMeManager.class);
 
-    private static final int DEFAULT_DAYS = 30;
-    private static final int SECONDS_PER_DAY = 86400;
     private static final String HEADER_API_KEY = "X-API-Key";
     private static final String HEADER_COOKIE = "Cookie";
+    /** privacyIDEA's fixed remember-device cookie name (matches its Set-Cookie and the Cookie we send up). */
+    private static final String COOKIE_NAME = "pi_remember_device";
+    /** Max-age used when privacyIDEA's Set-Cookie carries no Max-Age: a session cookie (browser default). */
+    private static final int SESSION_COOKIE = -1;
 
     private boolean rememberMeEnabled = false;
-    private int rememberMeDays = DEFAULT_DAYS;
-    @Nonnull
-    private String rememberMeCookieName = "pi_remember_device";
     @Nullable
     private String apiKey;
     @Nullable
@@ -66,7 +65,7 @@ public class RememberMeManager
 
     /** Built in {@link #initialize()} when the feature is enabled; stays {@code null} while disabled. */
     @Nullable
-    private CookieManager cookieManager;
+    private MaxAgeCookieManager cookieManager;
 
     /** How long a definitive {@code /validate/capabilities} answer is trusted before it is re-probed. */
     private static final long CAPABILITY_TTL_MILLIS = 15 * 60 * 1000L;
@@ -112,15 +111,13 @@ public class RememberMeManager
         {
             LOGGER.warn("Remember-me is enabled but no privacyIDEA API key is configured; the feature will be inactive.");
         }
-        CookieManager manager = new CookieManager();
+        // Expiry is entirely server-driven: each stored cookie is written with the Max-Age privacyIDEA
+        // sends in its Set-Cookie (see relayResponse), so no local max-age is configured here.
+        MaxAgeCookieManager manager = new MaxAgeCookieManager();
         manager.setHttpServletRequestSupplier(httpServletRequestSupplier);
         manager.setHttpServletResponseSupplier(httpServletResponseSupplier);
         manager.setSecure(true);
         manager.setHttpOnly(true);
-        // Cookie max-age is an int number of seconds (~68 years max). Compute in long and cap it so a
-        // large remember_me_days cannot overflow to a negative/short max-age. privacyIDEA remains the
-        // authority on real expiry; if it expires/clears the session, relayResponse() clears our cookie.
-        manager.setMaxAge((int) Math.min((long) rememberMeDays * SECONDS_PER_DAY, Integer.MAX_VALUE));
         manager.initialize();
         cookieManager = manager;
     }
@@ -195,7 +192,7 @@ public class RememberMeManager
     @Nullable
     public String readCookie()
     {
-        return cookieManager == null ? null : cookieManager.getCookieValue(rememberMeCookieName, null);
+        return cookieManager == null ? null : cookieManager.getCookieValue(COOKIE_NAME, null);
     }
 
     /**
@@ -232,7 +229,7 @@ public class RememberMeManager
         if (StringUtil.isNotBlank(stored))
         {
             headers.put(HEADER_API_KEY, apiKey);
-            headers.put(HEADER_COOKIE, rememberMeCookieName + "=" + stored);
+            headers.put(HEADER_COOKIE, COOKIE_NAME + "=" + stored);
         }
     }
 
@@ -255,7 +252,7 @@ public class RememberMeManager
         {
             return;
         }
-        String prefix = rememberMeCookieName + "=";
+        String prefix = COOKIE_NAME + "=";
         for (String header : setCookies)
         {
             if (header == null || !header.startsWith(prefix))
@@ -265,7 +262,11 @@ public class RememberMeManager
             String afterName = header.substring(prefix.length());
             int semicolon = afterName.indexOf(';');
             String value = (semicolon >= 0 ? afterName.substring(0, semicolon) : afterName).trim();
-            boolean cleared = value.isEmpty() || hasNonPositiveMaxAge(header);
+            Integer maxAge = parseMaxAge(header);
+            // A blank value or Max-Age<=0 is privacyIDEA clearing the cookie (expiry / theft-triggered
+            // series deletion). Otherwise store the rotated value with privacyIDEA's own Max-Age, so the
+            // browser cookie expires exactly per the server-side policy (no local day setting).
+            boolean cleared = value.isEmpty() || (maxAge != null && maxAge <= 0);
             if (cleared)
             {
                 clearCookie();
@@ -273,7 +274,7 @@ public class RememberMeManager
             }
             else
             {
-                cookieManager.addCookie(rememberMeCookieName, value);
+                cookieManager.addCookie(COOKIE_NAME, value, maxAge != null ? maxAge : SESSION_COOKIE);
                 int colon = value.lastIndexOf(':');
                 String counter = colon >= 0 ? value.substring(colon + 1) : "?";
                 LOGGER.info("Remember-device: stored {} cookie (counter {}).",
@@ -284,15 +285,16 @@ public class RememberMeManager
     }
 
     /**
-     * @return whether the {@code Set-Cookie} header carries a {@code Max-Age} attribute whose value is
-     * {@code <= 0} (the hallmark of a delete). Parses the attribute token rather than a substring match,
-     * so a valid {@code Max-Age} that merely starts with a zero digit (e.g. {@code Max-Age=03600}) is not
-     * mistaken for a clear.
+     * Parse the {@code Max-Age} (seconds) from a {@code Set-Cookie} header. Parses the attribute token
+     * rather than a substring match, so a valid value that merely starts with a zero digit (e.g.
+     * {@code Max-Age=03600}) is read correctly.
      *
      * @param header the raw {@code Set-Cookie} header value
+     * @return the Max-Age in seconds, or {@code null} if the attribute is absent or non-numeric
      */
     // package-private for unit testing
-    static boolean hasNonPositiveMaxAge(@Nonnull String header)
+    @Nullable
+    static Integer parseMaxAge(@Nonnull String header)
     {
         for (String attribute : header.split(";"))
         {
@@ -302,15 +304,15 @@ public class RememberMeManager
                 String maxAge = token.substring("Max-Age=".length()).trim();
                 try
                 {
-                    return Integer.parseInt(maxAge) <= 0;
+                    return Integer.parseInt(maxAge);
                 }
                 catch (NumberFormatException e)
                 {
-                    return false;
+                    return null;
                 }
             }
         }
-        return false;
+        return null;
     }
 
     /**
@@ -320,46 +322,13 @@ public class RememberMeManager
     {
         if (cookieManager != null)
         {
-            cookieManager.unsetCookie(rememberMeCookieName);
+            cookieManager.unsetCookie(COOKIE_NAME);
         }
     }
 
     // Spring bean property setters
 
     public void setRememberMeEnabled(boolean rememberMeEnabled) {this.rememberMeEnabled = rememberMeEnabled;}
-
-    /**
-     * Set the IdP-domain cookie validity in days. Parsed defensively: a blank, non-numeric or
-     * non-positive value is ignored (the default of {@value #DEFAULT_DAYS} days is kept) rather than
-     * failing flow startup.
-     *
-     * @param rememberMeDays the configured value (digits only)
-     */
-    public void setRememberMeDays(@Nullable String rememberMeDays)
-    {
-        if (StringUtil.isBlank(rememberMeDays))
-        {
-            return;
-        }
-        try
-        {
-            int parsed = Integer.parseInt(rememberMeDays.trim());
-            if (parsed > 0)
-            {
-                this.rememberMeDays = parsed;
-            }
-            else
-            {
-                LOGGER.warn("Config option \"remember_me_days\": must be a positive number. Using default {}.", DEFAULT_DAYS);
-            }
-        }
-        catch (NumberFormatException e)
-        {
-            LOGGER.warn("Config option \"remember_me_days\": Wrong format. Only digits allowed. Using default {}.", DEFAULT_DAYS);
-        }
-    }
-
-    public void setRememberMeCookieName(@Nonnull String rememberMeCookieName) {this.rememberMeCookieName = rememberMeCookieName;}
 
     public void setApiKey(@Nullable String apiKey) {this.apiKey = apiKey;}
 
@@ -371,5 +340,19 @@ public class RememberMeManager
     public void setHttpServletResponseSupplier(@Nullable NonnullSupplier<HttpServletResponse> httpServletResponseSupplier)
     {
         this.httpServletResponseSupplier = httpServletResponseSupplier;
+    }
+
+    /**
+     * {@link CookieManager} whose per-call, max-age-carrying {@code addCookie} is exposed (it is protected
+     * in the base class), so the browser cookie can be written with the {@code Max-Age} privacyIDEA sends
+     * rather than a fixed local value — keeping the base class's path / Secure / HttpOnly handling.
+     */
+    private static final class MaxAgeCookieManager extends CookieManager
+    {
+        @Override
+        public void addCookie(String name, String value, int maxAgeSeconds)
+        {
+            super.addCookie(name, value, maxAgeSeconds);
+        }
     }
 }

@@ -17,52 +17,61 @@ package org.privacyidea.context;
 
 import org.testng.annotations.Test;
 
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 /**
- * Unit tests for {@link RememberMeManager}: the Set-Cookie Max-Age parsing (finding A8) and the server
- * capability cache semantics (the /validate/capabilities gating).
+ * Unit tests for {@link RememberMeManager}: the Set-Cookie Max-Age parsing that drives server-driven cookie
+ * expiry (A8) and the server capability cache semantics (the /validate/capabilities gating).
  */
 public class RememberMeManagerTest
 {
-    // --- hasNonPositiveMaxAge (A8: a rotated cookie must not be mistaken for a delete) ---
+    // --- parseMaxAge: the browser cookie's expiry is taken from privacyIDEA's Set-Cookie Max-Age.
+    //     <= 0 means clear; a positive value is the persistence; absent/non-numeric means "no Max-Age". ---
 
     @Test
-    public void maxAgeZeroIsClear()
+    public void parsesMaxAgeZero()
     {
-        assertTrue(RememberMeManager.hasNonPositiveMaxAge("pi_remember_device=; Max-Age=0; Path=/"));
+        assertEquals(RememberMeManager.parseMaxAge("pi_remember_device=; Max-Age=0; Path=/"), Integer.valueOf(0));
     }
 
     @Test
-    public void negativeMaxAgeIsClear()
+    public void parsesNegativeMaxAge()
     {
-        assertTrue(RememberMeManager.hasNonPositiveMaxAge("pi_remember_device=x; Max-Age=-1"));
+        assertEquals(RememberMeManager.parseMaxAge("pi_remember_device=x; Max-Age=-1"), Integer.valueOf(-1));
     }
 
     @Test
     public void maxAgeIsCaseInsensitive()
     {
-        assertTrue(RememberMeManager.hasNonPositiveMaxAge("pi_remember_device=; max-age=0"));
+        assertEquals(RememberMeManager.parseMaxAge("pi_remember_device=; max-age=0"), Integer.valueOf(0));
     }
 
     @Test
-    public void leadingZeroMaxAgeIsNotClear()
+    public void parsesLeadingZeroMaxAge()
     {
-        // The regression this guards: contains("max-age=0") false-matched values like 03600.
-        assertFalse(RememberMeManager.hasNonPositiveMaxAge("pi_remember_device=s:5; Max-Age=03600; Path=/"));
+        // The regression this guards: a substring "max-age=0" match false-read values like 03600.
+        assertEquals(RememberMeManager.parseMaxAge("pi_remember_device=s:5; Max-Age=03600; Path=/"), Integer.valueOf(3600));
     }
 
     @Test
-    public void positiveMaxAgeIsNotClear()
+    public void parsesLargeMaxAge()
     {
-        assertFalse(RememberMeManager.hasNonPositiveMaxAge("pi_remember_device=s:5; Max-Age=2592000"));
+        assertEquals(RememberMeManager.parseMaxAge("pi_remember_device=s:5; Max-Age=2592000"), Integer.valueOf(2592000));
     }
 
     @Test
-    public void noMaxAgeAttributeIsNotClear()
+    public void noMaxAgeAttributeIsNull()
     {
-        assertFalse(RememberMeManager.hasNonPositiveMaxAge("pi_remember_device=s:5; Path=/; Secure"));
+        assertNull(RememberMeManager.parseMaxAge("pi_remember_device=s:5; Path=/; Secure"));
+    }
+
+    @Test
+    public void nonNumericMaxAgeIsNull()
+    {
+        assertNull(RememberMeManager.parseMaxAge("pi_remember_device=s:5; Max-Age=abc"));
     }
 
     // --- capability cache (definitive answers vs the inconclusive/unknown short window) ---
