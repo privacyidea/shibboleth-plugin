@@ -131,7 +131,7 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
                 {
                     entries.add(new TokenListEntry(token.serial, token.tokenType, token.description,
                                                    token.info.get("last_auth"), token.active, token.revoked,
-                                                   token.locked, token.rolloutState));
+                                                   token.locked, token.rolloutState, request.getLocale()));
                 }
                 // Usable tokens first; unusable (revoked/locked/…) at the end so the user still sees them.
                 entries.sort(Comparator.comparing(TokenListEntry::isUsable).reversed());

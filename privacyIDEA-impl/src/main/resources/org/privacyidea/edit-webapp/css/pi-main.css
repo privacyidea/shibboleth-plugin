@@ -25,18 +25,11 @@ body {
 }
 
 .pi-message {
-    display: inline-block;       /* shrink the box to its text... */
-    min-width: 280px;            /* ...but not narrower than the buttons */
-    max-width: 700px;            /* ...and wrap long messages */
-    box-sizing: border-box;
-    margin-bottom: 10px;
-    padding: 18px 28px;
-    background: #fffbe6;
-    border: 1px solid #ffe58f;
-    border-radius: 8px;
-    color: #664d03;
-    font-size: 1.1em;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    max-width: 700px;            /* wrap long messages */
+    margin: 4px 0 14px;
+    color: #222;
+    font-size: 1.25em;
+    font-weight: 600;
 }
 
 /* Default styling for form error messages (wrong OTP, passkey rejected/mismatch, ...).
@@ -102,20 +95,20 @@ body {
 }
 
 #resetButton {
-    background-color: #913535;
-    border-color: #622c2c;
-    color: #fff;
+    background-color: transparent;
+    border: 1px solid #913535;
+    color: #913535;
     border-radius: 5px;
     padding: 12px 0;
     width: 280px;
     margin-top: 10px;
     font-weight: 500;
-    transition: background 0.2s;
+    transition: background 0.2s, color 0.2s;
 }
 
 #resetButton:hover {
-    background-color: #b94a48;
-    border-color: #913535;
+    background-color: #fbeaea;
+    color: #6f2727;
 }
 
 #enrollmentLink {
@@ -171,12 +164,11 @@ input:focus {
     cursor: pointer;
 }
 /* tokenSelection: the user's token list. Deployers can restyle; this is a sensible default. */
-#tokenList { padding-top: 10px; }
+#tokenList { padding-top: 10px; margin-bottom: 24px; }
 .pi-token {
     display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
+    align-items: center;         /* button/status vertically centred against the two-row info block */
+    gap: 16px;
     max-width: 700px;
     padding: 10px 14px;
     margin-bottom: 8px;
@@ -184,10 +176,43 @@ input:focus {
     border-radius: 6px;
     background: #fff;
 }
+/* Two-row info block: (type, serial) on top, (description, last used) below. */
+.pi-token-info { display: flex; flex-direction: column; gap: 4px; flex: 1 1 auto; min-width: 0; }
+.pi-token-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.pi-token-icon { width: 32px; height: 32px; flex: none; object-fit: contain; }
 .pi-token-type { font-weight: 600; text-transform: uppercase; font-size: 0.85em; color: #1976d2; }
 .pi-token-serial { font-family: monospace; color: #555; }
-.pi-token-desc { color: #333; }
+.pi-token-desc { color: #333; overflow-wrap: anywhere; }
 .pi-token-lastused { color: #888; font-size: 0.9em; }
-.pi-token-use { width: auto; padding: 6px 18px; margin: 0 0 0 auto; }
+/* Outline (not filled) so the per-row action reads as secondary to the page's primary buttons. */
+.pi-token-use {
+    width: auto; padding: 6px 18px; margin: 0; flex: none;
+    background: transparent;
+    color: #1976d2;
+    border: 1px solid #1976d2;
+}
+.pi-token-use:hover { background: #e3f2fd; color: #125ea2; }
 .pi-token-unusable { opacity: 0.55; }
-.pi-token-status { margin-left: auto; color: #a8071a; font-size: 0.85em; text-transform: uppercase; }
+.pi-token-active { border-color: #1976d2; box-shadow: 0 0 0 2px rgba(25,118,210,0.25); }
+.pi-token-waiting { color: #1976d2; font-size: 0.9em; font-style: italic; flex: none; }
+.pi-token-status { color: #a8071a; font-size: 0.85em; text-transform: uppercase; flex: none; }
+
+/* Masking font for the OTP field: renders every glyph as a disc so a plain type=text input is
+   visually redacted (••••) without being a type=password field. That matters because Firefox always
+   offers saved logins on password fields regardless of autocomplete; a text field is not offered.
+   Font: text-security (npm, MIT), text-security-disc.woff2, embedded so the page stays self-contained. */
+@font-face {
+    font-family: "pi-text-security-disc";
+    src: url(data:font/woff2;base64,d09GMgABAAAAAAMQAAoAAAAACAAAAALIAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAABmAAggAKcHILBgABNgIkAwYEIAWJSAcvG0gHEZWcjBRfHNjNPraIGU7SkQoTFkXoFRjv8FUcbDmIj4fv117P3fcRQioFRseKQUaWwJVVVVWlqUSWQCqzAXDOVp+vqsnVapWIlhw7yBoEhhMnHFYCHMKOvkR03bf6e9V3k5C0pdB3/e9T0qkd4MMPltYAwwl4rBdKBw5Q6WQJiMe2JfXQzxqDHiJHyBCRoyWk9D0eokh2Ww9se/9MHLHYawD4n5f/Ls/b722ATVs377KRPE9jOdKY88cWRA5gIghJDQ1N8AfoA89ygvcYf4pg/Ec+TgiEgQwZEhIKKKCIIkoooYwyKqigiipqqKGOOhpooIkmWmihjTY66PxOyEABGSZiKqAAQnQ6B6/n1u98x4262u0Js8WuS9OPfJk+/cuR6bOAtTcIJOZcuOuj7bV/Kyl9h9f38fFYbrefcSYrI8lAQDMUDxExOyyGlfQ/vVsg0xGArgJ1t5MoVLEcA2Gq5ci0HECy2rnswoOiU55kl1xUjEQJdXtiFM3sEWm9lqWFmgZbjP05LRVBvbqdHux9wpyGnbGWEX6p5JEHp+lXirTnJ5QhZa5Rrsq9D67r+24QRrdzndcmBzUrQ9xXb6hp/3Kt1h1kLEFUI/CLVKdW/dqtdrVRNqpIyLr2KxU5WYVXmZuskh+VXqlluyjNMNPGBGcj6JOF0MC+M9Ucc48RhDxCB6QQzssN7C3m8bmbGCrG7VXU5FY+yGdUakVOvwKllMExtmsLwzMsVQFGpi5UbHxfXhb762Voh6fTcKeW03OxxicY73eTpa8bxhIzeWR+wnoJ6j/4kBejs2xf69j7pOSUzmzPCqNy4cojtlsLwpBhb++AtcBHQcpyGZgkYrGUBTwXn2/RF12BjlQTI1XSvANELqO18DPB+UIyNkJSZBsoX7wh7DlfsyVfTshpuSjLSv9H3fwD+a36nwAAkBFZ5aSOqp+7Bg==) format("woff2");
+    font-weight: normal;
+    font-style: normal;
+}
+.pi-mask {
+    font-family: "pi-text-security-disc", disc, sans-serif;
+    -webkit-text-security: disc;   /* Chromium/WebKit native masking; harmless where unsupported */
+}
+/* Keep the admin hint (placeholder) readable rather than masked by the disc font. */
+.pi-mask::placeholder {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-text-security: none;
+}

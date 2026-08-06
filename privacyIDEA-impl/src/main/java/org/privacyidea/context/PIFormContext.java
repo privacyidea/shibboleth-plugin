@@ -28,8 +28,6 @@ public class PIFormContext extends BaseContext
     private String defaultMessage;
     @Nonnull
     private String message = "";
-    @Nonnull
-    private String otpFieldHint;
     @Nullable
     private String pushMessage;
     @Nullable
@@ -55,10 +53,9 @@ public class PIFormContext extends BaseContext
     @Nonnull
     private List<TokenListEntry> tokens = Collections.emptyList();
 
-    public PIFormContext(@Nullable String defaultMessage, @Nullable String otpFieldHint, @Nullable Integer otpLength, @Nullable String pollingInterval, boolean pollInBrowser, @Nullable String pollInBrowserUrl, boolean disablePasskey, boolean rememberMeEnabled)
+    public PIFormContext(@Nullable String defaultMessage, @Nullable Integer otpLength, @Nullable String pollingInterval, boolean pollInBrowser, @Nullable String pollInBrowserUrl, boolean disablePasskey, boolean rememberMeEnabled)
     {
         this.defaultMessage = Objects.requireNonNullElse(defaultMessage, "Please enter your One-Time-Password:");
-        this.otpFieldHint = Objects.requireNonNullElse(otpFieldHint, "One-Time-Password (OTP)");
         this.pollingInterval = Objects.requireNonNullElse(pollingInterval, "2");
         this.pollInBrowser = pollInBrowser;
         this.pollInBrowserUrl = pollInBrowserUrl;
@@ -71,9 +68,6 @@ public class PIFormContext extends BaseContext
 
     @Nonnull
     public String getMessage() {return (!message.isEmpty()) ? message : defaultMessage;}
-
-    @Nonnull
-    public String getOtpFieldHint() {return otpFieldHint;}
 
     public void setPushMessage(@Nullable String pushMessage) {this.pushMessage = pushMessage;}
 

@@ -55,6 +55,15 @@ public class PIContext extends BaseContext
     private boolean rememberMe = false;
     @Nonnull
     private String mode = "otp";
+    /**
+     * tokenSelection: the serial + type of the token the user picked with "Use", persisted across the reload
+     * so the re-rendered list can mark that row and drive the right in-place ceremony (passkey: auto-start +
+     * "Retry"; push: poll in place). Type is authoritative — do not infer the ceremony from the response.
+     */
+    @Nonnull
+    private String selectedSerial = "";
+    @Nonnull
+    private String selectedType = "";
     @Nullable
     private final String pluginVersion;
 
@@ -136,6 +145,16 @@ public class PIContext extends BaseContext
     public String getMode() {return mode;}
 
     public void setMode(@Nonnull String mode) {this.mode = mode;}
+
+    @Nonnull
+    public String getSelectedSerial() {return selectedSerial;}
+
+    public void setSelectedSerial(@Nonnull String selectedSerial) {this.selectedSerial = selectedSerial;}
+
+    @Nonnull
+    public String getSelectedType() {return selectedType;}
+
+    public void setSelectedType(@Nonnull String selectedType) {this.selectedType = selectedType;}
 
     @Nonnull
     public String getWebauthnSignRequest() {return webauthnSignRequest;}

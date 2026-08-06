@@ -35,7 +35,6 @@
           p:realm="%{privacyidea.realm:#{null}}"
           p:verifySSL="%{privacyidea.verify_ssl:true}"
           p:defaultMessage="%{privacyidea.default_message:#{null}}"
-          p:otpFieldHint="%{privacyidea.otp_field_hint:#{null}}"
           p:otpLength="%{privacyidea.otp_length:#{null}}"
           p:authenticationFlow="%{privacyidea.authentication_flow:#{'default'}}"
           p:serviceName="%{privacyidea.service_name:#{null}}"

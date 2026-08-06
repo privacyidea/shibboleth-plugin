@@ -70,8 +70,6 @@ public class InitializePIContext extends AbstractAuthenticationAction
     @Nullable
     private String forwardHeaders;
     @Nullable
-    private String otpFieldHint;
-    @Nullable
     private String otpLength;
     @Nullable
     private String pluginVersion;
@@ -143,7 +141,7 @@ public class InitializePIContext extends AbstractAuthenticationAction
         boolean rememberMeOffered = rememberMeManager != null && rememberMeManager.isConfigured()
                 && rememberMeManager.isServerCapable()
                 && hasFreshAuthenticationResult(authenticationContext);
-        PIFormContext piFormContext = new PIFormContext(defaultMessage, otpFieldHint, getOtpLength(),
+        PIFormContext piFormContext = new PIFormContext(defaultMessage, getOtpLength(),
                                                         pollingInterval, pollInBrowser, pollInBrowserUrl, disablePasskey,
                                                         rememberMeOffered);
         log.info("{} Create PIFormContext {}", this.getLogPrefix(), piFormContext);
@@ -335,8 +333,6 @@ public class InitializePIContext extends AbstractAuthenticationAction
     public void setVerifySSL(boolean verifySSL)                           {this.verifySSL = verifySSL;}
 
     public void setDefaultMessage(@Nullable String defaultMessage)        {this.defaultMessage = defaultMessage;}
-
-    public void setOtpFieldHint(@Nullable String otpFieldHint)            {this.otpFieldHint = otpFieldHint;}
 
     public void setAuthenticationFlow(@Nonnull String authenticationFlow) {this.authenticationFlow = authenticationFlow;}
 
