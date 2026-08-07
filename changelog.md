@@ -5,10 +5,19 @@
   factor. The plugin acts as a privacyIDEA API client (`privacyidea.api_key`): on opt-in the server
   issues a rotating `pi_remember_device` cookie, and on later logins the plugin presents it so the
   server can recognise the device. The token rotates on every use (theft detection) and privacyIDEA
-  owns the policy. Requires privacyIDEA 3.14+ with a `remember_device` policy. Configure via
-  `privacyidea.api_key`, `privacyidea.remember_me_enabled`, `privacyidea.remember_me_days` and
-  `privacyidea.remember_me_cookie_name`. Applies only when a preceding first factor authenticated the
-  user (ignored in standalone mode).
+  owns the policy (including the cookie lifetime — it is server-driven, not configured in the plugin).
+  Requires privacyIDEA 3.14+ with a `remember_device` policy. Configure via `privacyidea.api_key` and
+  `privacyidea.remember_me_enabled`. Applies only when a preceding first factor authenticated the user
+  (ignored in standalone mode).
+* New authentication flow `privacyidea.authentication_flow=tokenSelection`: lists the user's tokens and
+  lets them choose which one to use. Triggerable tokens (push / WebAuthn / passkey) run their ceremony
+  in place on the same screen (no layout switch); other tokens are used by typing their OTP. Per-token-type
+  icons are configurable via the `privacyidea.tokenIcon.<type>` message keys (defaults shipped for the
+  common types). Needs a service account (like `triggerChallenge`) with `tokenlist` rights.
+* The OTP field placeholder ("hint") is now the `privacyidea.inputHint` message key (empty by default),
+  so it is translatable per locale like the other UI labels (replaces the previous `otp_field_hint`).
+* The HTTP timeout for privacyIDEA requests is configurable via `privacyidea.http_timeout_ms`.
+* Bumped the bundled privacyidea-java-client to 1.6.0 (security and robustness improvements).
 
 ## 1.3.0 05/2026
 Update features to be on par with privacyIDEA 3.13. Support for the following policies:
