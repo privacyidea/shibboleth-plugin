@@ -78,7 +78,9 @@
                         ## tokenSelection: the token list is the chooser and stays visible while a ceremony runs
                         ## in place. "otp" lists the tokens; "passkey"/"webauthn" run their credential ceremony
                         ## (picked row → Retry); "push" polls in place (picked row highlighted).
-                        #if (!$piFormContext.getTokens().isEmpty() && ($piContext.getMode() == "otp" || $piContext.getMode() == "passkey" || $piContext.getMode() == "push" || $piContext.getMode() == "webauthn"))
+                        ## When the server responds with an enroll-via-multichallenge (a QR to scan + enter the new
+                        ## token's OTP), the list yields so the normal enrollment UI (image + message) shows instead.
+                        #if (!$piFormContext.getTokens().isEmpty() && !$piFormContext.isEnrollViaMultichallenge() && $passkeyRegistrationEmpty && ($piContext.getMode() == "otp" || $piContext.getMode() == "passkey" || $piContext.getMode() == "push" || $piContext.getMode() == "webauthn"))
                             #set ($showTokenList = true)
                         #else
                             #set ($showTokenList = false)
