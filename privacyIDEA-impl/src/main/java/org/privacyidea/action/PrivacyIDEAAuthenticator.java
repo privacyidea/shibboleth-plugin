@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
 import java.util.Objects;
@@ -420,17 +421,8 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             // Send the push notification and enter poll mode in place. Only the transaction id / push message
             // are taken from the response — no extractChallengeData, so a co-triggered passkey/webauthn
             // challenge cannot hijack the mode.
-            PIResponse response = privacyIDEA.triggerChallenges(piContext.getUsername(), Map.of("serial", serial), headers);
-            if (response == null)
-            {
-                LOGGER.error("{} tokenSelection: triggering push token '{}' returned no response.", this.getLogPrefix(), serial);
-            }
-            else if (response.error != null)
-            {
-                LOGGER.error("{} tokenSelection: triggering push token '{}' failed: {}!", this.getLogPrefix(), serial, response.error.message);
-                piContext.setFormErrorMessage(response.error.message);
-            }
-            else
+            PIResponse response = triggerSerialChallenge(piContext, serial, headers);
+            if (response != null)
             {
                 if (StringUtil.isNotBlank(response.transactionID))
                 {
@@ -447,17 +439,8 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             // JS path since the challenge is encoded differently). Only the transaction id / sign request /
             // message are taken from the response — no extractChallengeData, so a co-triggered passkey
             // challenge cannot hijack the mode.
-            PIResponse response = privacyIDEA.triggerChallenges(piContext.getUsername(), Map.of("serial", serial), headers);
-            if (response == null)
-            {
-                LOGGER.error("{} tokenSelection: triggering WebAuthn token '{}' returned no response.", this.getLogPrefix(), serial);
-            }
-            else if (response.error != null)
-            {
-                LOGGER.error("{} tokenSelection: triggering WebAuthn token '{}' failed: {}!", this.getLogPrefix(), serial, response.error.message);
-                piContext.setFormErrorMessage(response.error.message);
-            }
-            else
+            PIResponse response = triggerSerialChallenge(piContext, serial, headers);
+            if (response != null)
             {
                 if (StringUtil.isNotBlank(response.transactionID))
                 {
@@ -471,23 +454,44 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         else
         {
             // Any other challenge token: generic path (still hands off to the classic layout).
-            PIResponse response = privacyIDEA.triggerChallenges(piContext.getUsername(), Map.of("serial", serial), headers);
-            if (response == null)
-            {
-                LOGGER.error("{} tokenSelection: triggering token '{}' returned no response.", this.getLogPrefix(), serial);
-            }
-            else if (response.error != null)
-            {
-                LOGGER.error("{} tokenSelection: triggering token '{}' failed: {}!", this.getLogPrefix(), serial, response.error.message);
-                piContext.setFormErrorMessage(response.error.message);
-            }
-            else
+            PIResponse response = triggerSerialChallenge(piContext, serial, headers);
+            if (response != null)
             {
                 extractChallengeData(response);
                 extractMessage(response);
             }
         }
         ActionSupport.buildEvent(profileRequestContext, "reload");
+    }
+
+    /**
+     * Trigger the challenge for a specific token serial and return the response only when it is a usable
+     * success (non-null, no server error). On a null or error response it logs and — for a server error —
+     * sets the form error message, then returns {@code null} so the caller skips its success handling.
+     * Shared by the push / WebAuthn / generic {@link #triggerSelectedToken} paths, which differ only in how
+     * they consume a successful response.
+     *
+     * @param piContext the current privacyIDEA context
+     * @param serial    the selected token's serial
+     * @param headers   headers to forward to privacyIDEA
+     * @return the successful response, or {@code null} if the trigger failed
+     */
+    @Nullable
+    private PIResponse triggerSerialChallenge(@Nonnull PIContext piContext, @Nonnull String serial, @Nonnull Map<String, String> headers)
+    {
+        PIResponse response = privacyIDEA.triggerChallenges(piContext.getUsername(), Map.of("serial", serial), headers);
+        if (response == null)
+        {
+            LOGGER.error("{} tokenSelection: triggering token '{}' returned no response.", this.getLogPrefix(), serial);
+            return null;
+        }
+        if (response.error != null)
+        {
+            LOGGER.error("{} tokenSelection: triggering token '{}' failed: {}!", this.getLogPrefix(), serial, response.error.message);
+            piContext.setFormErrorMessage(response.error.message);
+            return null;
+        }
+        return response;
     }
 
     /**

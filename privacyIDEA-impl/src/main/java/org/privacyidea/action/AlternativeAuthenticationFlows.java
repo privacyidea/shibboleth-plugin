@@ -115,6 +115,18 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
             {
                 LOGGER.info("{} Authentication flow - tokenSelection.", this.getLogPrefix());
             }
+            // No username yet (e.g. the username form was submitted blank) — getTokenInfo would NPE on the
+            // null user, so redisplay the username form instead, matching the default branch.
+            if (StringUtil.isBlank(piContext.getUsername()))
+            {
+                if (debug)
+                {
+                    LOGGER.info("{} No username available; redisplaying username/password form.", this.getLogPrefix());
+                }
+                piContext.setFormErrorMessage("Username is required.");
+                ActionSupport.buildEvent(profileRequestContext, "redisplayUsernameForm");
+                return;
+            }
             // Fetch the user's tokens (service-account GET /token) and hand them to the view. If the list
             // cannot be retrieved (no service account / request failed), fall back to the plain OTP form
             // rather than failing the login.

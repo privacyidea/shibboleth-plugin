@@ -174,8 +174,12 @@
                                                 ## Push notification sent; the page polls in place until it is confirmed.
                                                 <span class="pi-token-waiting">#springMessageText("privacyidea.tokenWaiting", "Waiting for confirmation…")</span>
                                             #elseif ($token.isTriggerable())
+                                                ## Serial/type are carried in data-* attributes (HTML-attribute encoded) and copied into
+                                                ## the hidden fields by a delegated listener (pi-eventListeners.js) on click — never
+                                                ## interpolated into an inline JS string, so a serial containing a quote cannot break out.
                                                 <button type="submit" class="form-element-button pi-token-use" name="_eventId_proceed"
-                                                        onclick="document.getElementById('selectedSerial').value='$encoder.encodeForHTML($token.getSerial())'; document.getElementById('selectedType').value='$encoder.encodeForHTML($token.getType())';">#springMessageText("privacyidea.tokenUse", "Use")</button>
+                                                        data-serial="$encoder.encodeForHTMLAttribute($token.getSerial())"
+                                                        data-type="$encoder.encodeForHTMLAttribute($token.getType())">#springMessageText("privacyidea.tokenUse", "Use")</button>
                                             #elseif (!$token.isUsable())
                                                 <span class="pi-token-status">$encoder.encodeForHTML($token.getStatus())</span>
                                             #end
@@ -206,11 +210,11 @@
                                     ## Optional input placeholder ("hint"), configured via the privacyidea.inputHint
                                     ## message key (empty by default = no placeholder), so it is translatable.
                                     #set ($inputHint = $springMacroRequestContext.getMessage("privacyidea.inputHint", ""))
-                                    ## type=text (not password) so Firefox never offers saved logins — it ignores
-                                    ## autocomplete on password fields. The .pi-mask disc font redacts the input visually
-                                    ## instead. autocomplete=one-time-code + the data-*-ignore hints keep password
-                                    ## managers away; spellcheck/autocap off since it's a code, not prose.
-                                    <input id="otp" class="form-element form-field pi-mask" name="otp" type="text" autocomplete="one-time-code" data-1p-ignore="true" data-lpignore="true" data-form-type="other" spellcheck="false" autocapitalize="off" autofocus value=""#if ($inputHint && $inputHint != "") placeholder="$encoder.encodeForHTMLAttribute($inputHint)"#end>
+                                    ## type=password for native, reliable masking. autocomplete=one-time-code + the
+                                    ## data-*-ignore hints steer password managers away from offering saved logins
+                                    ## (Firefox ignores autocomplete on password fields and may still offer them —
+                                    ## accepted, in exchange for guaranteed masking).
+                                    <input id="otp" class="form-element form-field" name="otp" type="password" autocomplete="one-time-code" data-1p-ignore="true" data-lpignore="true" data-form-type="other" autofocus value=""#if ($inputHint && $inputHint != "") placeholder="$encoder.encodeForHTMLAttribute($inputHint)"#end>
                                     <br>
                                 #end
 

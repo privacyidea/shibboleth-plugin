@@ -196,23 +196,3 @@ input:focus {
 .pi-token-active { border-color: #1976d2; box-shadow: 0 0 0 2px rgba(25,118,210,0.25); }
 .pi-token-waiting { color: #1976d2; font-size: 0.9em; font-style: italic; flex: none; }
 .pi-token-status { color: #a8071a; font-size: 0.85em; text-transform: uppercase; flex: none; }
-
-/* Masking font for the OTP field: renders every glyph as a disc so a plain type=text input is
-   visually redacted (••••) without being a type=password field. That matters because Firefox always
-   offers saved logins on password fields regardless of autocomplete; a text field is not offered.
-   Font: text-security (npm, MIT), text-security-disc.woff2, embedded so the page stays self-contained. */
-@font-face {
-    font-family: "pi-text-security-disc";
-    src: url(data:font/woff2;base64,d09GMgABAAAAAAMQAAoAAAAACAAAAALIAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAABmAAggAKcHILBgABNgIkAwYEIAWJSAcvG0gHEZWcjBRfHNjNPraIGU7SkQoTFkXoFRjv8FUcbDmIj4fv117P3fcRQioFRseKQUaWwJVVVVWlqUSWQCqzAXDOVp+vqsnVapWIlhw7yBoEhhMnHFYCHMKOvkR03bf6e9V3k5C0pdB3/e9T0qkd4MMPltYAwwl4rBdKBw5Q6WQJiMe2JfXQzxqDHiJHyBCRoyWk9D0eokh2Ww9se/9MHLHYawD4n5f/Ls/b722ATVs377KRPE9jOdKY88cWRA5gIghJDQ1N8AfoA89ygvcYf4pg/Ec+TgiEgQwZEhIKKKCIIkoooYwyKqigiipqqKGOOhpooIkmWmihjTY66PxOyEABGSZiKqAAQnQ6B6/n1u98x4262u0Js8WuS9OPfJk+/cuR6bOAtTcIJOZcuOuj7bV/Kyl9h9f38fFYbrefcSYrI8lAQDMUDxExOyyGlfQ/vVsg0xGArgJ1t5MoVLEcA2Gq5ci0HECy2rnswoOiU55kl1xUjEQJdXtiFM3sEWm9lqWFmgZbjP05LRVBvbqdHux9wpyGnbGWEX6p5JEHp+lXirTnJ5QhZa5Rrsq9D67r+24QRrdzndcmBzUrQ9xXb6hp/3Kt1h1kLEFUI/CLVKdW/dqtdrVRNqpIyLr2KxU5WYVXmZuskh+VXqlluyjNMNPGBGcj6JOF0MC+M9Ucc48RhDxCB6QQzssN7C3m8bmbGCrG7VXU5FY+yGdUakVOvwKllMExtmsLwzMsVQFGpi5UbHxfXhb762Voh6fTcKeW03OxxicY73eTpa8bxhIzeWR+wnoJ6j/4kBejs2xf69j7pOSUzmzPCqNy4cojtlsLwpBhb++AtcBHQcpyGZgkYrGUBTwXn2/RF12BjlQTI1XSvANELqO18DPB+UIyNkJSZBsoX7wh7DlfsyVfTshpuSjLSv9H3fwD+a36nwAAkBFZ5aSOqp+7Bg==) format("woff2");
-    font-weight: normal;
-    font-style: normal;
-}
-.pi-mask {
-    font-family: "pi-text-security-disc", disc, sans-serif;
-    -webkit-text-security: disc;   /* Chromium/WebKit native masking; harmless where unsupported */
-}
-/* Keep the admin hint (placeholder) readable rather than masked by the disc font. */
-.pi-mask::placeholder {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    -webkit-text-security: none;
-}
