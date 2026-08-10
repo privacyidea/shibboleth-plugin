@@ -80,9 +80,13 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         // tokenSelection: the user clicked "Use" on a specific token row — trigger that token, then
         // re-render into the resulting challenge (push poll / WebAuthn / passkey). Only the Use button
         // sets these, and they reset to empty on every re-render, so this fires once per selection.
+        // Gate on the configured flow: the hidden selectedType/selectedSerial fields ship in every form,
+        // so without this check a crafted request could trigger token challenges (e.g. passkey) even when
+        // tokenSelection is not the configured flow (or passkeys are disabled).
         String selectedType = request.getParameter("selectedType");
         String selectedSerial = request.getParameter("selectedSerial");
-        if (StringUtil.isNotBlank(selectedType) && StringUtil.isNotBlank(selectedSerial))
+        if ("tokenSelection".equals(piServerConfigContext.getConfigParams().getAuthenticationFlow())
+            && StringUtil.isNotBlank(selectedType) && StringUtil.isNotBlank(selectedSerial))
         {
             triggerSelectedToken(profileRequestContext, piContext, selectedType, selectedSerial, headers);
             return;
@@ -165,7 +169,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         if ("1".equals(request.getParameter("passkeyLoginRequested")))
         {
             PIResponse response = privacyIDEA.validateInitialize("passkey");
-            if (StringUtil.isNotBlank(response.passkeyChallenge))
+            if (response != null && StringUtil.isNotBlank(response.passkeyChallenge))
             {
                 // /validate/initialize puts the prompt at detail.passkey.message, parsed into
                 // response.passkeyMessage. detail.message is empty for that shape. Fall back to
@@ -188,6 +192,16 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                 {
                     ActionSupport.buildEvent(profileRequestContext, "reload");
                 }
+                return;
+            }
+            else
+            {
+                // Server unreachable / no challenge returned: surface an error instead of falling through
+                // (and, previously, NPE-ing on a null response).
+                LOGGER.error("{} Could not initialize a passkey challenge.", this.getLogPrefix());
+                piContext.setFormErrorMessage("Could not start passkey authentication. Please try again.");
+                ActionSupport.buildEvent(profileRequestContext,
+                                         request.getParameterMap().containsKey("_eventId_passkey") ? "reloadUsernameForm" : "reload");
                 return;
             }
         }
@@ -443,13 +457,25 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             PIResponse response = triggerSerialChallenge(piContext, serial, headers);
             if (response != null)
             {
-                if (StringUtil.isNotBlank(response.transactionID))
+                String signRequest = response.mergedSignRequest();
+                if (StringUtil.isNotBlank(signRequest))
                 {
-                    piContext.setTransactionID(response.transactionID);
+                    if (StringUtil.isNotBlank(response.transactionID))
+                    {
+                        piContext.setTransactionID(response.transactionID);
+                    }
+                    piContext.setWebauthnSignRequest(signRequest);
+                    piContext.setMode("webauthn");
+                    extractMessage(response);
                 }
-                piContext.setWebauthnSignRequest(response.mergedSignRequest());
-                piContext.setMode("webauthn");
-                extractMessage(response);
+                else
+                {
+                    // The response carried no WebAuthn challenge (e.g. the token was disabled between the
+                    // list fetch and the trigger). Don't switch into webauthn mode — that would auto-run
+                    // doWebAuthn() against an empty request with no in-row Retry — surface an error instead.
+                    LOGGER.error("{} tokenSelection: WebAuthn token '{}' returned no sign request.", this.getLogPrefix(), sanitizeForLog(serial));
+                    piContext.setFormErrorMessage("Could not start the security key challenge. Please try again or choose another token.");
+                }
             }
         }
         else

@@ -21,7 +21,9 @@ import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.FormatStyle;
 import java.time.temporal.ChronoField;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A single row in the {@code tokenSelection} token list shown to the user: the display fields plus whether
@@ -61,6 +63,9 @@ public final class TokenListEntry
             .optionalStart().appendOffset("+HH:MM", "Z").optionalEnd()
             .optionalStart().appendOffset("+HHMM", "Z").optionalEnd()
             .toFormatter(Locale.ROOT);
+
+    /** Cache of the locale-specific display formatters, so one is not built per {@link #formatLastUsed} call. */
+    private static final Map<Locale, DateTimeFormatter> DISPLAY_FORMATTERS = new ConcurrentHashMap<>();
 
     private final String serial;
     private final String type;
@@ -115,8 +120,9 @@ public final class TokenListEntry
             this.usable = true;
             this.status = "";
         }
-        // Only a usable, challenge-type token gets a "Use" button.
-        this.triggerable = this.usable && TRIGGERABLE_TYPES.contains(this.type.toLowerCase());
+        // Only a usable, challenge-type token gets a "Use" button. Lowercase with Locale.ROOT so token-type
+        // matching is stable regardless of the JVM default locale (e.g. the Turkish dotted-I).
+        this.triggerable = this.usable && TRIGGERABLE_TYPES.contains(this.type.toLowerCase(Locale.ROOT));
     }
 
     /**
@@ -135,9 +141,10 @@ public final class TokenListEntry
         try
         {
             LocalDateTime parsed = LocalDateTime.from(LAST_USED_PARSER.parse(trimmed.replaceFirst(" ", "T")));
-            return DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)
-                                    .withLocale(locale == null ? Locale.getDefault() : locale)
-                                    .format(parsed);
+            Locale loc = locale == null ? Locale.getDefault() : locale;
+            return DISPLAY_FORMATTERS.computeIfAbsent(loc, l ->
+                    DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT).withLocale(l))
+                                     .format(parsed);
         }
         catch (RuntimeException e)
         {
@@ -148,6 +155,9 @@ public final class TokenListEntry
     public String getSerial() {return serial;}
 
     public String getType() {return type;}
+
+    /** @return the token type lowercased with {@link Locale#ROOT} — for locale-stable lookups (e.g. the icon message key). */
+    public String getTypeLower() {return type.toLowerCase(Locale.ROOT);}
 
     public String getDescription() {return description;}
 

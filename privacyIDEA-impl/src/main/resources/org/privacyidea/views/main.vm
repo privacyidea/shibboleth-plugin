@@ -102,28 +102,30 @@
                                 #if ($piContext.getFormErrorMessage())
                                     <p class="pi-error" role="alert">$encoder.encodeForHTML($piContext.getFormErrorMessage())</p>
                                 #end
+                                ## Server-provided values (messages + QR/data-URL images) are encoded: HTML for the
+                                ## message text, HTML-attribute for the image src, to prevent injected markup / attribute breakouts.
                                 #if ($piContext.getMode() == "otp" && $passkeyRegistrationEmpty)
                                     #if ($piFormContext.getImageOtp() != "")
                                         <br>
-                                        <img class="pi-tokenImage" src="$piFormContext.getImageOtp()" alt="[OTP Image]">
+                                        <img class="pi-tokenImage" src="$encoder.encodeForHTMLAttribute($piFormContext.getImageOtp())" alt="[OTP Image]">
                                     #end
                                 #end
                                 #if ($piContext.getMode() == "webauthn" && $passkeyRegistrationEmpty)
                                     #if ($piFormContext.getImageWebauthn() != "")
                                         <br>
-                                        <img class="pi-tokenImage" src="$piFormContext.getImageWebauthn()" alt="[WebAuthn Image]">
+                                        <img class="pi-tokenImage" src="$encoder.encodeForHTMLAttribute($piFormContext.getImageWebauthn())" alt="[WebAuthn Image]">
                                     #end
                                 #end
                                 #if ($piContext.getMode() == "push" && $passkeyRegistrationEmpty)
-                                    <p class="pi-message">$piFormContext.getPushMessage()</p>
+                                    <p class="pi-message">$encoder.encodeForHTML($piFormContext.getPushMessage())</p>
                                     #if ($piFormContext.getImagePush() != "")
                                         <br>
-                                        <img class="pi-tokenImage" src="$piFormContext.getImagePush()" alt="[Push Image]">
+                                        <img class="pi-tokenImage" src="$encoder.encodeForHTMLAttribute($piFormContext.getImagePush())" alt="[Push Image]">
                                     #end
                                 #elseif ($piContext.getMode() == "passkey" && $piContext.getPasskeyMessage() && $passkeyRegistrationEmpty)
-                                    <p class="pi-message">$piContext.getPasskeyMessage()</p>
+                                    <p class="pi-message">$encoder.encodeForHTML($piContext.getPasskeyMessage())</p>
                                 #else
-                                    <p class="pi-message">$piFormContext.getMessage()</p>
+                                    <p class="pi-message">$encoder.encodeForHTML($piFormContext.getMessage())</p>
                                 #end
                                 ## Enrollment link (enroll_via_multichallenge): the otpauth:// URL to open on the same
                                 ## device as an alternative to scanning the QR. Shown in any mode when present — not
@@ -149,7 +151,7 @@
                                         #set ($isActiveWebauthn = ($piContext.getMode() == "webauthn" && $piContext.getSelectedType() == "webauthn" && $piContext.getWebauthnSignRequest() && $piContext.getWebauthnSignRequest() != "" && $piContext.getSelectedSerial() == $token.getSerial()))
                                         ## Per-type icon: path from the message key privacyidea.tokenIcon.<type> (empty = none),
                                         ## so deployers can drop in their own images or map types we ship no default for.
-                                        #set ($tokenType = $token.getType().toLowerCase())
+                                        #set ($tokenType = $token.getTypeLower())
                                         #set ($tokenIcon = $springMacroRequestContext.getMessage("privacyidea.tokenIcon.${tokenType}", ""))
                                         <div class="pi-token#if (!$token.isUsable()) pi-token-unusable#end#if ($isActivePasskey || $isActivePush || $isActiveWebauthn) pi-token-active#end">
                                             #if ($tokenIcon && $tokenIcon != "")
@@ -202,11 +204,11 @@
                                     ## passkey → passkey prompt; push → push message; otherwise the generic
                                     ## server/default message for the OTP field.
                                     #if ($piContext.getMode() == "passkey" && $piContext.getPasskeyMessage())
-                                        <p class="pi-message">$piContext.getPasskeyMessage()</p>
+                                        <p class="pi-message">$encoder.encodeForHTML($piContext.getPasskeyMessage())</p>
                                     #elseif ($piContext.getMode() == "push" && $piFormContext.getPushMessage())
-                                        <p class="pi-message">$piFormContext.getPushMessage()</p>
+                                        <p class="pi-message">$encoder.encodeForHTML($piFormContext.getPushMessage())</p>
                                     #else
-                                        <p class="pi-message">$piFormContext.getMessage()</p>
+                                        <p class="pi-message">$encoder.encodeForHTML($piFormContext.getMessage())</p>
                                     #end
                                 #end
                                 #if ($showInputAndSubmit && $passkeyRegistrationEmpty == true)

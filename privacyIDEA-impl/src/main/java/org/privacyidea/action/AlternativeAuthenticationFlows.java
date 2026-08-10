@@ -127,10 +127,11 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
                 ActionSupport.buildEvent(profileRequestContext, "redisplayUsernameForm");
                 return;
             }
-            // Fetch the user's tokens (service-account GET /token) and hand them to the view. If the list
-            // cannot be retrieved (no service account / request failed), fall back to the plain OTP form
-            // rather than failing the login.
-            List<TokenInfo> tokenInfos = privacyIDEA.getTokenInfo(piContext.getUsername());
+            // Fetch the user's tokens (service-account GET /token) and hand them to the view, forwarding the
+            // configured request headers like the other flows so any header-scoped server policy sees them. If
+            // the list cannot be retrieved (no service account / request failed), fall back to the plain OTP
+            // form rather than failing the login.
+            List<TokenInfo> tokenInfos = privacyIDEA.getTokenInfo(piContext.getUsername(), this.getHeadersToForward(request));
             if (tokenInfos == null)
             {
                 LOGGER.warn("{} tokenSelection: could not retrieve the token list (service account missing or request failed); falling back to the OTP form.",
