@@ -414,6 +414,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             else
             {
                 LOGGER.error("{} tokenSelection: could not initialize a passkey challenge.", this.getLogPrefix());
+                piContext.setFormErrorMessage("Could not start passkey authentication. Please try again or choose another token.");
             }
         }
         else if ("push".equalsIgnoreCase(type))
@@ -482,16 +483,27 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         PIResponse response = privacyIDEA.triggerChallenges(piContext.getUsername(), Map.of("serial", serial), headers);
         if (response == null)
         {
-            LOGGER.error("{} tokenSelection: triggering token '{}' returned no response.", this.getLogPrefix(), serial);
+            LOGGER.error("{} tokenSelection: triggering token '{}' returned no response.", this.getLogPrefix(), sanitizeForLog(serial));
+            piContext.setFormErrorMessage("Could not reach the privacyIDEA server. Please try again.");
             return null;
         }
         if (response.error != null)
         {
-            LOGGER.error("{} tokenSelection: triggering token '{}' failed: {}!", this.getLogPrefix(), serial, response.error.message);
+            LOGGER.error("{} tokenSelection: triggering token '{}' failed: {}!", this.getLogPrefix(), sanitizeForLog(serial), response.error.message);
             piContext.setFormErrorMessage(response.error.message);
             return null;
         }
         return response;
+    }
+
+    /**
+     * Strip CR/LF from a (potentially user-controlled) value before logging it, so a crafted form field
+     * such as {@code selectedSerial} cannot inject forged log lines.
+     */
+    @Nonnull
+    private static String sanitizeForLog(@Nullable String value)
+    {
+        return value == null ? "null" : value.replaceAll("[\\r\\n]", "_");
     }
 
     /**

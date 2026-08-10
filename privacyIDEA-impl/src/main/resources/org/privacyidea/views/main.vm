@@ -123,11 +123,14 @@
                                 #elseif ($piContext.getMode() == "passkey" && $piContext.getPasskeyMessage() && $passkeyRegistrationEmpty)
                                     <p class="pi-message">$piContext.getPasskeyMessage()</p>
                                 #else
-                                    #if ($piFormContext.getEnrollmentLink() != "")
-                                        <a id="enrollmentLink" href="$piFormContext.getEnrollmentLink()">#springMessageText("privacyidea.enrollmentLink", "Enrollment Link")</a>
-                                        <br>
-                                    #end
                                     <p class="pi-message">$piFormContext.getMessage()</p>
+                                #end
+                                ## Enrollment link (enroll_via_multichallenge): the otpauth:// URL to open on the same
+                                ## device as an alternative to scanning the QR. Shown in any mode when present — not
+                                ## just the OTP branch — so it appears alongside the push/QR enrollment too.
+                                #if ($piFormContext.getEnrollmentLink() != "")
+                                    <br>
+                                    <a id="enrollmentLink" href="$encoder.encodeForHTMLAttribute($piFormContext.getEnrollmentLink())">#springMessageText("privacyidea.enrollmentLink", "Enrollment Link")</a>
                                 #end
                             </div>
                             #end
@@ -210,11 +213,18 @@
                                     ## Optional input placeholder ("hint"), configured via the privacyidea.inputHint
                                     ## message key (empty by default = no placeholder), so it is translatable.
                                     #set ($inputHint = $springMacroRequestContext.getMessage("privacyidea.inputHint", ""))
+                                    ## Accessible name for the field: use the admin hint if set, else a stable label,
+                                    ## so screen readers always announce the field even when no placeholder is shown.
+                                    #if ($inputHint && $inputHint != "")
+                                        #set ($otpLabel = $inputHint)
+                                    #else
+                                        #set ($otpLabel = $springMacroRequestContext.getMessage("privacyidea.otpLabel", "One-Time-Password"))
+                                    #end
                                     ## type=password for native, reliable masking. autocomplete=one-time-code + the
                                     ## data-*-ignore hints steer password managers away from offering saved logins
                                     ## (Firefox ignores autocomplete on password fields and may still offer them —
                                     ## accepted, in exchange for guaranteed masking).
-                                    <input id="otp" class="form-element form-field" name="otp" type="password" autocomplete="one-time-code" data-1p-ignore="true" data-lpignore="true" data-form-type="other" autofocus value=""#if ($inputHint && $inputHint != "") placeholder="$encoder.encodeForHTMLAttribute($inputHint)"#end>
+                                    <input id="otp" class="form-element form-field" name="otp" type="password" autocomplete="one-time-code" data-1p-ignore="true" data-lpignore="true" data-form-type="other" autofocus value="" aria-label="$encoder.encodeForHTMLAttribute($otpLabel)"#if ($inputHint && $inputHint != "") placeholder="$encoder.encodeForHTMLAttribute($inputHint)"#end>
                                     <br>
                                 #end
 
