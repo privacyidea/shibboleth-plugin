@@ -96,8 +96,8 @@ body {
 
 #resetButton {
     background-color: transparent;
-    border: 1px solid #913535;
-    color: #913535;
+    border: 1px solid #b45309;
+    color: #b45309;
     border-radius: 5px;
     padding: 12px 0;
     width: 280px;
@@ -107,8 +107,8 @@ body {
 }
 
 #resetButton:hover {
-    background-color: #fbeaea;
-    color: #6f2727;
+    background-color: #fef3e2;
+    color: #92400e;
 }
 
 #enrollmentLink {
