@@ -7,7 +7,7 @@
   server can recognise the device. The token rotates on every use (theft detection) and privacyIDEA
   owns the policy (including the cookie lifetime — it is server-driven, not configured in the plugin).
   Requires privacyIDEA 3.14+ with a `remember_device` policy. Configure via `privacyidea.api_key` and
-  `privacyidea.remember_me_enabled`. Applies only when a preceding first factor authenticated the user
+  `privacyidea.remember_device_enabled`. Applies only when a preceding first factor authenticated the user
   (ignored in standalone mode).
 * New authentication flow `privacyidea.authentication_flow=tokenSelection`: lists the user's tokens and
   lets them choose which one to use. Triggerable tokens (push / WebAuthn / passkey) run their ceremony

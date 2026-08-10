@@ -94,6 +94,20 @@ body {
     font-size: 0.98em;
 }
 
+/* Alternate-method buttons (OTP / Push / WebAuthn): stack vertically and render as outlines, so only the
+   primary action on the screen (the green Submit, or the active ceremony's Retry) is filled. */
+#otherLoginOptions .form-element-button {
+    display: block;
+    background: transparent;
+    color: #1976d2;
+    border: 1px solid #1976d2;
+}
+
+#otherLoginOptions .form-element-button:hover {
+    background: #e3f2fd;
+    color: #125ea2;
+}
+
 #resetButton {
     background-color: transparent;
     border: 1px solid #b45309;
@@ -109,6 +123,19 @@ body {
 #resetButton:hover {
     background-color: #fef3e2;
     color: #92400e;
+}
+
+/* "Not Now" (decline optional enroll-via-multichallenge): neutral outline, secondary to the page actions. */
+#cancelEnrollmentButton {
+    background-color: transparent;
+    border: 1px solid #bdbdbd;
+    color: #555;
+    transition: background 0.2s, color 0.2s;
+}
+
+#cancelEnrollmentButton:hover {
+    background-color: #eeeeee;
+    color: #333;
 }
 
 #enrollmentLink {

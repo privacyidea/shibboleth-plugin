@@ -85,12 +85,12 @@ public class PIFormContext extends BaseContext
     @Nullable
     public String getPollInBrowserUrl() {return pollInBrowserUrl;}
 
-    public void setImageOtp(@Nonnull String imageOtp) {this.imageOtp = imageOtp; this.enrollViaMultichallenge = true;}
+    public void setImageOtp(@Nonnull String imageOtp) {this.imageOtp = imageOtp;}
 
     @Nonnull
     public String getImageOtp() {return imageOtp;}
 
-    public void setImagePush(@Nonnull String imagePush) {this.imagePush = imagePush; this.enrollViaMultichallenge = true;}
+    public void setImagePush(@Nonnull String imagePush) {this.imagePush = imagePush;}
 
     @Nonnull
     public String getImagePush() {return imagePush;}
@@ -106,6 +106,8 @@ public class PIFormContext extends BaseContext
     public String getEnrollmentLink() {return enrollmentLink;}
 
     public boolean isEnrollViaMultichallenge() {return enrollViaMultichallenge;}
+
+    public void setEnrollViaMultichallenge(boolean enrollViaMultichallenge) {this.enrollViaMultichallenge = enrollViaMultichallenge;}
 
     public void setEnrollViaMultichallengeOptional(boolean enrollViaMultichallengeOptional) {this.enrollViaMultichallengeOptional = enrollViaMultichallengeOptional;}
 

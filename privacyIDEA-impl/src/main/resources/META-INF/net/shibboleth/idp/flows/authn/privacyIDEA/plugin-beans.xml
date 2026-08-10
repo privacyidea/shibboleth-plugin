@@ -59,7 +59,7 @@
           p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier"
           p:httpServletResponseSupplier-ref="shibboleth.HttpServletResponseSupplier"
           p:apiKey="%{privacyidea.api_key:#{null}}"
-          p:rememberMeEnabled="%{privacyidea.remember_me_enabled:false}"/>
+          p:rememberMeEnabled="%{privacyidea.remember_device_enabled:false}"/>
 
     <bean id="piAuthenticator" class="org.privacyidea.action.PrivacyIDEAAuthenticator" scope="prototype"
           p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier"
