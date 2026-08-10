@@ -53,7 +53,7 @@ To ensure that only valid local users can log in, you should rely on the standar
 
 ### Remember Me:
 **You can let users skip the privacyIDEA second factor on a trusted device.**<br>
-When `privacyidea.remember_me_enabled=true` (and a `privacyidea.api_key` is configured), a "remember this device" checkbox is shown on the privacyIDEA form. If the user ticks it and authentication succeeds, privacyIDEA issues a persistent-device cookie. On later logins from that browser the plugin presents the cookie to privacyIDEA, which recognises the device so the second factor can be skipped — for as long as the **server-side** policy allows.
+When `privacyidea.remember_device_enabled=true` (and a `privacyidea.api_key` is configured), a "remember this device" checkbox is shown on the privacyIDEA form. If the user ticks it and authentication succeeds, privacyIDEA issues a persistent-device cookie. On later logins from that browser the plugin presents the cookie to privacyIDEA, which recognises the device so the second factor can be skipped — for as long as the **server-side** policy allows.
 
 The logic lives in privacyIDEA, not in the plugin: the plugin is only the transport. This requires **privacyIDEA 3.14+** with a `remember_device` policy (scope `authentication`) enabled for this client. See privacyIDEA's own documentation for the policy, validity and counter options.
 
@@ -66,7 +66,7 @@ How it works and why it is safe:
 
 > **Security note.** A remembered device is a deliberate, bounded relaxation of MFA, not a free one. Token rotation gives you *detection* of a stolen cookie, but between rotations the cookie is still a bearer token — it is not bound to the device the way a passkey is. Enable it where reducing second-factor friction is worth that trade-off, and rely on the server-side policy (max age, counters) and per-client key revocation to bound the exposure.
 
-Configure it with `privacyidea.api_key` and `privacyidea.remember_me_enabled` — see the table below. The cookie name and lifetime are owned by privacyIDEA, so there is nothing else to set on the plugin side.
+Configure it with `privacyidea.api_key` and `privacyidea.remember_device_enabled` — see the table below. The cookie name and lifetime are owned by privacyIDEA, so there is nothing else to set on the plugin side.
 
 ### Requested authentication context (AuthnContextClassRef):
 By default the privacyIDEA flow advertises no specific SAML `AuthnContextClassRef`. If a service provider sends a `RequestedAuthnContext` — or you need the IdP to assert a particular context class, e.g. the REFEDS MFA profile for eduGAIN / DFN-AAI — declare the values the flow can satisfy via `idp.authn.privacyIDEA.supportedPrincipals` in `privacyidea.properties`:
@@ -89,9 +89,8 @@ The different configuration parameters are explained in the following table:
 | `privacyidea.realm`                  | This realm will be appended to all requests to the privacyIDEA. <br/>Note: Drop it to use the default realm.                                                                                                                                                                                                                                                                                                                                                                           |
 | `privacyidea.verify_ssl`             | Choose if the Shibboleth should verify the SSL certificate of the privacyIDEA. <br/>Note: Always verify the SSL certificate in a productive environment!                                                                                                                                                                                                                                                                                                                               |
 | `privacyidea.http_timeout_ms`        | HTTP timeout for all privacyIDEA requests, in milliseconds. Only digits allowed; a blank/invalid value keeps the default. Default `10000` (10s).                                                                                                                                                                                                                                                                                                                                        |
-| `privacyidea.default_message`        | Use this parameter to edit the default user message.                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `privacyidea.otp_field_hint`         | Use this parameter to edit the default placeholder for the OTP input field.                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `privacyidea.authentication_flow`    | Choose one of three possible options:<br>`default` - standard authentication flow,<br>`triggerChallenge` - triggers all challenges beforehand using the provided service account. Required additional parameters: *privacyidea.service_name*, *privacyidea.service_pass* (see below),<br>`sendStaticPass` - performs the privacyIDEA server request automatically beforehand using the provided static password. Required additional parameter: *privacyidea.static_pass* (see below). |
+| `privacyidea.default_message`        | Use this parameter to edit the default user message (shown when the server sends no message).                                                                                                                                                                                                                                                                                                                                                                                          |
+| `privacyidea.authentication_flow`    | Choose one of the possible options:<br>`default` - standard authentication flow,<br>`triggerChallenge` - triggers all challenges beforehand using the provided service account. Required additional parameters: *privacyidea.service_name*, *privacyidea.service_pass* (see below),<br>`sendStaticPass` - performs the privacyIDEA server request automatically beforehand using the provided static password. Required additional parameter: *privacyidea.static_pass* (see below),<br>`tokenSelection` - lists the user's tokens and lets the user choose which one to authenticate with. Triggerable tokens (push/WebAuthn/passkey) get a button; others are used by typing their code. Needs a service account (like `triggerChallenge`) with `tokenlist` rights. |
 | `privacyidea.service_name`           | The username of the service account required by the `triggerchallenge` config option. <br/>Note: Please make sure, that the service account has the correct rights.                                                                                                                                                                                                                                                                                                                    |
 | `privacyidea.service_pass`           | The password of your service account, which is required by the `triggerchallenge` config option.                                                                                                                                                                                                                                                                                                                                                                                       |
 | `privacyidea.service_realm`          | Specify a separate service account's realm if needed. <br/>Note: If the service account is located in the same realm as the users, it is sufficient to specify the realm in the `privacyidea.realm` parameter.                                                                                                                                                                                                                                                                         |
@@ -104,7 +103,7 @@ The different configuration parameters are explained in the following table:
 | `privacyidea.disable_passkey`        | Set to 'true' to disable passkey authentication.                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `privacyidea.skip_first_step`        | Default `true`. When `true`, the plugin's own username/password form is skipped if a prior MFA sub-flow (e.g. `authn/Password`) produced a fresh authentication result in the current MFA run, and that result's principal is used. If no fresh result exists (e.g. privacyIDEA is the first factor, or only a stale session principal is available), the form is displayed regardless — prefilled with the principal if one is known. Set to `false` to always display the form.      |
 | `privacyidea.api_key`                | API key identifying this plugin to privacyIDEA (`pi_<key_id>_<secret>`), obtained from the privacyIDEA admin. **Required** for remember-me; sent as the `X-API-Key` header. Keep it secret (see [Securing the configuration](#securing-the-configuration)).                                                                                                                                                                                                                              |
-| `privacyidea.remember_me_enabled`    | Default `false`. Set to `true` (with `api_key` set) to show a "remember this device" checkbox on the privacyIDEA form. When checked and authentication succeeds, privacyIDEA issues a rotating `pi_remember_device` cookie; on later logins the plugin presents it and privacyIDEA can skip the second factor per its `remember_device` policy. Requires **privacyIDEA 3.14+**. Only applies when a preceding first factor authenticated the user — **ignored in standalone mode**. See the [Remember Me](#remember-me) section. |
+| `privacyidea.remember_device_enabled`    | Default `false`. Set to `true` (with `api_key` set) to show a "remember this device" checkbox on the privacyIDEA form. When checked and authentication succeeds, privacyIDEA issues a rotating `pi_remember_device` cookie; on later logins the plugin presents it and privacyIDEA can skip the second factor per its `remember_device` policy. Requires **privacyIDEA 3.14+**. Only applies when a preceding first factor authenticated the user — **ignored in standalone mode**. See the [Remember Me](#remember-me) section. |
 | `privacyidea.debug`                  | Set this parameter to true to see the debug messages in the `idp-process.log`.                                                                                                                                                                                                                                                                                                                                                                                                         |
 
 ### Securing the configuration:
@@ -136,6 +135,54 @@ Note: Obviously, you need to adjust the flow transition map to your needs.
 Note: Make sure to change each configuration variables names to `privacyidea2.*` in the `privacyidea2.properties` file.
 - Restart the Shibboleth IdP server to apply the changes and register new auth flow.
 
-### Translation:
-If you want to translate the plugin, you can use the `messages.properties` file located in `$idp_install_path/conf/authn/messages.properties`.<br>
-See shibboleth documentation for more information about the translation process: [Shibboleth - Translation](https://shibboleth.atlassian.net/wiki/spaces/IDP30/pages/2499314036/MessagesTranslation).
+### Translation / UI text:
+All of the plugin's UI labels (buttons, headers, the token list, …) are message keys in the `messages.properties`
+bundle located at `$idp_install_path/messages/messages.properties`. Editing a value there re-labels that element;
+adding a locale variant (e.g. `messages_pl.properties`) provides a translation. These files live outside the war,
+so a change is picked up without a redeploy (within `idp.message.cacheSeconds`, default 300s).
+
+The OTP input **placeholder** ("hint") is the key `privacyidea.inputHint`. It is empty by default (no placeholder);
+set it to give users guidance, e.g. `privacyidea.inputHint=Token PIN + Yubikey press!`. Because it is a message key
+it is translated per locale like every other label — there is no separate plugin property for it.
+
+See the shibboleth documentation for more information about the translation process: [Shibboleth - Translation](https://shibboleth.atlassian.net/wiki/spaces/IDP30/pages/2499314036/MessagesTranslation).
+
+### Token icons (tokenSelection):
+In the `tokenSelection` flow each token row can show an icon next to its type. The icon is chosen by a message
+key `privacyidea.tokenIcon.<tokentype>` (token type lowercased) whose value is an image path served under the IdP
+context. An **empty value or a missing key means no icon**, so a token type we ship no default for (or a new type
+introduced on the server) simply renders without one — nothing breaks.
+
+Defaults we ship (in `$idp_install_path/edit-webapp/images/privacyIDEA/`):
+
+| Key | Icon |
+| --- | --- |
+| `privacyidea.tokenIcon.push` | `push.svg` (smartphone) |
+| `privacyidea.tokenIcon.passkey` | `securitykey.svg` (key) |
+| `privacyidea.tokenIcon.webauthn` | `securitykey.svg` (key) |
+| `privacyidea.tokenIcon.tan` | `tan.svg` (notepad) |
+| `privacyidea.tokenIcon.hotp` | `hotp.svg` (counter-clockwise arrow / counter) |
+| `privacyidea.tokenIcon.totp` | `totp.svg` (fading clock / time) |
+| `privacyidea.tokenIcon.spass` | `spass.svg` (masked field / static password) |
+| `privacyidea.tokenIcon.applspec` | `spass.svg` (masked field) |
+| `privacyidea.tokenIcon.yubikey` | `securitykey.svg` (key) |
+| `privacyidea.tokenIcon.yubico` | `securitykey.svg` (key) |
+| `privacyidea.tokenIcon.paper` | `tan.svg` (notepad) |
+| `privacyidea.tokenIcon.daypassword` | `totp.svg` (fading clock) |
+| `privacyidea.tokenIcon.4eyes` | `4eyes.svg` (people) |
+| `privacyidea.tokenIcon.question` | `shield-question.svg` (shield + question) |
+| `privacyidea.tokenIcon.indexedsecret` | `shield-question.svg` (shield + question) |
+| `privacyidea.tokenIcon.email` | `email.svg` (envelope) |
+| `privacyidea.tokenIcon.sms` | `sms.svg` (message bubble) |
+| `privacyidea.tokenIcon.remote` | `remote.svg` (cast) |
+
+To use your own icon, drop the file under `$idp_install_path/edit-webapp/` and point the key at it, e.g.
+`privacyidea.tokenIcon.hotp=/images/mycorp/hotp.png`. The `hotp`/`totp` defaults use generic counter/time
+metaphors since those tokens can live on a hardware device *or* a phone app — override them if your fleet is
+uniform. Add a key for any other type the same way.
+
+The shipped icons are from [Lucide](https://lucide.dev) (ISC License) — `smartphone`, `key-round`,
+`notepad-text`, `rotate-ccw`, `rotate-cw-fading-clock`, `rectangle-ellipsis`, `users`, `shield-question-mark`,
+`mail`, `message-square-more`, `cast` — recolored to the theme blue; each SVG keeps a license comment. Lucide/[Feather](https://feathericons.com)
+icons match the plugin's line style; when copying one, set `stroke="#1976d2"` (they default to `currentColor`, which
+renders black through an `<img>` tag) and it will be sized by the `.pi-token-icon` CSS rule.

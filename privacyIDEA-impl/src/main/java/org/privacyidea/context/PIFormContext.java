@@ -15,6 +15,8 @@
  */
 package org.privacyidea.context;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -26,8 +28,6 @@ public class PIFormContext extends BaseContext
     private String defaultMessage;
     @Nonnull
     private String message = "";
-    @Nonnull
-    private String otpFieldHint;
     @Nullable
     private String pushMessage;
     @Nullable
@@ -49,11 +49,13 @@ public class PIFormContext extends BaseContext
     private String enrollmentLink = "";
     private boolean enrollViaMultichallenge = false;
     private boolean enrollViaMultichallengeOptional = false;
+    /** The user's tokens for the tokenSelection flow (usable first, then unusable); empty otherwise. */
+    @Nonnull
+    private List<TokenListEntry> tokens = Collections.emptyList();
 
-    public PIFormContext(@Nullable String defaultMessage, @Nullable String otpFieldHint, @Nullable Integer otpLength, @Nullable String pollingInterval, boolean pollInBrowser, @Nullable String pollInBrowserUrl, boolean disablePasskey, boolean rememberMeEnabled)
+    public PIFormContext(@Nullable String defaultMessage, @Nullable Integer otpLength, @Nullable String pollingInterval, boolean pollInBrowser, @Nullable String pollInBrowserUrl, boolean disablePasskey, boolean rememberMeEnabled)
     {
         this.defaultMessage = Objects.requireNonNullElse(defaultMessage, "Please enter your One-Time-Password:");
-        this.otpFieldHint = Objects.requireNonNullElse(otpFieldHint, "One-Time-Password (OTP)");
         this.pollingInterval = Objects.requireNonNullElse(pollingInterval, "2");
         this.pollInBrowser = pollInBrowser;
         this.pollInBrowserUrl = pollInBrowserUrl;
@@ -66,9 +68,6 @@ public class PIFormContext extends BaseContext
 
     @Nonnull
     public String getMessage() {return (!message.isEmpty()) ? message : defaultMessage;}
-
-    @Nonnull
-    public String getOtpFieldHint() {return otpFieldHint;}
 
     public void setPushMessage(@Nullable String pushMessage) {this.pushMessage = pushMessage;}
 
@@ -86,12 +85,12 @@ public class PIFormContext extends BaseContext
     @Nullable
     public String getPollInBrowserUrl() {return pollInBrowserUrl;}
 
-    public void setImageOtp(@Nonnull String imageOtp) {this.imageOtp = imageOtp; this.enrollViaMultichallenge = true;}
+    public void setImageOtp(@Nonnull String imageOtp) {this.imageOtp = imageOtp;}
 
     @Nonnull
     public String getImageOtp() {return imageOtp;}
 
-    public void setImagePush(@Nonnull String imagePush) {this.imagePush = imagePush; this.enrollViaMultichallenge = true;}
+    public void setImagePush(@Nonnull String imagePush) {this.imagePush = imagePush;}
 
     @Nonnull
     public String getImagePush() {return imagePush;}
@@ -108,7 +107,14 @@ public class PIFormContext extends BaseContext
 
     public boolean isEnrollViaMultichallenge() {return enrollViaMultichallenge;}
 
+    public void setEnrollViaMultichallenge(boolean enrollViaMultichallenge) {this.enrollViaMultichallenge = enrollViaMultichallenge;}
+
     public void setEnrollViaMultichallengeOptional(boolean enrollViaMultichallengeOptional) {this.enrollViaMultichallengeOptional = enrollViaMultichallengeOptional;}
+
+    public void setTokens(@Nonnull List<TokenListEntry> tokens) {this.tokens = tokens;}
+
+    @Nonnull
+    public List<TokenListEntry> getTokens() {return tokens;}
 
     public boolean isEnrollViaMultichallengeOptional() {return enrollViaMultichallengeOptional;}
 

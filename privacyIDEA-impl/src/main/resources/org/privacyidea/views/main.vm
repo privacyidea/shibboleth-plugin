@@ -75,50 +75,158 @@
                         #else
                             #set ($passkeyRegistrationEmpty = true)
                         #end
+                        ## tokenSelection: the token list is the chooser and stays visible while a ceremony runs
+                        ## in place. "otp" lists the tokens; "passkey"/"webauthn" run their credential ceremony
+                        ## (picked row → Retry); "push" polls in place (picked row highlighted).
+                        ## When the server responds with an enroll-via-multichallenge (a QR to scan + enter the new
+                        ## token's OTP), the list yields so the normal enrollment UI (image + message) shows instead.
+                        #if (!$piFormContext.getTokens().isEmpty() && !$piFormContext.isEnrollViaMultichallenge() && $passkeyRegistrationEmpty && ($piContext.getMode() == "otp" || $piContext.getMode() == "passkey" || $piContext.getMode() == "push" || $piContext.getMode() == "webauthn"))
+                            #set ($showTokenList = true)
+                        #else
+                            #set ($showTokenList = false)
+                        #end
+                        ## OTP input + remember-me + Submit: shown in otp/passkey (the user can still type a code for a
+                        ## direct-entry token while a passkey ceremony runs), but hidden in push (poll-only) mode.
+                        #if ($piContext.getMode() != "push" && ($showTokenList || $piContext.getMode() != "passkey"))
+                            #set ($showInputAndSubmit = true)
+                        #else
+                            #set ($showInputAndSubmit = false)
+                        #end
                         <div class="content">
+                            ## MESSAGES & IMAGES (non-tokenSelection modes) ##
+                            ## In tokenSelection the error + message are rendered below the token list, right above
+                            ## the OTP field (see #one-time-password), so this whole block is skipped there.
+                            #if (!$showTokenList)
                             <div class="form-element-wrapper" id="messages-and-images">
-                                ## IMAGES & MESSAGES ##
+                                ## Encoded — formErrorMessage may originate from request params or server error text.
+                                #if ($piContext.getFormErrorMessage())
+                                    <p class="pi-error" role="alert">$encoder.encodeForHTML($piContext.getFormErrorMessage())</p>
+                                #end
+                                ## Server-provided values (messages + QR/data-URL images) are encoded: HTML for the
+                                ## message text, HTML-attribute for the image src, to prevent injected markup / attribute breakouts.
                                 #if ($piContext.getMode() == "otp" && $passkeyRegistrationEmpty)
                                     #if ($piFormContext.getImageOtp() != "")
                                         <br>
-                                        <img class="pi-tokenImage" src="$piFormContext.getImageOtp()" alt="[OTP Image]">
+                                        <img class="pi-tokenImage" src="$encoder.encodeForHTMLAttribute($piFormContext.getImageOtp())" alt="[OTP Image]">
                                     #end
                                 #end
                                 #if ($piContext.getMode() == "webauthn" && $passkeyRegistrationEmpty)
                                     #if ($piFormContext.getImageWebauthn() != "")
                                         <br>
-                                        <img class="pi-tokenImage" src="$piFormContext.getImageWebauthn()" alt="[WebAuthn Image]">
+                                        <img class="pi-tokenImage" src="$encoder.encodeForHTMLAttribute($piFormContext.getImageWebauthn())" alt="[WebAuthn Image]">
                                     #end
                                 #end
-                                ## Encoded — formErrorMessage may originate from request params or server error text.
-                                #if ($piContext.getFormErrorMessage())
-                                    <br>
-                                    <p class="pi-error" role="alert">$encoder.encodeForHTML($piContext.getFormErrorMessage())</p>
-                                #end
-                                <br>
                                 #if ($piContext.getMode() == "push" && $passkeyRegistrationEmpty)
-                                    <p class="pi-message">$piFormContext.getPushMessage()</p>
+                                    <p class="pi-message">$encoder.encodeForHTML($piFormContext.getPushMessage())</p>
                                     #if ($piFormContext.getImagePush() != "")
                                         <br>
-                                        <img class="pi-tokenImage" src="$piFormContext.getImagePush()" alt="[Push Image]">
+                                        <img class="pi-tokenImage" src="$encoder.encodeForHTMLAttribute($piFormContext.getImagePush())" alt="[Push Image]">
                                     #end
                                 #elseif ($piContext.getMode() == "passkey" && $piContext.getPasskeyMessage() && $passkeyRegistrationEmpty)
-                                    <p class="pi-message">$piContext.getPasskeyMessage()</p>
+                                    <p class="pi-message">$encoder.encodeForHTML($piContext.getPasskeyMessage())</p>
                                 #else
-                                    #if ($piFormContext.getEnrollmentLink() != "")
-                                        <a id="enrollmentLink" href="$piFormContext.getEnrollmentLink()">#springMessageText("privacyidea.enrollmentLink", "Enrollment Link")</a>
-                                        <br>
-                                    #end
-                                    <p class="pi-message">$piFormContext.getMessage()</p>
+                                    <p class="pi-message">$encoder.encodeForHTML($piFormContext.getMessage())</p>
                                 #end
-
+                                ## Enrollment link (enroll_via_multichallenge): the otpauth:// URL to open on the same
+                                ## device as an alternative to scanning the QR. Shown in any mode when present — not
+                                ## just the OTP branch — so it appears alongside the push/QR enrollment too.
+                                #if ($piFormContext.getEnrollmentLink() != "")
+                                    <br>
+                                    <a id="enrollmentLink" href="$encoder.encodeForHTMLAttribute($piFormContext.getEnrollmentLink())">#springMessageText("privacyidea.enrollmentLink", "Enrollment Link")</a>
+                                #end
                             </div>
+                            #end
+
+                            ## TOKEN SELECTION LIST (tokenSelection flow) ##
+                            ## The user's tokens: triggerable ones (push/webauthn/passkey) get a "Use" button;
+                            ## the rest are used by typing their code in the always-present OTP field below.
+                            ## Unusable tokens (revoked/locked/…) are listed last, greyed, with their status.
+                            #if ($showTokenList)
+                                <div class="form-element-wrapper" id="tokenList">
+                                    <h3 id="tokenListHeader">#springMessageText("privacyidea.tokenListHeader", "Choose a token")</h3>
+                                    #foreach ($token in $piFormContext.getTokens())
+                                        ## Which row is the user running a ceremony on right now (persisted selectedType/serial)?
+                                        #set ($isActivePasskey = ($piContext.getMode() == "passkey" && $piContext.getSelectedType() == "passkey" && $piContext.getPasskeyChallenge() && $piContext.getPasskeyChallenge() != "" && $piContext.getSelectedSerial() == $token.getSerial()))
+                                        #set ($isActivePush = ($piContext.getMode() == "push" && $piContext.getSelectedType() == "push" && $piContext.getSelectedSerial() == $token.getSerial()))
+                                        #set ($isActiveWebauthn = ($piContext.getMode() == "webauthn" && $piContext.getSelectedType() == "webauthn" && $piContext.getWebauthnSignRequest() && $piContext.getWebauthnSignRequest() != "" && $piContext.getSelectedSerial() == $token.getSerial()))
+                                        ## Per-type icon: path from the message key privacyidea.tokenIcon.<type> (empty = none),
+                                        ## so deployers can drop in their own images or map types we ship no default for.
+                                        #set ($tokenType = $token.getTypeLower())
+                                        #set ($tokenIcon = $springMacroRequestContext.getMessage("privacyidea.tokenIcon.${tokenType}", ""))
+                                        <div class="pi-token#if (!$token.isUsable()) pi-token-unusable#end#if ($isActivePasskey || $isActivePush || $isActiveWebauthn) pi-token-active#end">
+                                            #if ($tokenIcon && $tokenIcon != "")
+                                                <img class="pi-token-icon" src="$request.getContextPath()$encoder.encodeForHTMLAttribute($tokenIcon)" alt="">
+                                            #end
+                                            <div class="pi-token-info">
+                                                <div class="pi-token-row">
+                                                    <span class="pi-token-type">$encoder.encodeForHTML($token.getType())</span>
+                                                    <span class="pi-token-serial">#springMessageText("privacyidea.tokenSerial", "Serial Number:") $encoder.encodeForHTML($token.getSerial())</span>
+                                                </div>
+                                                <div class="pi-token-row">
+                                                    #if ($token.getDescription() != "")
+                                                        <span class="pi-token-desc">$encoder.encodeForHTML($token.getDescription())</span>
+                                                    #end
+                                                    <span class="pi-token-lastused">#springMessageText("privacyidea.tokenLastUsed", "Last used:") #if ($token.getLastUsed() != "")$encoder.encodeForHTML($token.getLastUsed())#else#springMessageText("privacyidea.tokenNeverUsed", "not used yet")#end</span>
+                                                </div>
+                                            </div>
+                                            #if ($isActivePasskey)
+                                                ## Ceremony auto-started below; this re-triggers navigator.credentials.get after a cancel.
+                                                <button type="button" class="form-element-button pi-token-use" onclick="passkeyAuthentication()">#springMessageText("privacyidea.tokenRetry", "Retry")</button>
+                                            #elseif ($isActiveWebauthn)
+                                                ## WebAuthn ceremony auto-started by pi-main.js (mode=webauthn); this re-triggers it after a cancel.
+                                                <button type="button" class="form-element-button pi-token-use" onclick="doWebAuthn()">#springMessageText("privacyidea.tokenRetry", "Retry")</button>
+                                            #elseif ($isActivePush)
+                                                ## Push notification sent; the page polls in place until it is confirmed.
+                                                <span class="pi-token-waiting">#springMessageText("privacyidea.tokenWaiting", "Waiting for confirmation…")</span>
+                                            #elseif ($token.isTriggerable())
+                                                ## Serial/type are carried in data-* attributes (HTML-attribute encoded) and copied into
+                                                ## the hidden fields by a delegated listener (pi-eventListeners.js) on click — never
+                                                ## interpolated into an inline JS string, so a serial containing a quote cannot break out.
+                                                <button type="submit" class="form-element-button pi-token-use" name="_eventId_proceed"
+                                                        data-serial="$encoder.encodeForHTMLAttribute($token.getSerial())"
+                                                        data-type="$encoder.encodeForHTMLAttribute($token.getType())">#springMessageText("privacyidea.tokenUse", "Use")</button>
+                                            #elseif (!$token.isUsable())
+                                                <span class="pi-token-status">$encoder.encodeForHTML($token.getStatus())</span>
+                                            #end
+                                        </div>
+                                    #end
+                                </div>
+                            #end
 
                             ## OTP, REMEMBER-ME & SUBMIT ##
                             <div class="form-element-wrapper" id="one-time-password">
-                                #if ($piContext.getMode() != "push" && $piContext.getMode() != "passkey" && $passkeyRegistrationEmpty == true)
-                                    <label for="otp">$piFormContext.getOtpFieldHint()</label>
-                                    <input id="otp" class="form-element form-field" name="otp" type="password" autocomplete="new-password" autofocus value="">
+                                ## tokenSelection: error + instruction message sit here, right above the OTP field
+                                ## (order: token list → error → message → input).
+                                #if ($showTokenList)
+                                    #if ($piContext.getFormErrorMessage())
+                                        <p class="pi-error" role="alert">$encoder.encodeForHTML($piContext.getFormErrorMessage())</p>
+                                    #end
+                                    ## passkey → passkey prompt; push → push message; otherwise the generic
+                                    ## server/default message for the OTP field.
+                                    #if ($piContext.getMode() == "passkey" && $piContext.getPasskeyMessage())
+                                        <p class="pi-message">$encoder.encodeForHTML($piContext.getPasskeyMessage())</p>
+                                    #elseif ($piContext.getMode() == "push" && $piFormContext.getPushMessage())
+                                        <p class="pi-message">$encoder.encodeForHTML($piFormContext.getPushMessage())</p>
+                                    #else
+                                        <p class="pi-message">$encoder.encodeForHTML($piFormContext.getMessage())</p>
+                                    #end
+                                #end
+                                #if ($showInputAndSubmit && $passkeyRegistrationEmpty == true)
+                                    ## Optional input placeholder ("hint"), configured via the privacyidea.inputHint
+                                    ## message key (empty by default = no placeholder), so it is translatable.
+                                    #set ($inputHint = $springMacroRequestContext.getMessage("privacyidea.inputHint", ""))
+                                    ## Accessible name for the field: use the admin hint if set, else a stable label,
+                                    ## so screen readers always announce the field even when no placeholder is shown.
+                                    #if ($inputHint && $inputHint != "")
+                                        #set ($otpLabel = $inputHint)
+                                    #else
+                                        #set ($otpLabel = $springMacroRequestContext.getMessage("privacyidea.otpLabel", "One-Time-Password"))
+                                    #end
+                                    ## type=password for native, reliable masking. autocomplete=one-time-code + the
+                                    ## data-*-ignore hints steer password managers away from offering saved logins
+                                    ## (Firefox ignores autocomplete on password fields and may still offer them —
+                                    ## accepted, in exchange for guaranteed masking).
+                                    <input id="otp" class="form-element form-field" name="otp" type="password" autocomplete="one-time-code" data-1p-ignore="true" data-lpignore="true" data-form-type="other" autofocus value="" aria-label="$encoder.encodeForHTMLAttribute($otpLabel)"#if ($inputHint && $inputHint != "") placeholder="$encoder.encodeForHTMLAttribute($inputHint)"#end>
                                     <br>
                                 #end
 
@@ -126,8 +234,9 @@
                                 ## before submitting. isRememberMeEnabled() is already gated on a fresh first-factor
                                 ## result, so it is false when privacyIDEA is the first/only factor (standalone or
                                 ## passkey-only). Also gate on the same mode condition as the OTP field / Submit
-                                ## button above, so the checkbox is not left orphaned in push / passkey mode.
-                                #if ($piFormContext.isRememberMeEnabled() && $piContext.getMode() != "push" && $piContext.getMode() != "passkey" && $passkeyRegistrationEmpty == true)
+                                ## Shown with the OTP field (otp/passkey) and also in push mode — the token list keeps
+                                ## "remember this device" visible while polling; its state rides along on each poll submit.
+                                #if ($piFormContext.isRememberMeEnabled() && ($showInputAndSubmit || $showTokenList) && $passkeyRegistrationEmpty == true)
                                     <div id="rememberMe">
                                         <input id="pidea_remember_me" name="pidea_remember_me" value="1" type="checkbox"#if($piContext.isRememberMe()) checked#end>
                                         <label for="pidea_remember_me">#springMessageText("privacyidea.rememberMe", "Remember this device")</label>
@@ -140,9 +249,14 @@
                                     <input name="pidea_remember_me" value="1" type="hidden">
                                 #end
 
-                                #if ($piContext.getMode() != "push" && $piContext.getMode() != "passkey" && $passkeyRegistrationEmpty == true)
+                                #if ($showInputAndSubmit && $passkeyRegistrationEmpty == true)
                                     <button class="form-element-button" id="pi-form-submit-button" type="submit"
                                             name="_eventId_proceed">#springMessageText("privacyidea.submit", "Submit")</button>
+                                #elseif ($piContext.getMode() == "push" && $showTokenList)
+                                    ## Push mode hides the OTP input/Submit; offer a way back to the OTP field.
+                                    ## piChangeMode("otp") sets mode=otp and reloads — the input + Submit return.
+                                    <button class="form-element-button" id="switchToOtpButton" type="button"
+                                            onclick="piChangeMode('otp')">#springMessageText("privacyidea.otpButton", "One-Time-Password")</button>
                                 #end
                                 <br>
                             </div>
@@ -169,21 +283,30 @@
                                 <input id="passkeyLoginRequested" name="passkeyLoginRequested" value="0" type="hidden">
                                 <input id="otpLength" name="otpLength" value='$piFormContext.getOtpLength()' type="hidden">
                                 <input id="cancelEnrollment" name="cancelEnrollment" value="0" type="hidden">
+                                ## tokenSelection: set by a token row's "Use" button to trigger that specific token.
+                                <input id="selectedSerial" name="selectedSerial" value="" type="hidden">
+                                <input id="selectedType" name="selectedType" value="" type="hidden">
                             </div>
 
                             ## ACTIVE PASSKEY LOGIN (ceremony in progress / retry after a cancelled PIN) ##
-                            ## This is the method currently being used, so it is shown above the alternatives,
-                            ## not inside "Other Login Options".
-                            #if ($piContext.getPasskeyChallenge() && $piContext.getPasskeyChallenge() != "")
+                            ## The script auto-starts navigator.credentials.get whenever a passkey challenge is present
+                            ## (it runs here, after the hidden #passkeyChallenge field exists). The separate button is
+                            ## only rendered outside the token list; in tokenSelection the Retry button lives in the
+                            ## picked token's row instead.
+                            #if ($piContext.getMode() == "passkey" && $piContext.getPasskeyChallenge() && $piContext.getPasskeyChallenge() != "")
                                 <div class="form-element-wrapper" id="passkeyActive">
                                     <script>passkeyAuthentication()</script>
-                                    <input class="form-element-button" id="passkeyButton" type="button" name="passkeyButton"
-                                           onclick="passkeyAuthentication()" value="#springMessageText("privacyidea.passkeyLogin", "Passkey Login")">
-                                    <br>
+                                    #if (!$showTokenList)
+                                        <input class="form-element-button" id="passkeyButton" type="button" name="passkeyButton"
+                                               onclick="passkeyAuthentication()" value="#springMessageText("privacyidea.passkeyLogin", "Passkey Login")">
+                                        <br>
+                                    #end
                                 </div>
                             #end
 
                             ## OTHER LOGIN OPTIONS ##
+                            ## Hidden in tokenSelection mode: there the token list itself is the chooser.
+                            #if ($piFormContext.getTokens().isEmpty())
                             <div class="form-element-wrapper" id="otherLoginOptions">
                                 <h3 id="otherLoginOptionsHeader">#springMessageText("privacyidea.otherLoginOptions", "Other Login Options")</h3>
                                 ## POLL IN BROWSER ##
@@ -205,12 +328,14 @@
                                 #end
                                 <br>
                             </div>
+                            #end
 
                             ## PASSKEY (offered as an alternative login option) ##
                             <div class="form-element-wrapper" id="passkey">
                                 ## PASSKEY INIT — only when no passkey ceremony is already in progress
                                 ## (the active/retry case is rendered above the alternatives).
-                                #if ($passkeyRegistrationEmpty == true && !$piFormContext.isEnrollViaMultichallenge() && $piFormContext.isDisablePasskey() != true && !($piContext.getPasskeyChallenge() && $piContext.getPasskeyChallenge() != ""))
+                                ## Not shown in tokenSelection mode — a passkey appears as a row in the token list instead.
+                                #if ($passkeyRegistrationEmpty == true && !$piFormContext.isEnrollViaMultichallenge() && $piFormContext.isDisablePasskey() != true && !($piContext.getPasskeyChallenge() && $piContext.getPasskeyChallenge() != "") && $piFormContext.getTokens().isEmpty())
                                     <button class="form-element-button" id="initPasskeyLogin" type="submit"
                                             onclick="document.getElementById('passkeyLoginRequested').value = '1'"
                                             name="_eventId_proceed">#springMessageText("privacyidea.passkeyButton", "Sign in with Passkey")</button>

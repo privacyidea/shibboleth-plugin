@@ -50,6 +50,16 @@ function piEventListeners()
             doWebAuthn();
         });
     }
+
+    // tokenSelection: the "Use" buttons carry their token serial/type in data-* attributes. Copy them into
+    // the hidden fields on click (the button is type=submit, so this runs before the form submits). Reading
+    // via getAttribute keeps the values as plain data — they are never parsed as HTML or JS.
+    document.querySelectorAll(".pi-token-use[data-serial]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            piSetValue("selectedSerial", btn.getAttribute("data-serial"));
+            piSetValue("selectedType", btn.getAttribute("data-type"));
+        });
+    });
 }
 
 // Wait until the document is ready

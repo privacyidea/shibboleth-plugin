@@ -15,7 +15,10 @@
  */
 package org.privacyidea.action;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nonnull;
@@ -25,9 +28,11 @@ import net.shibboleth.idp.authn.context.UsernameContext;
 import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.context.ProfileRequestContext;
 import org.privacyidea.PIResponse;
+import org.privacyidea.TokenInfo;
 import org.privacyidea.context.PIContext;
 import org.privacyidea.context.PIServerConfigContext;
 import org.privacyidea.context.StringUtil;
+import org.privacyidea.context.TokenListEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,6 +107,48 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
             else
             {
                 LOGGER.error("{} triggerChallenge failed. Response was null. Fallback to standard procedure.", this.getLogPrefix());
+            }
+        }
+        else if ("tokenSelection".equals(piServerConfigContext.getConfigParams().getAuthenticationFlow()))
+        {
+            if (debug)
+            {
+                LOGGER.info("{} Authentication flow - tokenSelection.", this.getLogPrefix());
+            }
+            // No username yet (e.g. the username form was submitted blank) — getTokenInfo would NPE on the
+            // null user, so redisplay the username form instead, matching the default branch.
+            if (StringUtil.isBlank(piContext.getUsername()))
+            {
+                if (debug)
+                {
+                    LOGGER.info("{} No username available; redisplaying username/password form.", this.getLogPrefix());
+                }
+                piContext.setFormErrorMessage("Username is required.");
+                ActionSupport.buildEvent(profileRequestContext, "redisplayUsernameForm");
+                return;
+            }
+            // Fetch the user's tokens (service-account GET /token) and hand them to the view, forwarding the
+            // configured request headers like the other flows so any header-scoped server policy sees them. If
+            // the list cannot be retrieved (no service account / request failed), fall back to the plain OTP
+            // form rather than failing the login.
+            List<TokenInfo> tokenInfos = privacyIDEA.getTokenInfo(piContext.getUsername(), this.getHeadersToForward(request));
+            if (tokenInfos == null)
+            {
+                LOGGER.warn("{} tokenSelection: could not retrieve the token list (service account missing or request failed); falling back to the OTP form.",
+                            this.getLogPrefix());
+            }
+            else
+            {
+                List<TokenListEntry> entries = new ArrayList<>();
+                for (TokenInfo token : tokenInfos)
+                {
+                    entries.add(new TokenListEntry(token.serial, token.tokenType, token.description,
+                                                   token.info.get("last_auth"), token.active, token.revoked,
+                                                   token.locked, token.rolloutState, request.getLocale()));
+                }
+                // Usable tokens first; unusable (revoked/locked/…) at the end so the user still sees them.
+                entries.sort(Comparator.comparing(TokenListEntry::isUsable).reversed());
+                piFormContext.setTokens(entries);
             }
         }
         else if ("sendStaticPass".equals(piServerConfigContext.getConfigParams().getAuthenticationFlow()))

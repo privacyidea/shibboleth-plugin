@@ -35,7 +35,6 @@
           p:realm="%{privacyidea2.realm:#{null}}"
           p:verifySSL="%{privacyidea2.verify_ssl:true}"
           p:defaultMessage="%{privacyidea2.default_message:#{null}}"
-          p:otpFieldHint="%{privacyidea2.otp_field_hint:#{null}}"
           p:otpLength="%{privacyidea2.otp_length:#{null}}"
           p:authenticationFlow="%{privacyidea2.authentication_flow:#{'default'}}"
           p:serviceName="%{privacyidea2.service_name:#{null}}"
@@ -60,7 +59,7 @@
           p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier"
           p:httpServletResponseSupplier-ref="shibboleth.HttpServletResponseSupplier"
           p:apiKey="%{privacyidea2.api_key:#{null}}"
-          p:rememberMeEnabled="%{privacyidea2.remember_me_enabled:false}"/>
+          p:rememberMeEnabled="%{privacyidea2.remember_device_enabled:false}"/>
 
     <bean id="piAuthenticator" class="org.privacyidea.action.PrivacyIDEAAuthenticator" scope="prototype"
           p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier"

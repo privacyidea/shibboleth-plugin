@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
 import java.util.Objects;
@@ -75,6 +76,22 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         {
             rememberMeManager.addApiKey(headers);
         }
+
+        // tokenSelection: the user clicked "Use" on a specific token row — trigger that token, then
+        // re-render into the resulting challenge (push poll / WebAuthn / passkey). Only the Use button
+        // sets these, and they reset to empty on every re-render, so this fires once per selection.
+        // Gate on the configured flow: the hidden selectedType/selectedSerial fields ship in every form,
+        // so without this check a crafted request could trigger token challenges (e.g. passkey) even when
+        // tokenSelection is not the configured flow (or passkeys are disabled).
+        String selectedType = request.getParameter("selectedType");
+        String selectedSerial = request.getParameter("selectedSerial");
+        if ("tokenSelection".equals(piServerConfigContext.getConfigParams().getAuthenticationFlow())
+            && StringUtil.isNotBlank(selectedType) && StringUtil.isNotBlank(selectedSerial))
+        {
+            triggerSelectedToken(profileRequestContext, piContext, selectedType, selectedSerial, headers);
+            return;
+        }
+
         PIResponse piResponse = null;
 
         // Passkey: Sets the username collected from the privacyIDEA server and ends the authentication on success.
@@ -152,7 +169,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         if ("1".equals(request.getParameter("passkeyLoginRequested")))
         {
             PIResponse response = privacyIDEA.validateInitialize("passkey");
-            if (StringUtil.isNotBlank(response.passkeyChallenge))
+            if (response != null && StringUtil.isNotBlank(response.passkeyChallenge))
             {
                 // /validate/initialize puts the prompt at detail.passkey.message, parsed into
                 // response.passkeyMessage. detail.message is empty for that shape. Fall back to
@@ -175,6 +192,16 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                 {
                     ActionSupport.buildEvent(profileRequestContext, "reload");
                 }
+                return;
+            }
+            else
+            {
+                // Server unreachable / no challenge returned: surface an error instead of falling through
+                // (and, previously, NPE-ing on a null response).
+                LOGGER.error("{} Could not initialize a passkey challenge.", this.getLogPrefix());
+                piContext.setFormErrorMessage("Could not start passkey authentication. Please try again.");
+                ActionSupport.buildEvent(profileRequestContext,
+                                         request.getParameterMap().containsKey("_eventId_passkey") ? "reloadUsernameForm" : "reload");
                 return;
             }
         }
@@ -358,6 +385,151 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             LOGGER.error("{} privacyIDEA response was null. Please check the config and try again.", this.getLogPrefix());
             ActionSupport.buildEvent(profileRequestContext, "reload");
         }
+    }
+
+    /**
+     * Trigger the token the user picked in the tokenSelection list, then reload into its challenge:
+     * a passkey uses {@code /validate/initialize} (usernameless challenge, like "Sign in with Passkey");
+     * push / WebAuthn (and any other challenge token) use {@code /validate/triggerchallenge} scoped to the
+     * serial. {@link #extractChallengeData}/{@link #extractMessage} set the mode, transaction id and
+     * challenge data so the re-rendered form drives the right ceremony (push poll / WebAuthn / passkey).
+     *
+     * @param profileRequestContext the current profile request context
+     * @param piContext             the current privacyIDEA context
+     * @param type                  the selected token's type
+     * @param serial                the selected token's serial
+     * @param headers               headers to forward to privacyIDEA
+     */
+    private void triggerSelectedToken(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext,
+                                      @Nonnull String type, @Nonnull String serial, @Nonnull Map<String, String> headers)
+    {
+        // Remember which row was picked so the re-rendered list can mark it and drive the right ceremony.
+        // The type is authoritative — we set the mode explicitly per type rather than inferring it from the
+        // response, because triggerchallenge for a user who also owns a passkey/webauthn token can sweep those
+        // challenges into the response and flip the view into the wrong ceremony.
+        piContext.setSelectedSerial(serial);
+        piContext.setSelectedType(type);
+        // Clear any previous ceremony's passkey challenge before setting up the new selection. Otherwise a
+        // cancelled passkey (challenge still set) would survive into e.g. a following push selection and the
+        // auto-run script would flip the client back into the passkey ceremony.
+        piContext.setPasskeyChallenge("");
+        piContext.setPasskeyMessage(null);
+        piContext.setPasskeyTransactionID(null);
+        if ("passkey".equalsIgnoreCase(type))
+        {
+            PIResponse response = privacyIDEA.validateInitialize("passkey");
+            if (response != null && StringUtil.isNotBlank(response.passkeyChallenge))
+            {
+                piContext.setPasskeyMessage(StringUtil.isNotBlank(response.passkeyMessage) ? response.passkeyMessage : response.message);
+                piContext.setPasskeyChallenge(response.passkeyChallenge);
+                piContext.setMode("passkey");
+                piContext.setPasskeyTransactionID(response.transactionID);
+            }
+            else
+            {
+                LOGGER.error("{} tokenSelection: could not initialize a passkey challenge.", this.getLogPrefix());
+                piContext.setFormErrorMessage("Could not start passkey authentication. Please try again or choose another token.");
+            }
+        }
+        else if ("push".equalsIgnoreCase(type))
+        {
+            // Send the push notification and enter poll mode in place. Only the transaction id / push message
+            // are taken from the response — no extractChallengeData, so a co-triggered passkey/webauthn
+            // challenge cannot hijack the mode.
+            PIResponse response = triggerSerialChallenge(piContext, serial, headers);
+            if (response != null)
+            {
+                if (StringUtil.isNotBlank(response.transactionID))
+                {
+                    piContext.setTransactionID(response.transactionID);
+                }
+                piContext.setIsPushAvailable(true);
+                piFormContext.setPushMessage(response.pushMessage());
+                piContext.setMode("push");
+            }
+        }
+        else if ("webauthn".equalsIgnoreCase(type))
+        {
+            // Get the WebAuthn sign request and run the ceremony in place (like passkey, but via the WebAuthn
+            // JS path since the challenge is encoded differently). Only the transaction id / sign request /
+            // message are taken from the response — no extractChallengeData, so a co-triggered passkey
+            // challenge cannot hijack the mode.
+            PIResponse response = triggerSerialChallenge(piContext, serial, headers);
+            if (response != null)
+            {
+                String signRequest = response.mergedSignRequest();
+                if (StringUtil.isNotBlank(signRequest))
+                {
+                    if (StringUtil.isNotBlank(response.transactionID))
+                    {
+                        piContext.setTransactionID(response.transactionID);
+                    }
+                    piContext.setWebauthnSignRequest(signRequest);
+                    piContext.setMode("webauthn");
+                    extractMessage(response);
+                }
+                else
+                {
+                    // The response carried no WebAuthn challenge (e.g. the token was disabled between the
+                    // list fetch and the trigger). Don't switch into webauthn mode — that would auto-run
+                    // doWebAuthn() against an empty request with no in-row Retry — surface an error instead.
+                    LOGGER.error("{} tokenSelection: WebAuthn token '{}' returned no sign request.", this.getLogPrefix(), sanitizeForLog(serial));
+                    piContext.setFormErrorMessage("Could not start the security key challenge. Please try again or choose another token.");
+                }
+            }
+        }
+        else
+        {
+            // Any other challenge token: generic path (still hands off to the classic layout).
+            PIResponse response = triggerSerialChallenge(piContext, serial, headers);
+            if (response != null)
+            {
+                extractChallengeData(response);
+                extractMessage(response);
+            }
+        }
+        ActionSupport.buildEvent(profileRequestContext, "reload");
+    }
+
+    /**
+     * Trigger the challenge for a specific token serial and return the response only when it is a usable
+     * success (non-null, no server error). On a null or error response it logs and — for a server error —
+     * sets the form error message, then returns {@code null} so the caller skips its success handling.
+     * Shared by the push / WebAuthn / generic {@link #triggerSelectedToken} paths, which differ only in how
+     * they consume a successful response.
+     *
+     * @param piContext the current privacyIDEA context
+     * @param serial    the selected token's serial
+     * @param headers   headers to forward to privacyIDEA
+     * @return the successful response, or {@code null} if the trigger failed
+     */
+    @Nullable
+    private PIResponse triggerSerialChallenge(@Nonnull PIContext piContext, @Nonnull String serial, @Nonnull Map<String, String> headers)
+    {
+        PIResponse response = privacyIDEA.triggerChallenges(piContext.getUsername(), Map.of("serial", serial), headers);
+        if (response == null)
+        {
+            LOGGER.error("{} tokenSelection: triggering token '{}' returned no response.", this.getLogPrefix(), sanitizeForLog(serial));
+            piContext.setFormErrorMessage("Could not reach the privacyIDEA server. Please try again.");
+            return null;
+        }
+        if (response.error != null)
+        {
+            LOGGER.error("{} tokenSelection: triggering token '{}' failed: {}!", this.getLogPrefix(), sanitizeForLog(serial), response.error.message);
+            piContext.setFormErrorMessage(response.error.message);
+            return null;
+        }
+        return response;
+    }
+
+    /**
+     * Strip CR/LF from a (potentially user-controlled) value before logging it, so a crafted form field
+     * such as {@code selectedSerial} cannot inject forged log lines.
+     */
+    @Nonnull
+    private static String sanitizeForLog(@Nullable String value)
+    {
+        return value == null ? "null" : value.replaceAll("[\\r\\n]", "_");
     }
 
     /**

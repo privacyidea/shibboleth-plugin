@@ -47,7 +47,7 @@ public class ChallengeResponseAction extends AbstractProfileAction
     private static final Logger LOGGER = LoggerFactory.getLogger(ChallengeResponseAction.class);
     private PIServerConfigContext piServerConfigContext;
     private PIContext piContext;
-    private PIFormContext piFormContext;
+    protected PIFormContext piFormContext;
     protected PrivacyIDEA privacyIDEA;
     protected boolean debug = false;
     // Remember-me ("trust this device") manager, shared with InitializePIContext via Spring.
@@ -199,7 +199,11 @@ public class ChallengeResponseAction extends AbstractProfileAction
             piFormContext.setPushMessage(piResponse.pushMessage());
         }
 
-        // Carry the optional-enrollment flag through to the form so the view can render a "Not Now" button.
+        // Carry the enroll-via-multichallenge flags through to the form. Driven by the server's own
+        // enroll_via_multichallenge / _optional fields (not derived from an image being present), so a
+        // passkey-registration enrollment — which carries passkey_registration but no QR image — is also
+        // recognised and the optional "Not Now" button is offered.
+        piFormContext.setEnrollViaMultichallenge(piResponse.isEnrollViaMultichallenge);
         piFormContext.setEnrollViaMultichallengeOptional(piResponse.isEnrollViaMultichallengeOptional);
 
         // Check for the images
