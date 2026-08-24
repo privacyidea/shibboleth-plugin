@@ -111,6 +111,13 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                                                               headers);
                 if (piResponse != null)
                 {
+                    // Passkey success returns early below, bypassing the shared response handling at the
+                    // end of this method — so store/rotate/clear the remember-device cookie here too,
+                    // otherwise a passkey login with the box ticked would never persist the cookie.
+                    if (rememberMeManager != null)
+                    {
+                        rememberMeManager.relayResponse(piResponse);
+                    }
                     if (piResponse.authenticationSuccessful())
                     {
                         // Passkeys are usernameless: validateCheckPasskey resolves to whoever owns the
