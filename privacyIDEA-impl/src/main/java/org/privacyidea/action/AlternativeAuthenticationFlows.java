@@ -191,10 +191,10 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
                             if (debug)
                             {
                                 LOGGER.info("{} Standalone mode, setting username and building event...", this.getLogPrefix());
-                                LOGGER.info("username: {}", piContext.getUsername());
+                                LOGGER.info("username: {}", StringUtil.sanitizeForLog(piContext.getUsername()));
                             }
-                            UsernameContext userCtx = profileRequestContext.getSubcontext(UsernameContext.class, true);
-                            Objects.requireNonNull(userCtx).setUsername(piContext.getUsername());
+                            UsernameContext userCtx = profileRequestContext.ensureSubcontext(UsernameContext.class);
+                            userCtx.setUsername(piContext.getUsername());
                             ActionSupport.buildEvent(profileRequestContext, "validateResponseStandalone");
                         }
                         else
@@ -260,10 +260,10 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
                         if (debug)
                         {
                             LOGGER.info("{} Standalone mode, setting username '{}' and building event...",
-                                        this.getLogPrefix(), piContext.getUsername());
+                                        this.getLogPrefix(), StringUtil.sanitizeForLog(piContext.getUsername()));
                         }
-                        UsernameContext userCtx = profileRequestContext.getSubcontext(UsernameContext.class, true);
-                        Objects.requireNonNull(userCtx).setUsername(piContext.getUsername());
+                        UsernameContext userCtx = profileRequestContext.ensureSubcontext(UsernameContext.class);
+                        userCtx.setUsername(piContext.getUsername());
                         ActionSupport.buildEvent(profileRequestContext, "validateResponseStandalone");
                     }
                     else

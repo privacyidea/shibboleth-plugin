@@ -21,9 +21,10 @@ public class ValidateResponseStandalone extends AbstractValidationAction
 
     public ValidateResponseStandalone() {}
 
+    @Override
     protected void doExecute(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull AuthenticationContext authenticationContext)
     {
-        UsernameContext userCtx = profileRequestContext.getSubcontext(UsernameContext.class, false);
+        UsernameContext userCtx = profileRequestContext.getSubcontext(UsernameContext.class);
         if (userCtx != null && StringUtil.isNotBlank(userCtx.getUsername()))
         {
             username = userCtx.getUsername();

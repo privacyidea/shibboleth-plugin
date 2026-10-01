@@ -136,7 +136,8 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                                     && !localPart(established).equalsIgnoreCase(piResponse.username))
                             {
                                 LOGGER.error("{} Passkey resolved to '{}' but the login was started as '{}'. Rejecting.",
-                                             this.getLogPrefix(), piResponse.username, established);
+                                             this.getLogPrefix(), StringUtil.sanitizeForLog(piResponse.username),
+                                             StringUtil.sanitizeForLog(established));
                                 piContext.setFormErrorMessage("Passkey does not match the signed-in user.");
                                 piContext.setMode("otp");
                                 ActionSupport.buildEvent(profileRequestContext, "reload");
@@ -253,15 +254,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         // User declined an optional enroll-via-multichallenge offer: notify the server and finish.
         if ("1".equals(request.getParameter("cancelEnrollment")))
         {
-            if (debug)
-            {
-                LOGGER.info("{} User declined optional enroll-via-multichallenge. Cancelling enrollment for transaction '{}'.",
-                            this.getLogPrefix(), piContext.getTransactionID());
-            }
-            privacyIDEA.validateCheckCancelEnrollment(piContext.getTransactionID(), headers);
-            // Primary auth already succeeded (otherwise no enroll-via-multichallenge offer would exist).
-            // Use finalizeAuthentication so the standalone path still populates UsernameContext.
-            finalizeAuthentication(profileRequestContext, piContext);
+            cancelOptionalEnrollment(profileRequestContext, piContext, headers);
             return;
         }
         else if ("push".equals(piContext.getMode()))
@@ -395,6 +388,45 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
     }
 
     /**
+     * Cancel an optional enroll-via-multichallenge offer and finish the login. The cancel request is only sent
+     * when the last challenge response actually offered an optional enrollment, and the login is only finished
+     * when privacyIDEA confirms the cancellation (it accepts it only for an open, optional enrollment challenge
+     * of this transaction). In every other case the form is shown again.
+     *
+     * @param profileRequestContext the current profile request context
+     * @param piContext             the current privacyIDEA context
+     * @param headers               headers to forward to privacyIDEA
+     */
+    private void cancelOptionalEnrollment(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext,
+                                          @Nonnull Map<String, String> headers)
+    {
+        if (!piFormContext.isEnrollViaMultichallenge() || !piFormContext.isEnrollViaMultichallengeOptional()
+            || StringUtil.isBlank(piContext.getTransactionID()))
+        {
+            LOGGER.warn("{} Enrollment cancellation requested, but no optional enrollment is pending. Showing the form again.",
+                        this.getLogPrefix());
+            ActionSupport.buildEvent(profileRequestContext, "reload");
+            return;
+        }
+        if (debug)
+        {
+            LOGGER.info("{} User declined optional enroll-via-multichallenge. Cancelling enrollment for transaction '{}'.",
+                        this.getLogPrefix(), piContext.getTransactionID());
+        }
+        PIResponse response = privacyIDEA.validateCheckCancelEnrollment(piContext.getTransactionID(), headers);
+        if (response == null || response.error != null || !response.authenticationSuccessful())
+        {
+            LOGGER.error("{} privacyIDEA did not confirm the enrollment cancellation{}",
+                         this.getLogPrefix(), response != null && response.error != null ? ": " + response.error.message : ".");
+            piContext.setFormErrorMessage("The enrollment could not be cancelled. Please try again.");
+            ActionSupport.buildEvent(profileRequestContext, "reload");
+            return;
+        }
+        // Use finalizeAuthentication so the standalone path still populates UsernameContext.
+        finalizeAuthentication(profileRequestContext, piContext);
+    }
+
+    /**
      * Trigger the token the user picked in the tokenSelection list, then reload into its challenge:
      * a passkey uses {@code /validate/initialize} (usernameless challenge, like "Sign in with Passkey");
      * push / WebAuthn (and any other challenge token) use {@code /validate/triggerchallenge} scoped to the
@@ -480,7 +512,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                     // The response carried no WebAuthn challenge (e.g. the token was disabled between the
                     // list fetch and the trigger). Don't switch into webauthn mode — that would auto-run
                     // doWebAuthn() against an empty request with no in-row Retry — surface an error instead.
-                    LOGGER.error("{} tokenSelection: WebAuthn token '{}' returned no sign request.", this.getLogPrefix(), sanitizeForLog(serial));
+                    LOGGER.error("{} tokenSelection: WebAuthn token '{}' returned no sign request.", this.getLogPrefix(), StringUtil.sanitizeForLog(serial));
                     piContext.setFormErrorMessage("Could not start the security key challenge. Please try again or choose another token.");
                 }
             }
@@ -516,27 +548,17 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         PIResponse response = privacyIDEA.triggerChallenges(piContext.getUsername(), Map.of("serial", serial), headers);
         if (response == null)
         {
-            LOGGER.error("{} tokenSelection: triggering token '{}' returned no response.", this.getLogPrefix(), sanitizeForLog(serial));
+            LOGGER.error("{} tokenSelection: triggering token '{}' returned no response.", this.getLogPrefix(), StringUtil.sanitizeForLog(serial));
             piContext.setFormErrorMessage("Could not reach the privacyIDEA server. Please try again.");
             return null;
         }
         if (response.error != null)
         {
-            LOGGER.error("{} tokenSelection: triggering token '{}' failed: {}!", this.getLogPrefix(), sanitizeForLog(serial), response.error.message);
+            LOGGER.error("{} tokenSelection: triggering token '{}' failed: {}!", this.getLogPrefix(), StringUtil.sanitizeForLog(serial), response.error.message);
             piContext.setFormErrorMessage(response.error.message);
             return null;
         }
         return response;
-    }
-
-    /**
-     * Strip CR/LF from a (potentially user-controlled) value before logging it, so a crafted form field
-     * such as {@code selectedSerial} cannot inject forged log lines.
-     */
-    @Nonnull
-    private static String sanitizeForLog(@Nullable String value)
-    {
-        return value == null ? "null" : value.replaceAll("[\\r\\n]", "_");
     }
 
     /**
@@ -581,8 +603,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             {
                 LOGGER.info("{} Standalone mode, setting username and building event...", this.getLogPrefix());
             }
-            UsernameContext userCtx = profileRequestContext.getSubcontext(UsernameContext.class, true);
-            assert userCtx != null;
+            UsernameContext userCtx = profileRequestContext.ensureSubcontext(UsernameContext.class);
             userCtx.setUsername(piContext.getUsername());
             ActionSupport.buildEvent(profileRequestContext, "validateResponseStandalone");
         }
@@ -595,4 +616,4 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             ActionSupport.buildEvent(profileRequestContext, "success");
         }
     }
-}
+}

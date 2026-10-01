@@ -13,4 +13,18 @@ public class StringUtil
     {
         return str != null && !str.trim().isEmpty();
     }
+
+    /**
+     * Replace line breaks and control characters (CR, LF, tab, ...) in a value before it is logged, so that a
+     * value taken from a form field always stays on its own log line.
+     *
+     * @param value the value to log, may be null
+     * @return the value with every line break and control character replaced by an underscore, or "null"
+     */
+    public static String sanitizeForLog(String value)
+    {
+        // \R matches every line break sequence (a CRLF pair counts as one; U+0085, U+2028 and U+2029 included),
+        // then \p{Cc} catches the remaining C0 and C1 control characters. (\p{Cntrl} would be ASCII-only.)
+        return value == null ? "null" : value.replaceAll("\\R", "_").replaceAll("\\p{Cc}", "_");
+    }
 }
