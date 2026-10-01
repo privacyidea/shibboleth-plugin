@@ -10,3 +10,9 @@ updates:
     cooldown:
       default-days: 7
     open-pull-requests-limit: 5
+    groups:
+      # init, analyze and upload-sarif must move together: a PR that bumps only one of them
+      # fails the CodeQL analysis on the version mismatch.
+      codeql-action:
+        patterns:
+          - "github/codeql-action*"
