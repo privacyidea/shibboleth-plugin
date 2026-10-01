@@ -253,15 +253,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         // User declined an optional enroll-via-multichallenge offer: notify the server and finish.
         if ("1".equals(request.getParameter("cancelEnrollment")))
         {
-            if (debug)
-            {
-                LOGGER.info("{} User declined optional enroll-via-multichallenge. Cancelling enrollment for transaction '{}'.",
-                            this.getLogPrefix(), piContext.getTransactionID());
-            }
-            privacyIDEA.validateCheckCancelEnrollment(piContext.getTransactionID(), headers);
-            // Primary auth already succeeded (otherwise no enroll-via-multichallenge offer would exist).
-            // Use finalizeAuthentication so the standalone path still populates UsernameContext.
-            finalizeAuthentication(profileRequestContext, piContext);
+            cancelOptionalEnrollment(profileRequestContext, piContext, headers);
             return;
         }
         else if ("push".equals(piContext.getMode()))
@@ -392,6 +384,45 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             LOGGER.error("{} privacyIDEA response was null. Please check the config and try again.", this.getLogPrefix());
             ActionSupport.buildEvent(profileRequestContext, "reload");
         }
+    }
+
+    /**
+     * Cancel an optional enroll-via-multichallenge offer and finish the login. The cancel request is only sent
+     * when the last challenge response actually offered an optional enrollment, and the login is only finished
+     * when privacyIDEA confirms the cancellation (it accepts it only for an open, optional enrollment challenge
+     * of this transaction). In every other case the form is shown again.
+     *
+     * @param profileRequestContext the current profile request context
+     * @param piContext             the current privacyIDEA context
+     * @param headers               headers to forward to privacyIDEA
+     */
+    private void cancelOptionalEnrollment(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext,
+                                          @Nonnull Map<String, String> headers)
+    {
+        if (!piFormContext.isEnrollViaMultichallenge() || !piFormContext.isEnrollViaMultichallengeOptional()
+            || StringUtil.isBlank(piContext.getTransactionID()))
+        {
+            LOGGER.warn("{} Enrollment cancellation requested, but no optional enrollment is pending. Showing the form again.",
+                        this.getLogPrefix());
+            ActionSupport.buildEvent(profileRequestContext, "reload");
+            return;
+        }
+        if (debug)
+        {
+            LOGGER.info("{} User declined optional enroll-via-multichallenge. Cancelling enrollment for transaction '{}'.",
+                        this.getLogPrefix(), piContext.getTransactionID());
+        }
+        PIResponse response = privacyIDEA.validateCheckCancelEnrollment(piContext.getTransactionID(), headers);
+        if (response == null || response.error != null || !response.authenticationSuccessful())
+        {
+            LOGGER.error("{} privacyIDEA did not confirm the enrollment cancellation{}",
+                         this.getLogPrefix(), response != null && response.error != null ? ": " + response.error.message : ".");
+            piContext.setFormErrorMessage("The enrollment could not be cancelled. Please try again.");
+            ActionSupport.buildEvent(profileRequestContext, "reload");
+            return;
+        }
+        // Use finalizeAuthentication so the standalone path still populates UsernameContext.
+        finalizeAuthentication(profileRequestContext, piContext);
     }
 
     /**
