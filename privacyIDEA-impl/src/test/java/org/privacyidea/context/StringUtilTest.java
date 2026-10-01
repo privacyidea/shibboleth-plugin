@@ -39,6 +39,13 @@ public class StringUtilTest
     @Test
     public void controlCharactersReplaced()
     {
-        assertEquals(StringUtil.sanitizeForLog("alice\r\nINFO next\tline\u0000"), "alice__INFO next_line_");
+        // A CRLF pair is one line break, so it becomes a single underscore.
+        assertEquals(StringUtil.sanitizeForLog("alice\r\nINFO next\tline\u0000"), "alice_INFO next_line_");
+    }
+
+    @Test
+    public void unicodeLineSeparatorsReplaced()
+    {
+        assertEquals(StringUtil.sanitizeForLog("a\u2028b\u2029c\u0085d"), "a_b_c_d");
     }
 }
