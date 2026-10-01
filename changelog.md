@@ -20,8 +20,6 @@
 * Bumped the bundled privacyidea-java-client to 1.6.0 (security and robustness improvements).
 
 ### Fixes
-* Skipping an optional enroll-via-multichallenge now finishes the login only after privacyIDEA confirms
-  the cancellation; otherwise the form is shown again.
 * Control characters in logged usernames and token serials are replaced, so each value stays on its own
   log line.
 
