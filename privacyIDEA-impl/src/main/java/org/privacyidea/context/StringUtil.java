@@ -23,8 +23,8 @@ public class StringUtil
      */
     public static String sanitizeForLog(String value)
     {
-        // \R matches every line break sequence (a CRLF pair counts as one, and it also covers the Unicode line
-        // separators that the ASCII-only \p{Cntrl} does not), then \p{Cntrl} catches the remaining control chars.
-        return value == null ? "null" : value.replaceAll("\\R", "_").replaceAll("\\p{Cntrl}", "_");
+        // \R matches every line break sequence (a CRLF pair counts as one; U+0085, U+2028 and U+2029 included),
+        // then \p{Cc} catches the remaining C0 and C1 control characters. (\p{Cntrl} would be ASCII-only.)
+        return value == null ? "null" : value.replaceAll("\\R", "_").replaceAll("\\p{Cc}", "_");
     }
 }

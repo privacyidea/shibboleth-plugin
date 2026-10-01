@@ -48,4 +48,11 @@ public class StringUtilTest
     {
         assertEquals(StringUtil.sanitizeForLog("a\u2028b\u2029c\u0085d"), "a_b_c_d");
     }
+
+    @Test
+    public void c1ControlCharactersReplaced()
+    {
+        // C1 controls (U+0080..U+009F) are outside the ASCII-only \p{Cntrl}, e.g. U+009B (CSI).
+        assertEquals(StringUtil.sanitizeForLog("a\u009B31mb\u0080c"), "a_31mb_c");
+    }
 }
