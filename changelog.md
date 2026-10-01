@@ -1,4 +1,4 @@
-## Unreleased
+## 1.4.0 10/2026
 
 ### Features
 * "Remember this device": optional checkbox that lets a trusted device skip the privacyIDEA second
@@ -18,6 +18,12 @@
   so it is translatable per locale like the other UI labels (replaces the previous `otp_field_hint`).
 * The HTTP timeout for privacyIDEA requests is configurable via `privacyidea.http_timeout_ms`.
 * Bumped the bundled privacyidea-java-client to 1.6.0 (security and robustness improvements).
+
+### Fixes
+* Skipping an optional enroll-via-multichallenge now finishes the login only after privacyIDEA confirms
+  the cancellation; otherwise the form is shown again.
+* Control characters in logged usernames and token serials are replaced, so each value stays on its own
+  log line.
 
 ## 1.3.0 05/2026
 Update features to be on par with privacyIDEA 3.13. Support for the following policies:
