@@ -603,8 +603,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             {
                 LOGGER.info("{} Standalone mode, setting username and building event...", this.getLogPrefix());
             }
-            UsernameContext userCtx = profileRequestContext.getSubcontext(UsernameContext.class, true);
-            assert userCtx != null;
+            UsernameContext userCtx = profileRequestContext.ensureSubcontext(UsernameContext.class);
             userCtx.setUsername(piContext.getUsername());
             ActionSupport.buildEvent(profileRequestContext, "validateResponseStandalone");
         }
@@ -617,4 +616,4 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             ActionSupport.buildEvent(profileRequestContext, "success");
         }
     }
-}
+}

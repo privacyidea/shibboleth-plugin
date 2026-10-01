@@ -66,6 +66,7 @@ public class ChallengeResponseAction extends AbstractProfileAction
             new ChildContextLookup(PIServerConfigContext.class, false)).compose(
             new ChildContextLookup(AuthenticationContext.class));
 
+    @Override
     protected final boolean doPreExecute(@Nonnull ProfileRequestContext profileRequestContext)
     {
         if (super.doPreExecute(profileRequestContext))
@@ -119,6 +120,7 @@ public class ChallengeResponseAction extends AbstractProfileAction
         }
     }
 
+    @Override
     protected final void doExecute(@Nonnull ProfileRequestContext profileRequestContext)
     {
         this.doExecute(profileRequestContext, this.piContext, this.piServerConfigContext);

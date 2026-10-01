@@ -96,12 +96,12 @@ public class InitializePIContext extends AbstractAuthenticationAction
         authenticationContext.removeSubcontext(PIServerConfigContext.class);
 
         PIServerConfigContext piServerConfigContext = getConfigBaseContext();
-        log.info("{} Create PIServerConfigContext {}", this.getLogPrefix(), piServerConfigContext);
+        log.info("{} Create PIServerConfigContext", this.getLogPrefix());
         authenticationContext.addSubcontext(piServerConfigContext);
 
         User user = getUser(profileRequestContext);
         PIContext piContext = new PIContext(user, pluginVersion);
-        log.info("{} Create PIContext {}", this.getLogPrefix(), piContext);
+        log.info("{} Create PIContext", this.getLogPrefix());
         authenticationContext.addSubcontext(piContext);
 
         // Resolve the server capability once (cached for the JVM). GET /validate/capabilities is a
@@ -144,7 +144,7 @@ public class InitializePIContext extends AbstractAuthenticationAction
         PIFormContext piFormContext = new PIFormContext(defaultMessage, getOtpLength(),
                                                         pollingInterval, pollInBrowser, pollInBrowserUrl, disablePasskey,
                                                         rememberMeOffered);
-        log.info("{} Create PIFormContext {}", this.getLogPrefix(), piFormContext);
+        log.info("{} Create PIFormContext", this.getLogPrefix());
         authenticationContext.addSubcontext(piFormContext);
 
         // Remember-me: if this device presents a pi_remember_device cookie that privacyIDEA recognises
@@ -264,38 +264,38 @@ public class InitializePIContext extends AbstractAuthenticationAction
     @NotNull
     private PIServerConfigContext getConfigBaseContext()
     {
-        String authenticationFlow;
-        String staticPass = null;
+        String flow;
+        String flowStaticPass = null;
         if ("triggerChallenge".equals(this.authenticationFlow))
         {
-            authenticationFlow = "triggerChallenge";
+            flow = "triggerChallenge";
         }
         else if ("sendStaticPass".equals(this.authenticationFlow))
         {
-            authenticationFlow = "sendStaticPass";
+            flow = "sendStaticPass";
             if (this.staticPass != null)
             {
-                staticPass = this.staticPass;
+                flowStaticPass = this.staticPass;
             }
         }
         else if ("tokenSelection".equals(this.authenticationFlow))
         {
-            authenticationFlow = "tokenSelection";
+            flow = "tokenSelection";
         }
         else
         {
-            authenticationFlow = "default";
+            flow = "default";
         }
         Config
                 configParams =
                 new Config(serverURL,
                            realm,
                            verifySSL,
-                           authenticationFlow,
+                           flow,
                            serviceName,
                            servicePass,
                            serviceRealm,
-                           staticPass,
+                           flowStaticPass,
                            pollInBrowser,
                            disablePasskey,
                            forwardHeaders,
@@ -363,4 +363,4 @@ public class InitializePIContext extends AbstractAuthenticationAction
     public void setSkipFirstStep(boolean skipFirstStep)                   {this.skipFirstStep = skipFirstStep;}
 
     public void setRememberMeManager(@Nullable RememberMeManager rememberMeManager) {this.rememberMeManager = rememberMeManager;}
-}
+}
