@@ -47,26 +47,27 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
     {
         HttpServletRequest request = Objects.requireNonNull(getHttpServletRequestSupplier()).get();
         
-        String standalone = request.getParameter("standalone");
-        if (StringUtil.isNotBlank(standalone))
+        // Fix the user and the standalone flag from server-side state. With a preceding factor privacyIDEA
+        // is a second factor: the user is that factor's result and the submitted username/standalone fields
+        // are ignored, so the token is checked for — and the login completes as — the established identity.
+        boolean standalone = applyAuthoritativeIdentity(profileRequestContext, piContext);
+
+        if (standalone)
         {
-            piContext.setStandalone(standalone);
-        }
-        
-        // The "username" param is present (possibly empty) when the user submits the username/password
-        // form; it is absent (null) on flow paths that didn't go through the form (skip_first_step etc.).
-        // If the form was submitted with a blank field, clear any prefilled username so a stale principal
-        // can't be carried forward — the downstream isBlank guard then redirects to the username form.
-        String username = request.getParameter("username");
-        if (username != null)
-        {
-            if (StringUtil.isNotBlank(username))
+            // privacyIDEA is the first/only factor: the username comes from this plugin's own form. The
+            // field is present (possibly empty) when the form was submitted; a blank field clears any
+            // prefilled username so the downstream isBlank guard redirects back to the username form.
+            String username = request.getParameter("username");
+            if (username != null)
             {
-                piContext.setUsername(username);
-            }
-            else
-            {
-                piContext.clearUsername();
+                if (StringUtil.isNotBlank(username))
+                {
+                    piContext.setUsername(username);
+                }
+                else
+                {
+                    piContext.clearUsername();
+                }
             }
         }
 

@@ -56,17 +56,17 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         piContext.setPasskeyRegistration(request.getParameter("passkeyRegistration"));
         piContext.setPasskeyRegistrationResponse(request.getParameter("passkeyRegistrationResponse"));
         piContext.setPasskeyChallenge(request.getParameter("passkeyChallenge"));
-        piContext.setOrigin(request.getParameter("origin"));
+        // The origin for a WebAuthn / passkey ceremony comes from the request (Origin header, else the
+        // request's own scheme/host), never from a form field.
+        piContext.setOrigin(resolveOrigin(request));
         piContext.setFormErrorMessage(request.getParameter("errorMessage"));
         // Capture the "remember this device" checkbox on every submit so its state survives form
         // reloads (e.g. push polling or a mistyped OTP). Read back at the success point below.
         piContext.setRememberMe("1".equals(request.getParameter("pidea_remember_me")));
 
-        String standalone = request.getParameter("standalone");
-        if (StringUtil.isNotBlank(standalone))
-        {
-            piContext.setStandalone(standalone);
-        }
+        // Fix the user and the standalone flag from server-side state; the submitted username/standalone
+        // fields never decide which user is validated or how the result is asserted.
+        applyAuthoritativeIdentity(profileRequestContext, piContext);
         // Opt-in params: request_persistent_cookie=1 when the box was ticked (and not standalone).
         Map<String, String> rememberParams = rememberMeParams(piContext);
         // Attach the X-API-Key only for issuance (opt-in), so a bad/expired key can never 401 an

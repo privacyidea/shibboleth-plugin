@@ -16,7 +16,10 @@
 package org.privacyidea.action;
 
 import jakarta.servlet.http.HttpServletRequest;
+import net.shibboleth.idp.authn.AuthenticationResult;
 import net.shibboleth.idp.authn.context.AuthenticationContext;
+import net.shibboleth.idp.authn.context.MultiFactorAuthenticationContext;
+import net.shibboleth.idp.authn.principal.UsernamePrincipal;
 import org.opensaml.profile.context.EventContext;
 import org.opensaml.profile.context.ProfileRequestContext;
 import org.privacyidea.AuthenticationStatus;
@@ -30,6 +33,8 @@ import org.privacyidea.context.PIServerConfigContext;
 import org.privacyidea.context.User;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import javax.security.auth.Subject;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
@@ -74,6 +79,13 @@ public class PrivacyIDEAAuthenticatorCancelEnrollmentTest
         authenticationContext.addSubcontext(piContext);
         authenticationContext.addSubcontext(piFormContext);
         authenticationContext.addSubcontext(new PIServerConfigContext(config));
+        // enroll-via-multichallenge happens after a first factor succeeded, so model a second-factor run:
+        // give the MFA context a result for "alice". privacyIDEA then completes with the "success" event.
+        Subject subject = new Subject();
+        subject.getPrincipals().add(new UsernamePrincipal("alice"));
+        AuthenticationResult firstFactor = new AuthenticationResult("authn/test", subject);
+        MultiFactorAuthenticationContext mfaContext = authenticationContext.ensureSubcontext(MultiFactorAuthenticationContext.class);
+        mfaContext.getActiveResults().put(firstFactor.getAuthenticationFlowId(), firstFactor);
 
         authenticator = new PrivacyIDEAAuthenticator();
         authenticator.setPrivacyIDEA(privacyIDEA);

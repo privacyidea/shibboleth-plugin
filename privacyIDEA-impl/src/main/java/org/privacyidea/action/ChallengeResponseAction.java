@@ -16,7 +16,10 @@
 package org.privacyidea.action;
 
 import jakarta.servlet.http.HttpServletRequest;
+import net.shibboleth.idp.authn.AuthenticationResult;
 import net.shibboleth.idp.authn.context.AuthenticationContext;
+import net.shibboleth.idp.authn.context.MultiFactorAuthenticationContext;
+import net.shibboleth.idp.authn.principal.UsernamePrincipal;
 import net.shibboleth.idp.profile.AbstractProfileAction;
 import org.opensaml.messaging.context.navigate.ChildContextLookup;
 import org.opensaml.profile.action.ActionSupport;
@@ -39,6 +42,7 @@ import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -301,6 +305,106 @@ public class ChallengeResponseAction extends AbstractProfileAction
             params.put("request_persistent_cookie", "1");
         }
         return params;
+    }
+
+    /**
+     * Fix the user and the standalone flag for this run from server-side state, so the submitted
+     * {@code username} and {@code standalone} form fields cannot change which user privacyIDEA validates
+     * against, nor how the result is asserted.
+     * <p>
+     * When a preceding sub-flow in this MFA run produced a result (e.g. {@code authn/Password}), privacyIDEA
+     * is a second factor: the user is that result's principal and the flag is cleared, so the token is always
+     * checked for — and the login completes as — the identity the first factor established. The submitted
+     * field is ignored. When there is no such result, privacyIDEA is the first/only factor (standalone): the
+     * flag is set and the caller supplies the user from its own username form.
+     *
+     * @param profileRequestContext the current profile request context
+     * @param piContext             the current privacyIDEA context (updated in place)
+     * @return {@code true} if privacyIDEA is the first/only factor (standalone), {@code false} otherwise
+     */
+    protected boolean applyAuthoritativeIdentity(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext)
+    {
+        if (hasFreshAuthenticationResult(profileRequestContext))
+        {
+            String freshUser = freshResultUsername(profileRequestContext);
+            if (StringUtil.isNotBlank(freshUser))
+            {
+                piContext.setUsername(freshUser);
+            }
+            piContext.setStandalone("");
+            return false;
+        }
+        piContext.setStandalone("1");
+        return true;
+    }
+
+    /**
+     * @return {@code true} if a preceding sub-flow in this MFA run produced a result (privacyIDEA is a
+     * second factor), {@code false} if privacyIDEA is the first/only factor.
+     */
+    protected boolean hasFreshAuthenticationResult(@Nonnull ProfileRequestContext profileRequestContext)
+    {
+        MultiFactorAuthenticationContext mfaContext = getMfaContext(profileRequestContext);
+        return mfaContext != null && !mfaContext.getActiveResults().isEmpty();
+    }
+
+    /**
+     * @return the username of the first active result that carries a {@link UsernamePrincipal} (the identity
+     * the preceding factor authenticated), or {@code null} if none can be determined.
+     */
+    @Nullable
+    protected String freshResultUsername(@Nonnull ProfileRequestContext profileRequestContext)
+    {
+        MultiFactorAuthenticationContext mfaContext = getMfaContext(profileRequestContext);
+        if (mfaContext == null)
+        {
+            return null;
+        }
+        for (AuthenticationResult result : mfaContext.getActiveResults().values())
+        {
+            Set<UsernamePrincipal> principals = result.getSubject().getPrincipals(UsernamePrincipal.class);
+            if (!principals.isEmpty())
+            {
+                return principals.iterator().next().getName();
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    private MultiFactorAuthenticationContext getMfaContext(@Nonnull ProfileRequestContext profileRequestContext)
+    {
+        AuthenticationContext authenticationContext = profileRequestContext.getSubcontext(AuthenticationContext.class);
+        return authenticationContext == null ? null : authenticationContext.getSubcontext(MultiFactorAuthenticationContext.class);
+    }
+
+    /**
+     * Determine the browser origin for a WebAuthn / passkey ceremony from the request itself rather than a
+     * form field: the {@code Origin} header the browser sends, and if that is absent the scheme/host/port the
+     * request arrived on. privacyIDEA checks this against the credential, so it must reflect the real page
+     * origin and not a submitted value.
+     *
+     * @param request the current request
+     * @return the origin, or {@code null} if it cannot be determined
+     */
+    @Nullable
+    protected String resolveOrigin(@Nonnull HttpServletRequest request)
+    {
+        String origin = request.getHeader("Origin");
+        if (StringUtil.isNotBlank(origin))
+        {
+            return origin;
+        }
+        String scheme = request.getScheme();
+        String host = request.getServerName();
+        if (StringUtil.isBlank(scheme) || StringUtil.isBlank(host))
+        {
+            return null;
+        }
+        int port = request.getServerPort();
+        boolean defaultPort = ("https".equalsIgnoreCase(scheme) && port == 443)
+                || ("http".equalsIgnoreCase(scheme) && port == 80);
+        return defaultPort ? scheme + "://" + host : scheme + "://" + host + ":" + port;
     }
 
     // Spring bean property setters
