@@ -51,7 +51,7 @@ public class ModulePropertiesTest
     public void loadModuleProperties() throws IOException, URISyntaxException
     {
         Properties properties = new Properties();
-        try (InputStream in = getClass().getResourceAsStream(BASE + "/module.properties"))
+        try (InputStream in = ModulePropertiesTest.class.getResourceAsStream(BASE + "/module.properties"))
         {
             assertNotNull(in, "module.properties not found on the classpath");
             properties.load(in);
@@ -62,7 +62,7 @@ public class ModulePropertiesTest
                                   .map(String::trim)
                                   .collect(Collectors.toSet());
         // Resolve via module.properties: the package directory itself also exists under test-classes.
-        baseDir = Paths.get(Objects.requireNonNull(getClass().getResource(BASE + "/module.properties")).toURI()).getParent();
+        baseDir = Paths.get(Objects.requireNonNull(ModulePropertiesTest.class.getResource(BASE + "/module.properties")).toURI()).getParent();
     }
 
     @Test
@@ -86,7 +86,7 @@ public class ModulePropertiesTest
     public void everyListedSourceExists()
     {
         List<String> missing = listedSources.stream()
-                                            .filter(resource -> getClass().getResource(resource) == null)
+                                            .filter(resource -> ModulePropertiesTest.class.getResource(resource) == null)
                                             .sorted()
                                             .collect(Collectors.toList());
         assertTrue(missing.isEmpty(), "Listed in module.properties but not in the jar: " + missing);
