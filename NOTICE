@@ -1,0 +1,13 @@
+privacyIDEA Shibboleth IdP plugin
+Copyright 2023-2026 NetKnights GmbH
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+The token icons in privacyIDEA-impl/src/main/resources/org/privacyidea/edit-webapp/images/privacyIDEA/
+are from Lucide (https://lucide.dev), recolored. Copyright (c) 2026 Lucide Icons and Contributors,
+ISC License. push.svg ("smartphone") and remote.svg ("cast") are derived from Feather, Copyright (c)
+2013-present Cole Bemis, MIT License. The full license text is LICENSE-lucide.txt in that directory;
+the plugin installer copies it next to the icons.
+
+The bundled privacyidea-java-client jar (Apache License, Version 2.0) carries its own LICENSE and
+NOTICE under META-INF/, including the attributions for the libraries it contains.

@@ -19,6 +19,12 @@
 * The HTTP timeout for privacyIDEA requests is configurable via `privacyidea.http_timeout_ms`.
 * Bumped the bundled privacyidea-java-client to 1.6.0 (security and robustness improvements).
 
+### Other
+* The plugin is now licensed under the Apache License, Version 2.0, matching the license headers of its source
+  files (`LICENSE` previously contained the AGPL-3.0).
+* The token icons are from Lucide (ISC License; two of them derived from Feather, MIT License). Their license text is
+  installed as `edit-webapp/images/privacyIDEA/LICENSE-lucide.txt`.
+
 ### Fixes
 * Control characters in logged usernames and token serials are replaced, so each value stays on its own
   log line.

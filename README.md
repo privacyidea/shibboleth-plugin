@@ -183,6 +183,13 @@ uniform. Add a key for any other type the same way.
 
 The shipped icons are from [Lucide](https://lucide.dev) (ISC License) — `smartphone`, `key-round`,
 `notepad-text`, `rotate-ccw`, `rotate-cw-fading-clock`, `rectangle-ellipsis`, `users`, `shield-question-mark`,
-`mail`, `message-square-more`, `cast` — recolored to the theme blue; each SVG keeps a license comment. Lucide/[Feather](https://feathericons.com)
+`mail`, `message-square-more`, `cast` — recolored to the theme blue. `smartphone` and `cast` are derived from
+[Feather](https://feathericons.com) and are also under the MIT License. Each SVG carries its copyright line, and the full
+license text is installed next to them as `edit-webapp/images/privacyIDEA/LICENSE-lucide.txt`. Lucide/Feather
 icons match the plugin's line style; when copying one, set `stroke="#1976d2"` (they default to `currentColor`, which
 renders black through an `<img>` tag) and it will be sized by the `.pi-token-icon` CSS rule.
+
+### License:
+The plugin is licensed under the [Apache License, Version 2.0](LICENSE). The bundled privacyidea-java-client jar
+carries its own `LICENSE` and `NOTICE` (with the attributions for the libraries it contains) under `META-INF/`, and the
+token icons are covered by `LICENSE-lucide.txt` as described above.
