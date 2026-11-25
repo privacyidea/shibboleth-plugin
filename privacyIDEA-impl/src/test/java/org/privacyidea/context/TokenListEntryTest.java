@@ -70,4 +70,46 @@ public class TokenListEntryTest
     {
         assertEquals(TokenListEntry.formatLastUsed("  whenever  ", Locale.US), "whenever");
     }
+
+    private static TokenListEntry usableToken(String type)
+    {
+        return new TokenListEntry("SERIAL", type, "", "", true, false, false, "enrolled", Locale.US);
+    }
+
+    @Test
+    public void codeTokensAreTriggerable()
+    {
+        // privacyIDEA creates a challenge for these types without the challenge_response policy.
+        for (String type : new String[]{"hotp", "totp", "sms", "email", "push", "webauthn", "passkey", "TOTP"})
+        {
+            assertTrue(usableToken(type).isTriggerable(), type);
+        }
+    }
+
+    @Test
+    public void tokensWithoutChallengeModeAreTypedDirectly()
+    {
+        assertFalse(usableToken("spass").isTriggerable());
+    }
+
+    @Test
+    public void tokensThatCannotLogInAreNotLoginTypes()
+    {
+        for (String type : new String[]{"certificate", "sshkey", "applspec", "deprecated", "CERTIFICATE"})
+        {
+            assertFalse(TokenListEntry.isLoginType(type), type);
+        }
+        for (String type : new String[]{"hotp", "totp", "spass", "passkey", "registration", ""})
+        {
+            assertTrue(TokenListEntry.isLoginType(type), type);
+        }
+    }
+
+    @Test
+    public void unusableTokenIsNotTriggerable()
+    {
+        TokenListEntry revoked = new TokenListEntry("SERIAL", "totp", "", "", true, true, false, "enrolled", Locale.US);
+        assertFalse(revoked.isTriggerable());
+        assertEquals(revoked.getStatus(), "revoked");
+    }
 }

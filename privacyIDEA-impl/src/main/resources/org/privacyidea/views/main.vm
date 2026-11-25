@@ -138,9 +138,10 @@
                             #end
 
                             ## TOKEN SELECTION LIST (tokenSelection flow) ##
-                            ## The user's tokens: triggerable ones (push/webauthn/passkey) get a "Use" button;
-                            ## the rest are used by typing their code in the always-present OTP field below.
-                            ## Unusable tokens (revoked/locked/…) are listed last, greyed, with their status.
+                            ## The user's tokens: every usable token with a challenge mode gets a "Use" button. For
+                            ## code tokens (hotp/totp/sms/email/…) "Use" starts a challenge, and the code then goes in
+                            ## the always-present OTP field below; tokens without a challenge mode (spass) are typed
+                            ## there directly. Unusable tokens (revoked/locked/…) are listed last, greyed, with their status.
                             #if ($showTokenList)
                                 <div class="form-element-wrapper" id="tokenList">
                                     <h3 id="tokenListHeader">#springMessageText("privacyidea.tokenListHeader", "Choose a token")</h3>
@@ -152,8 +153,10 @@
                                         ## Per-type icon: path from the message key privacyidea.tokenIcon.<type> (empty = none),
                                         ## so deployers can drop in their own images or map types we ship no default for.
                                         #set ($tokenType = $token.getTypeLower())
+                                        ## A code token whose challenge is open: highlighted, and its "Use" button stays to send a new challenge.
+                                        #set ($isActiveCode = ($piContext.getMode() == "otp" && $tokenType != "push" && $tokenType != "webauthn" && $tokenType != "passkey" && $piContext.getTransactionID() && $piContext.getTransactionID() != "" && $piContext.getSelectedSerial() == $token.getSerial()))
                                         #set ($tokenIcon = $springMacroRequestContext.getMessage("privacyidea.tokenIcon.${tokenType}", ""))
-                                        <div class="pi-token#if (!$token.isUsable()) pi-token-unusable#end#if ($isActivePasskey || $isActivePush || $isActiveWebauthn) pi-token-active#end">
+                                        <div class="pi-token#if (!$token.isUsable()) pi-token-unusable#end#if ($isActivePasskey || $isActivePush || $isActiveWebauthn || $isActiveCode) pi-token-active#end">
                                             #if ($tokenIcon && $tokenIcon != "")
                                                 <img class="pi-token-icon" src="$request.getContextPath()$encoder.encodeForHTMLAttribute($tokenIcon)" alt="">
                                             #end

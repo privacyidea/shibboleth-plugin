@@ -52,6 +52,8 @@ public class PIFormContext extends BaseContext
     /** The user's tokens for the tokenSelection flow (usable first, then unusable); empty otherwise. */
     @Nonnull
     private List<TokenListEntry> tokens = Collections.emptyList();
+    /** Whether the username form shows the password field: only the default flow sends the password to privacyIDEA. */
+    private boolean passwordFieldShown = true;
 
     public PIFormContext(@Nullable String defaultMessage, @Nullable Integer otpLength, @Nullable String pollingInterval, boolean pollInBrowser, @Nullable String pollInBrowserUrl, boolean disablePasskey, boolean rememberMeEnabled)
     {
@@ -121,4 +123,8 @@ public class PIFormContext extends BaseContext
     public boolean isDisablePasskey() {return disablePasskey;}
 
     public boolean isRememberMeEnabled() {return rememberMeEnabled;}
+
+    public void setPasswordFieldShown(boolean passwordFieldShown) {this.passwordFieldShown = passwordFieldShown;}
+
+    public boolean isPasswordFieldShown() {return passwordFieldShown;}
 }

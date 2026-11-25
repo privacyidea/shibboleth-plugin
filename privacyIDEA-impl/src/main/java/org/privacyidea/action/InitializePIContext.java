@@ -144,6 +144,8 @@ public class InitializePIContext extends AbstractAuthenticationAction
         PIFormContext piFormContext = new PIFormContext(defaultMessage, getOtpLength(),
                                                         pollingInterval, pollInBrowser, pollInBrowserUrl, disablePasskey,
                                                         rememberMeOffered);
+        // Only the default flow sends the password to privacyIDEA. The other flows ignore it, so they do not ask for it.
+        piFormContext.setPasswordFieldShown("default".equals(piServerConfigContext.getConfigParams().getAuthenticationFlow()));
         log.info("{} Create PIFormContext", this.getLogPrefix());
         authenticationContext.addSubcontext(piFormContext);
 
