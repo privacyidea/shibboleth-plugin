@@ -165,6 +165,19 @@ public class PrivacyIDEAAuthenticatorTokenSelectionTest
     }
 
     @Test
+    public void hiddenUserErrorAtOtpStepGetsGenericMessage()
+    {
+        // hide_specific_error_message in privacyIDEA 3.13 returns 4031 with an empty description for an unknown user.
+        when(request.getParameter("otp")).thenReturn("123456");
+        PIResponse response = new PIResponse();
+        response.error = new PIError(4031, "ERR4031: ");
+        when(privacyIDEA.validateCheck(eq("alice"), eq("123456"), any(), anyMap(), anyMap())).thenReturn(response);
+
+        assertEquals(executeAndGetEvent(), "reload");
+        assertEquals(piContext.getFormErrorMessage(), "Authentication failed.");
+    }
+
+    @Test
     public void otherServerErrorAtOtpStepIsShown()
     {
         when(request.getParameter("otp")).thenReturn("123456");

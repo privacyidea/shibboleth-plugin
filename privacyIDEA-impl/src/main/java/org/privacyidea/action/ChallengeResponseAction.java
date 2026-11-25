@@ -51,6 +51,11 @@ public class ChallengeResponseAction extends AbstractProfileAction
     private static final Logger LOGGER = LoggerFactory.getLogger(ChallengeResponseAction.class);
     /** privacyIDEA error code of a {@code UserError}, for example for a user that does not exist in the realm. */
     private static final int USER_ERROR_CODE = 904;
+    /**
+     * Error codes of {@code /validate/check} when the auth policy {@code hide_specific_error_message} hides the
+     * reason: 4031 for an unknown user in privacyIDEA 3.13, and 403 for every error in 3.14 and later.
+     */
+    private static final Set<Integer> HIDDEN_ERROR_CODES = Set.of(403, 4031);
     private PIServerConfigContext piServerConfigContext;
     private PIContext piContext;
     protected PIFormContext piFormContext;
@@ -144,6 +149,20 @@ public class ChallengeResponseAction extends AbstractProfileAction
     protected static boolean isUserError(@Nonnull PIResponse piResponse)
     {
         return piResponse.error != null && piResponse.error.code == USER_ERROR_CODE;
+    }
+
+    /**
+     * Use this only for a {@code /validate/check} response. With the auth policy {@code hide_specific_error_message},
+     * privacyIDEA returns 4031 (3.13) or 403 (3.14 and later) instead of ERR904 for an unknown user. In 3.14 and later
+     * it also returns 403 for every other error of that endpoint, so the plugin cannot tell them apart.
+     *
+     * @param piResponse server response of {@code /validate/check}
+     * @return {@code true} for a user error, and for the codes that {@code hide_specific_error_message} returns instead
+     */
+    protected static boolean isCheckUserError(@Nonnull PIResponse piResponse)
+    {
+        return isUserError(piResponse)
+               || (piResponse.error != null && HIDDEN_ERROR_CODES.contains(piResponse.error.code));
     }
 
     /**

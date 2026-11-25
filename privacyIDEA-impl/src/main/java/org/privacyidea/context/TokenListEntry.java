@@ -46,7 +46,15 @@ public final class TokenListEntry
      * then accepts the code with the transaction id alone (no PIN). A type missing here only costs one extra
      * click: when the trigger returns no challenge, the view falls back to typed entry.
      */
-    private static final Set<String> DIRECT_ENTRY_TYPES = Set.of("spass", "sshkey");
+    private static final Set<String> DIRECT_ENTRY_TYPES = Set.of("spass");
+
+    /**
+     * Token types that privacyIDEA never accepts for a login at {@code /validate/check}, so the token list leaves
+     * them out (see {@link #isLoginType}). certificate and sshkey tokens have no OTP check. An applspec token
+     * needs a {@code service_id}, which the plugin does not send. privacyIDEA 3.14 and later stores a retired
+     * token with the type "deprecated".
+     */
+    private static final Set<String> NOT_FOR_LOGIN_TYPES = Set.of("certificate", "sshkey", "applspec", "deprecated");
 
     /**
      * Parser for the {@code last_used} timestamp. privacyIDEA is not consistent about the format — it can be
@@ -125,6 +133,15 @@ public final class TokenListEntry
         // Every usable token with a challenge mode gets a "Use" button. Lowercase with Locale.ROOT so token-type
         // matching is stable regardless of the JVM default locale (e.g. the Turkish dotted-I).
         this.triggerable = this.usable && !DIRECT_ENTRY_TYPES.contains(this.type.toLowerCase(Locale.ROOT));
+    }
+
+    /**
+     * @param type the token type as {@code GET /token} reports it
+     * @return {@code false} for a token type that can never log in through the plugin, which the token list leaves out
+     */
+    public static boolean isLoginType(String type)
+    {
+        return type == null || !NOT_FOR_LOGIN_TYPES.contains(type.toLowerCase(Locale.ROOT));
     }
 
     /**

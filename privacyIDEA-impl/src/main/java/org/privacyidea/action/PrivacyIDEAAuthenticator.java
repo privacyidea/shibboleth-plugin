@@ -358,7 +358,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             {
                 LOGGER.error("{} privacyIDEA server error: {}!", this.getLogPrefix(), piResponse.error.message);
                 // A user error (e.g. the user does not exist) gets a generic message, so the form does not reveal it.
-                piContext.setFormErrorMessage(isUserError(piResponse) ? AUTHENTICATION_FAILED_MESSAGE : piResponse.error.message);
+                piContext.setFormErrorMessage(isCheckUserError(piResponse) ? AUTHENTICATION_FAILED_MESSAGE : piResponse.error.message);
                 ActionSupport.buildEvent(profileRequestContext, "reload");
             }
             else if (piResponse.hasChallenges())

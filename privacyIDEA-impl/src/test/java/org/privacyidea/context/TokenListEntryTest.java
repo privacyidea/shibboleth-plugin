@@ -90,7 +90,19 @@ public class TokenListEntryTest
     public void tokensWithoutChallengeModeAreTypedDirectly()
     {
         assertFalse(usableToken("spass").isTriggerable());
-        assertFalse(usableToken("sshkey").isTriggerable());
+    }
+
+    @Test
+    public void tokensThatCannotLogInAreNotLoginTypes()
+    {
+        for (String type : new String[]{"certificate", "sshkey", "applspec", "deprecated", "CERTIFICATE"})
+        {
+            assertFalse(TokenListEntry.isLoginType(type), type);
+        }
+        for (String type : new String[]{"hotp", "totp", "spass", "passkey", "registration", ""})
+        {
+            assertTrue(TokenListEntry.isLoginType(type), type);
+        }
     }
 
     @Test

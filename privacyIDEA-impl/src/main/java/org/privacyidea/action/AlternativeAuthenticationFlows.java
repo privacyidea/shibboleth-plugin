@@ -94,7 +94,8 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
                 {
                     // Unknown user: continue to the OTP form like a user without challenges, so this step does not
                     // reveal whether the user exists. The OTP check then fails with a generic message.
-                    LOGGER.info("{} triggerChallenge: privacyIDEA reported a user error: {}", this.getLogPrefix(), piResponse.error.message);
+                    // WARN, because a wrong realm in the plugin configuration also causes this error for every user.
+                    LOGGER.warn("{} triggerChallenge: privacyIDEA reported a user error: {}", this.getLogPrefix(), piResponse.error.message);
                     return;
                 }
                 if (piResponse.error != null)
@@ -152,6 +153,16 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
                 List<TokenListEntry> entries = new ArrayList<>();
                 for (TokenInfo token : tokenInfos)
                 {
+                    if (!TokenListEntry.isLoginType(token.tokenType))
+                    {
+                        // certificate, sshkey, applspec, deprecated: privacyIDEA never accepts them for a login here.
+                        if (debug)
+                        {
+                            LOGGER.info("{} tokenSelection: token '{}' of type '{}' cannot log in; not listed.", this.getLogPrefix(),
+                                        StringUtil.sanitizeForLog(token.serial), StringUtil.sanitizeForLog(token.tokenType));
+                        }
+                        continue;
+                    }
                     entries.add(new TokenListEntry(token.serial, token.tokenType, token.description,
                                                    token.info.get("last_auth"), token.active, token.revoked,
                                                    token.locked, token.rolloutState, request.getLocale()));
@@ -182,10 +193,11 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
 
                 if (piResponse != null)
                 {
-                    if (isUserError(piResponse))
+                    if (isCheckUserError(piResponse))
                     {
                         // Unknown user: continue to the OTP form, as in the triggerChallenge flow.
-                        LOGGER.info("{} sendStaticPass: privacyIDEA reported a user error: {}", this.getLogPrefix(), piResponse.error.message);
+                        LOGGER.warn("{} sendStaticPass: privacyIDEA reported a user error (code {}): {}", this.getLogPrefix(),
+                                    piResponse.error.code, piResponse.error.message);
                         return;
                     }
                     if (piResponse.error != null)
@@ -261,11 +273,12 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
                     LOGGER.warn("{} No response from privacyIDEA server for validateCheck.", this.getLogPrefix());
                     return;
                 }
-                if (isUserError(piResponse))
+                if (isCheckUserError(piResponse))
                 {
                     // Unknown user: the same answer as a wrong password, so the form does not reveal whether the
-                    // user exists.
-                    LOGGER.info("{} privacyIDEA reported a user error: {}", this.getLogPrefix(), piResponse.error.message);
+                    // user exists. WARN, because a wrong realm in the plugin configuration also causes this error.
+                    LOGGER.warn("{} privacyIDEA reported a user error (code {}): {}", this.getLogPrefix(),
+                                piResponse.error.code, piResponse.error.message);
                     piContext.setFormErrorMessage(WRONG_CREDENTIALS_MESSAGE);
                     ActionSupport.buildEvent(profileRequestContext, "redisplayUsernameForm");
                     return;
