@@ -49,6 +49,8 @@ import java.util.stream.Collectors;
 public class ChallengeResponseAction extends AbstractProfileAction
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(ChallengeResponseAction.class);
+    /** privacyIDEA error code of a {@code UserError}, for example for a user that does not exist in the realm. */
+    private static final int USER_ERROR_CODE = 904;
     private PIServerConfigContext piServerConfigContext;
     private PIContext piContext;
     protected PIFormContext piFormContext;
@@ -133,6 +135,16 @@ public class ChallengeResponseAction extends AbstractProfileAction
     protected void doExecute(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext,
                              @Nonnull PIServerConfigContext piServerConfigContext)
     {}
+
+    /**
+     * @param piResponse server response
+     * @return {@code true} if privacyIDEA answered with a {@code UserError} (ERR904), which {@code /validate/check},
+     * {@code /validate/triggerchallenge} and {@code GET /token} all return for a user that does not exist
+     */
+    protected static boolean isUserError(@Nonnull PIResponse piResponse)
+    {
+        return piResponse.error != null && piResponse.error.code == USER_ERROR_CODE;
+    }
 
     /**
      * Extract message from server response, and save it in form context.

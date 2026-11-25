@@ -39,6 +39,8 @@ import org.slf4j.LoggerFactory;
 public class AlternativeAuthenticationFlows extends ChallengeResponseAction
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(AlternativeAuthenticationFlows.class);
+    /** One message for an unknown user and a wrong password, so the username form does not reveal which one it was. */
+    private static final String WRONG_CREDENTIALS_MESSAGE = "Wrong username or password.";
 
     public AlternativeAuthenticationFlows() {}
 
@@ -88,6 +90,13 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
 
             if (piResponse != null)
             {
+                if (isUserError(piResponse))
+                {
+                    // Unknown user: continue to the OTP form like a user without challenges, so this step does not
+                    // reveal whether the user exists. The OTP check then fails with a generic message.
+                    LOGGER.info("{} triggerChallenge: privacyIDEA reported a user error: {}", this.getLogPrefix(), piResponse.error.message);
+                    return;
+                }
                 if (piResponse.error != null)
                 {
                     LOGGER.error("{} privacyIDEA server error: {}!", this.getLogPrefix(), piResponse.error.message);
@@ -173,6 +182,12 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
 
                 if (piResponse != null)
                 {
+                    if (isUserError(piResponse))
+                    {
+                        // Unknown user: continue to the OTP form, as in the triggerChallenge flow.
+                        LOGGER.info("{} sendStaticPass: privacyIDEA reported a user error: {}", this.getLogPrefix(), piResponse.error.message);
+                        return;
+                    }
                     if (piResponse.error != null)
                     {
                         LOGGER.error("{} privacyIDEA server error: {}!", this.getLogPrefix(), piResponse.error.message);
@@ -246,6 +261,15 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
                     LOGGER.warn("{} No response from privacyIDEA server for validateCheck.", this.getLogPrefix());
                     return;
                 }
+                if (isUserError(piResponse))
+                {
+                    // Unknown user: the same answer as a wrong password, so the form does not reveal whether the
+                    // user exists.
+                    LOGGER.info("{} privacyIDEA reported a user error: {}", this.getLogPrefix(), piResponse.error.message);
+                    piContext.setFormErrorMessage(WRONG_CREDENTIALS_MESSAGE);
+                    ActionSupport.buildEvent(profileRequestContext, "redisplayUsernameForm");
+                    return;
+                }
                 if (piResponse.error != null)
                 {
                     LOGGER.error("{} privacyIDEA server error: {}!", this.getLogPrefix(), piResponse.error.message);
@@ -282,6 +306,17 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
                 if (piResponse.hasChallenges())
                 {
                     extractChallengeData(piResponse);
+                }
+                else
+                {
+                    // Rejected without a challenge: the password (or PIN + OTP) was wrong. Show the username form
+                    // again instead of the OTP form, where a code alone fails without a transaction.
+                    if (debug)
+                    {
+                        LOGGER.info("{} Rejected without a challenge; redisplaying username/password form.", this.getLogPrefix());
+                    }
+                    piContext.setFormErrorMessage(WRONG_CREDENTIALS_MESSAGE);
+                    ActionSupport.buildEvent(profileRequestContext, "redisplayUsernameForm");
                 }
             }
         }

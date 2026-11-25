@@ -19,6 +19,7 @@ import net.shibboleth.idp.authn.context.UsernameContext;
 import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.context.ProfileRequestContext;
 import org.privacyidea.AuthenticationStatus;
+import org.privacyidea.Challenge;
 import org.privacyidea.ChallengeStatus;
 import org.privacyidea.PIResponse;
 import org.privacyidea.context.PIContext;
@@ -36,6 +37,7 @@ import java.util.Objects;
 public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(PrivacyIDEAAuthenticator.class);
+    private static final String AUTHENTICATION_FAILED_MESSAGE = "Authentication failed.";
 
     public PrivacyIDEAAuthenticator() {}
 
@@ -355,7 +357,8 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
             if (piResponse.error != null)
             {
                 LOGGER.error("{} privacyIDEA server error: {}!", this.getLogPrefix(), piResponse.error.message);
-                piContext.setFormErrorMessage(piResponse.error.message);
+                // A user error (e.g. the user does not exist) gets a generic message, so the form does not reveal it.
+                piContext.setFormErrorMessage(isUserError(piResponse) ? AUTHENTICATION_FAILED_MESSAGE : piResponse.error.message);
                 ActionSupport.buildEvent(profileRequestContext, "reload");
             }
             else if (piResponse.hasChallenges())
@@ -519,15 +522,60 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         }
         else
         {
-            // Any other challenge token: generic path (still hands off to the classic layout).
+            // Any other token (hotp/totp/sms/email/…): privacyIDEA creates a challenge whenever the token type
+            // supports one, independent of the challenge_response policy, and accepts the code with the
+            // transaction id alone (no PIN). Only the challenge of the picked serial is used, so a co-triggered
+            // challenge of another token cannot change the mode.
             PIResponse response = triggerSerialChallenge(piContext, serial, headers);
             if (response != null)
             {
-                extractChallengeData(response);
-                extractMessage(response);
+                Challenge challenge = findChallenge(response, serial);
+                if (challenge == null)
+                {
+                    // No challenge for this token: its code is typed directly, without a transaction.
+                    if (debug)
+                    {
+                        LOGGER.info("{} tokenSelection: token '{}' returned no challenge; falling back to typed entry.",
+                                    this.getLogPrefix(), StringUtil.sanitizeForLog(serial));
+                    }
+                    piContext.setTransactionID("");
+                    piFormContext.setMessage("");
+                    piContext.setMode("otp");
+                }
+                else if ("interactive".equals(challenge.getClientMode()))
+                {
+                    piContext.setTransactionID(StringUtil.isNotBlank(challenge.getTransactionID())
+                                               ? challenge.getTransactionID() : response.transactionID);
+                    piFormContext.setMessage(challenge.getMessage() == null ? "" : challenge.getMessage());
+                    piContext.setMode("otp");
+                }
+                else
+                {
+                    // Other client modes (e.g. poll for tiqr): generic handling, as before.
+                    extractChallengeData(response);
+                    extractMessage(response);
+                }
             }
         }
         ActionSupport.buildEvent(profileRequestContext, "reload");
+    }
+
+    /**
+     * @param response the triggerchallenge response
+     * @param serial   the serial of the picked token
+     * @return the challenge that privacyIDEA created for this serial, or {@code null} if there is none
+     */
+    @Nullable
+    private static Challenge findChallenge(@Nonnull PIResponse response, @Nonnull String serial)
+    {
+        for (Challenge challenge : response.multiChallenge)
+        {
+            if (serial.equals(challenge.getSerial()))
+            {
+                return challenge;
+            }
+        }
+        return null;
     }
 
     /**

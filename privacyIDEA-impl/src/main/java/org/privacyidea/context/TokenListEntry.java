@@ -27,8 +27,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A single row in the {@code tokenSelection} token list shown to the user: the display fields plus whether
- * this token can be used ({@link #isUsable()}) and, if so, whether it authenticates by triggering a
- * challenge ({@link #isTriggerable()} → a "Use" button) or by typing a code in the always-present OTP field.
+ * this token can be used ({@link #isUsable()}) and, if so, whether it is started by triggering a challenge
+ * ({@link #isTriggerable()} → a "Use" button) or only by typing a code in the always-present OTP field.
  * <p>
  * Unusable tokens (revoked / locked / inactive / mid-rollout) are still listed — sorted to the end — with a
  * {@link #getStatus()} label, so a user sees the token exists rather than wondering where it went.
@@ -39,12 +39,14 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class TokenListEntry
 {
     /**
-     * Token types that authenticate by triggering a challenge the user then responds to, rather than by
-     * typing a code. Everything else (hotp/totp/spass/tan/…) is entered in the always-present OTP field.
-     * NOTE: hotp/totp can be put in challenge-response mode server-side, which {@code GET /token} does not
-     * report — those are treated as direct-entry here for now (a known limitation, see issue #84).
+     * Token types that have no challenge mode in privacyIDEA (their token class mode is "authenticate" only),
+     * so {@code /validate/triggerchallenge} cannot start anything for them. Their code is typed directly in the
+     * always-present OTP field. Every other usable token gets a "Use" button: privacyIDEA creates a challenge
+     * for it whenever the token type supports one, independent of the {@code challenge_response} policy, and
+     * then accepts the code with the transaction id alone (no PIN). A type missing here only costs one extra
+     * click: when the trigger returns no challenge, the view falls back to typed entry.
      */
-    private static final Set<String> TRIGGERABLE_TYPES = Set.of("push", "webauthn", "passkey");
+    private static final Set<String> DIRECT_ENTRY_TYPES = Set.of("spass", "sshkey");
 
     /**
      * Parser for the {@code last_used} timestamp. privacyIDEA is not consistent about the format — it can be
@@ -120,9 +122,9 @@ public final class TokenListEntry
             this.usable = true;
             this.status = "";
         }
-        // Only a usable, challenge-type token gets a "Use" button. Lowercase with Locale.ROOT so token-type
+        // Every usable token with a challenge mode gets a "Use" button. Lowercase with Locale.ROOT so token-type
         // matching is stable regardless of the JVM default locale (e.g. the Turkish dotted-I).
-        this.triggerable = this.usable && TRIGGERABLE_TYPES.contains(this.type.toLowerCase(Locale.ROOT));
+        this.triggerable = this.usable && !DIRECT_ENTRY_TYPES.contains(this.type.toLowerCase(Locale.ROOT));
     }
 
     /**
