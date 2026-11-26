@@ -54,6 +54,20 @@ public class PIFormContext extends BaseContext
     private List<TokenListEntry> tokens = Collections.emptyList();
     /** Whether the username form shows the password field: only the default flow sends the password to privacyIDEA. */
     private boolean passwordFieldShown = true;
+    /** Whether the first page sends the username to the IdP's own password flow (password_by_idp). */
+    private boolean passwordStepOffered;
+    /** The name of the username field of the IdP's password flow, which fills in the username from this page. */
+    @Nonnull
+    private String passwordUsernameFieldName = "j_username";
+    /** passkey_ui: "button", "conditional" (autofill in the username field) or "immediate" (on the submit click). */
+    @Nonnull
+    private String passkeyUi = PASSKEY_UI_BUTTON;
+    /** Whether the username form shows the passkey button before the script checks the browser support. */
+    private boolean passkeyButtonShown = true;
+
+    public static final String PASSKEY_UI_BUTTON = "button";
+    public static final String PASSKEY_UI_CONDITIONAL = "conditional";
+    public static final String PASSKEY_UI_IMMEDIATE = "immediate";
 
     public PIFormContext(@Nullable String defaultMessage, @Nullable Integer otpLength, @Nullable String pollingInterval, boolean pollInBrowser, @Nullable String pollInBrowserUrl, boolean disablePasskey, boolean rememberMeEnabled)
     {
@@ -127,4 +141,25 @@ public class PIFormContext extends BaseContext
     public void setPasswordFieldShown(boolean passwordFieldShown) {this.passwordFieldShown = passwordFieldShown;}
 
     public boolean isPasswordFieldShown() {return passwordFieldShown;}
+
+    public void setPasswordStepOffered(boolean passwordStepOffered) {this.passwordStepOffered = passwordStepOffered;}
+
+    public boolean isPasswordStepOffered() {return passwordStepOffered;}
+
+    public void setPasswordUsernameFieldName(@Nonnull String passwordUsernameFieldName) {this.passwordUsernameFieldName = passwordUsernameFieldName;}
+
+    @Nonnull
+    public String getPasswordUsernameFieldName() {return passwordUsernameFieldName;}
+
+    public void setPasskeyUi(@Nonnull String passkeyUi) {this.passkeyUi = passkeyUi;}
+
+    @Nonnull
+    public String getPasskeyUi() {return passkeyUi;}
+
+    /** @return {@code true} if the username form creates the passkey challenge before the user clicks */
+    public boolean preparesPasskeyChallenge() {return !disablePasskey && !PASSKEY_UI_BUTTON.equals(passkeyUi);}
+
+    public void setPasskeyButtonShown(boolean passkeyButtonShown) {this.passkeyButtonShown = passkeyButtonShown;}
+
+    public boolean isPasskeyButtonShown() {return passkeyButtonShown;}
 }

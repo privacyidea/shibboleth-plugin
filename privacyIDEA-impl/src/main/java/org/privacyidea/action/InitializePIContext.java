@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -81,6 +82,12 @@ public class InitializePIContext extends AbstractAuthenticationAction
     private String pollInBrowserUrl;
     private boolean debug;
     private boolean skipFirstStep = true;
+    private boolean passwordByIdp;
+    @Nonnull
+    private String passwordUsernameFieldName = "j_username";
+    @Nullable
+    private String passkeyUi;
+    private boolean passkeyButton = true;
     @Nullable
     private RememberMeManager rememberMeManager;
 
@@ -146,6 +153,11 @@ public class InitializePIContext extends AbstractAuthenticationAction
                                                         rememberMeOffered);
         // Only the default flow sends the password to privacyIDEA. The other flows ignore it, so they do not ask for it.
         piFormContext.setPasswordFieldShown("default".equals(piServerConfigContext.getConfigParams().getAuthenticationFlow()));
+        piFormContext.setPasswordStepOffered(isPasswordStepOffered(authenticationContext));
+        piFormContext.setPasswordUsernameFieldName(passwordUsernameFieldName);
+        String configuredPasskeyUi = getPasskeyUi();
+        piFormContext.setPasskeyUi(configuredPasskeyUi);
+        piFormContext.setPasskeyButtonShown(PIFormContext.PASSKEY_UI_BUTTON.equals(configuredPasskeyUi) || passkeyButton);
         log.info("{} Create PIFormContext", this.getLogPrefix());
         authenticationContext.addSubcontext(piFormContext);
 
@@ -216,6 +228,30 @@ public class InitializePIContext extends AbstractAuthenticationAction
         {
             log.info("{} Principal name '{}' already available via CanonicalUsernameLookupStrategy. Skipping username-password-form.", getLogPrefix(), user.getUsername());
         }
+    }
+
+    /**
+     * password_by_idp: the first run of the plugin in an MFA process asks for the username or a passkey. "Continue"
+     * ends the plugin with the event {@code PasswordRequested}, and the MFA transition map sends it to
+     * {@code authn/Password}. After the password flow, the plugin runs again as the second factor. That run has a
+     * fresh result, so it does not offer the password step again.
+     *
+     * @return {@code true} if the first page sends the username to the IdP's password flow
+     */
+    private boolean isPasswordStepOffered(@Nonnull AuthenticationContext authenticationContext)
+    {
+        if (!passwordByIdp)
+        {
+            return false;
+        }
+        if (authenticationContext.getSubcontext(MultiFactorAuthenticationContext.class) == null)
+        {
+            // Only the MFA flow can send the event to authn/Password. Without it, the event ends the login with an error.
+            log.warn("{} password_by_idp is set, but the plugin does not run in the MFA flow. The password step is not offered.",
+                     getLogPrefix());
+            return false;
+        }
+        return !hasFreshAuthenticationResult(authenticationContext);
     }
 
     private boolean hasFreshAuthenticationResult(@Nonnull AuthenticationContext authenticationContext)
@@ -306,6 +342,28 @@ public class InitializePIContext extends AbstractAuthenticationAction
         return new PIServerConfigContext(configParams);
     }
 
+    /**
+     * @return the configured passkey_ui value: "button", "conditional" or "immediate". An empty or unknown value
+     * gives "button", which is the behavior before this setting.
+     */
+    @Nonnull
+    private String getPasskeyUi()
+    {
+        if (StringUtil.isBlank(passkeyUi))
+        {
+            return PIFormContext.PASSKEY_UI_BUTTON;
+        }
+        String value = passkeyUi.trim().toLowerCase(Locale.ROOT);
+        if (PIFormContext.PASSKEY_UI_BUTTON.equals(value) || PIFormContext.PASSKEY_UI_CONDITIONAL.equals(value)
+            || PIFormContext.PASSKEY_UI_IMMEDIATE.equals(value))
+        {
+            return value;
+        }
+        log.warn("{} Config option \"passkey_ui\": unknown value '{}'. Use button, conditional or immediate. The plugin uses button.",
+                 getLogPrefix(), StringUtil.sanitizeForLog(passkeyUi));
+        return PIFormContext.PASSKEY_UI_BUTTON;
+    }
+
     @Nullable
     private Integer getOtpLength()
     {
@@ -363,6 +421,17 @@ public class InitializePIContext extends AbstractAuthenticationAction
     public void setDebug(boolean debug)                                   {this.debug = debug;}
 
     public void setSkipFirstStep(boolean skipFirstStep)                   {this.skipFirstStep = skipFirstStep;}
+
+    public void setPasswordByIdp(boolean passwordByIdp)                   {this.passwordByIdp = passwordByIdp;}
+
+    public void setPasswordUsernameFieldName(@Nullable String passwordUsernameFieldName)
+    {
+        this.passwordUsernameFieldName = StringUtil.isBlank(passwordUsernameFieldName) ? "j_username" : passwordUsernameFieldName.trim();
+    }
+
+    public void setPasskeyUi(@Nullable String passkeyUi)                  {this.passkeyUi = passkeyUi;}
+
+    public void setPasskeyButton(boolean passkeyButton)                   {this.passkeyButton = passkeyButton;}
 
     public void setRememberMeManager(@Nullable RememberMeManager rememberMeManager) {this.rememberMeManager = rememberMeManager;}
 }

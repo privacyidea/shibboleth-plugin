@@ -41,6 +41,73 @@ Example of the configuration: [MFA Config Example](docs/mfaConfigExample).
 This is also located in the *privacyidea.properties* file (`$idp_install_path/conf/authn/privacyidea.properties`).
 
 
+### Passkey or IdP password (`password_by_idp`):
+Use this setting if your users choose between a usernameless passkey and the IdP password, with privacyIDEA as the second factor after the password.
+
+With `privacyidea.password_by_idp=true`, the first page of the plugin shows the username field, a "Continue" button and the passkey. The login then has three pages:
+1. The plugin page. A usernameless passkey logs the user in, and the MFA flow then ends. "Continue" ends the plugin flow with the event `PasswordRequested`.
+2. The password page of the IdP. The MFA flow sends `PasswordRequested` to `authn/Password`, which checks the password against the user store of the IdP. The page fills in the username from the first page.
+3. The plugin page again, as the second factor. This run takes the username from the password flow and does not show the first page. Set `privacyidea.authentication_flow=tokenSelection` to show the token list in this step.
+
+The plugin does not check the password. On page 2 the user can change the username. The second factor always uses the username from the password flow.
+
+Requirements:
+1. The plugin must run in the MFA flow. Without MFA, the plugin logs a warning and shows its usual first page.
+2. Keep `privacyidea.skip_first_step` at its default value `true`.
+3. The password flow and privacyIDEA must use the same username for a user.
+4. The password page fills in the username only if `idp.authn.usernamePrecedence` starts with `form`. This is the default (`form,session,cookie`). The username field of the first page has the name from `idp.authn.Password.usernameFieldName` (default `j_username`).
+
+To show the passkeys in the autofill of the username field, set `privacyidea.passkey_ui=conditional`. See [Passkey on the username form](#passkey-on-the-username-form-passkey_ui).
+
+Configure the MFA flow in `conf/authn/authn.properties`:
+```
+idp.authn.flows = MFA
+```
+
+Then set the transitions in `conf/authn/mfa-authn-config.xml`:
+```xml
+<util:map id="shibboleth.authn.MFA.TransitionMap">
+    <!-- First page: the plugin, with passkey or password -->
+    <entry key="">
+        <bean parent="shibboleth.authn.MFA.Transition" p:nextFlow="authn/privacyIDEA" />
+    </entry>
+    <!-- After the plugin: "proceed" (passkey, or the second run) ends MFA.
+         The event PasswordRequested sends the user to the password flow. -->
+    <entry key="authn/privacyIDEA">
+        <bean parent="shibboleth.authn.MFA.Transition">
+            <property name="nextFlowStrategyMap">
+                <map>
+                    <entry key="PasswordRequested" value="authn/Password" />
+                </map>
+            </property>
+        </bean>
+    </entry>
+    <!-- After the password: privacyIDEA again, as the second factor -->
+    <entry key="authn/Password">
+        <bean parent="shibboleth.authn.MFA.Transition" p:nextFlow="authn/privacyIDEA" />
+    </entry>
+</util:map>
+```
+
+You do not need to add `PasswordRequested` to `conf/authn/authn-events-flow.xml`. The plugin flow declares the end state itself, and the MFA flow gives every event of a step to its transition map.
+
+For the second flow, use `privacyidea2.password_by_idp` and `authn/privacyIDEA2`.
+
+
+### Passkey on the username form (`passkey_ui`):
+The setting `privacyidea.passkey_ui` selects how the username form offers the usernameless passkey:
+
+| Value                 | Behavior                                                                                                                                                                                                 |
+|-----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `button` (default)    | The "Sign in with Passkey" button opens the browser dialog.                                                                                                                                              |
+| `conditional`         | The autofill list of the username field shows the passkeys of the user (WebAuthn conditional mediation). Chrome, Edge, Safari and Firefox support it.                                                   |
+| `immediate`           | The click on "Submit" or "Continue" first shows the passkeys on this device. If the device has no passkey, the form submits as usual. Only Chrome 149 and later support it (WebAuthn `uiMode: "immediate"`). |
+
+With `conditional` and `immediate`, the plugin creates a passkey challenge (`/validate/initialize`) each time the username form shows, because the browser needs the challenge before the user acts. privacyIDEA accepts a challenge only for its validity time. If the user waits longer, the passkey fails, and the form shows again with a new challenge.
+
+The "Sign in with Passkey" button stays on the page by default. It covers security keys, passkeys on other devices, and browsers without support for the mode. To hide it, set `privacyidea.passkey_button=false`. If the browser does not support the configured mode, the page shows the button anyway.
+
+
 ### User Verification (Passkey / Standalone):
 **Important Note on User Existence:**<br>
 When using the plugin in **Passkey** or **Standalone** mode (where the standard `authn/Password` flow is skipped), the plugin asserts the identity (username) returned by the privacyIDEA server.
@@ -102,6 +169,9 @@ The different configuration parameters are explained in the following table:
 | `privacyidea.polling_in_browser_url` | If 'poll in browser' should use a deviating URL, set it here. Otherwise, the general URL will be used.                                                                                                                                                                                                                                                                                                                                                                                 |
 | `privacyidea.disable_passkey`        | Set to 'true' to disable passkey authentication.                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `privacyidea.skip_first_step`        | Default `true`. When `true`, the plugin's own username/password form is skipped if a prior MFA sub-flow (e.g. `authn/Password`) produced a fresh authentication result in the current MFA run, and that result's principal is used. If no fresh result exists (e.g. privacyIDEA is the first factor, or only a stale session principal is available), the form is displayed regardless — prefilled with the principal if one is known. Set to `false` to always display the form.      |
+| `privacyidea.passkey_ui`             | Default `button`. Set to `conditional` for the passkey autofill in the username field, or to `immediate` for the passkey request on the submit click (Chrome 149 and later). See [Passkey on the username form](#passkey-on-the-username-form-passkey_ui). |
+| `privacyidea.passkey_button`         | Default `true`. Set to `false` to hide the "Sign in with Passkey" button when `passkey_ui` is `conditional` or `immediate`. |
+| `privacyidea.password_by_idp`        | Default `false`. Set to `true` to ask for the username or a usernameless passkey on the first page, and then for the password in the password flow of the IdP. Needs the MFA flow. See [Passkey or IdP password](#passkey-or-idp-password-password_by_idp). |
 | `privacyidea.api_key`                | API key identifying this plugin to privacyIDEA (`pi_<key_id>_<secret>`), obtained from the privacyIDEA admin. **Required** for remember-me; sent as the `X-API-Key` header. Keep it secret (see [Securing the configuration](#securing-the-configuration)).                                                                                                                                                                                                                              |
 | `privacyidea.remember_device_enabled`    | Default `false`. Set to `true` (with `api_key` set) to show a "remember this device" checkbox on the privacyIDEA form. When checked and authentication succeeds, privacyIDEA issues a rotating `pi_remember_device` cookie; on later logins the plugin presents it and privacyIDEA can skip the second factor per its `remember_device` policy. Requires **privacyIDEA 3.14+**. Only applies when a preceding first factor authenticated the user — **ignored in standalone mode**. See the [Remember Me](#remember-me) section. |
 | `privacyidea.debug`                  | Set this parameter to true to see the debug messages in the `idp-process.log`.                                                                                                                                                                                                                                                                                                                                                                                                         |

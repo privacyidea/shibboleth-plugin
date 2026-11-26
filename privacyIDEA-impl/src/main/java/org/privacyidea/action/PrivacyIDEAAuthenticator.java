@@ -141,6 +141,10 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                                              this.getLogPrefix(), StringUtil.sanitizeForLog(piResponse.username),
                                              StringUtil.sanitizeForLog(established));
                                 piContext.setFormErrorMessage("Passkey does not match the signed-in user.");
+                                if (returnToUsernameForm(profileRequestContext, piContext))
+                                {
+                                    return;
+                                }
                                 piContext.setMode("otp");
                                 ActionSupport.buildEvent(profileRequestContext, "reload");
                                 return;
@@ -161,6 +165,10 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                     {
                         LOGGER.error("{} Passkey authentication rejected!", this.getLogPrefix());
                         piContext.setFormErrorMessage("Passkey authentication rejected!");
+                        if (returnToUsernameForm(profileRequestContext, piContext))
+                        {
+                            return;
+                        }
                         piContext.setMode("otp");
                         ActionSupport.buildEvent(profileRequestContext, "reload");
                         return;
@@ -169,6 +177,10 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                     {
                         LOGGER.error("{} Passkey authentication error: {}!", this.getLogPrefix(), piResponse.error.message);
                         piContext.setFormErrorMessage(piResponse.error.message);
+                        if (returnToUsernameForm(profileRequestContext, piContext))
+                        {
+                            return;
+                        }
                         ActionSupport.buildEvent(profileRequestContext, "reload");
                         return;
                     }
@@ -189,6 +201,8 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
                 piContext.setPasskeyChallenge(response.passkeyChallenge);
                 piContext.setMode("passkey");
                 piContext.setPasskeyTransactionID(response.transactionID);
+                // The page opens the browser dialog for this challenge at once.
+                piContext.setPasskeyPrepared(false);
 
                 // If the click originated from the username/password form's "Sign in with Passkey"
                 // button, Spring Web Flow set _eventId_passkey on the request. In that case re-render
@@ -218,8 +232,7 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         // Passkey login cancelled: Remove the challenge and passkey transaction ID
         if ("1".equals(request.getParameter("passkeyLoginCancelled")))
         {
-            piContext.setPasskeyChallenge("");
-            piContext.setPasskeyTransactionID(null);
+            piContext.clearPasskeyChallenge();
         }
         // Passkey registration: enroll_via_multichallenge, this happens after successful authentication
         if (StringUtil.isNotBlank(piContext.getPasskeyRegistrationResponse()))
@@ -427,6 +440,24 @@ public class PrivacyIDEAAuthenticator extends ChallengeResponseAction
         }
         // Use finalizeAuthentication so the standalone path still populates UsernameContext.
         finalizeAuthentication(profileRequestContext, piContext);
+    }
+
+    /**
+     * passkey_ui conditional or immediate: a passkey from the autofill or the immediate request of the username form
+     * failed. Show the username form again. Its next render creates a new challenge. The OTP page cannot continue
+     * this login, because the passkey did not give a user.
+     *
+     * @return {@code true} if the passkey came from a prepared challenge and the event is set
+     */
+    private boolean returnToUsernameForm(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext)
+    {
+        if (!piContext.isPasskeyPrepared())
+        {
+            return false;
+        }
+        piContext.clearPasskeyChallenge();
+        ActionSupport.buildEvent(profileRequestContext, "reloadUsernameForm");
+        return true;
     }
 
     /**

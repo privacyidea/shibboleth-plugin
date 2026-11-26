@@ -49,6 +49,10 @@
           p:pluginVersion="%{privacyidea.plugin_version:#{null}}"
           p:debug="%{privacyidea.debug:false}"
           p:skipFirstStep="%{privacyidea.skip_first_step:true}"
+          p:passwordByIdp="%{privacyidea.password_by_idp:false}"
+          p:passwordUsernameFieldName="%{idp.authn.Password.usernameFieldName:j_username}"
+          p:passkeyUi="%{privacyidea.passkey_ui:button}"
+          p:passkeyButton="%{privacyidea.passkey_button:true}"
           p:rememberMeManager-ref="piRememberMe"
           p:privacyIDEA-ref="privacyIDEAClient"/>
 
@@ -70,5 +74,9 @@
 
     <bean id="alternativeAuthenticationFlows" class="org.privacyidea.action.AlternativeAuthenticationFlows" scope="prototype"
           p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier"
+          p:privacyIDEA-ref="privacyIDEAClient"/>
+
+    <!-- passkey_ui conditional or immediate: creates the passkey challenge each time the username form renders. -->
+    <bean id="preparePasskeyChallenge" class="org.privacyidea.action.PreparePasskeyChallenge" scope="prototype"
           p:privacyIDEA-ref="privacyIDEAClient"/>
 </beans>

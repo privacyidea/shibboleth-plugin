@@ -15,6 +15,8 @@
 
     <view-state id="displayUsernamePasswordForm" view="privacyIDEA/usernamePasswordForm">
         <on-render>
+            <!-- passkey_ui conditional or immediate: a new passkey challenge for each render. -->
+            <evaluate expression="preparePasskeyChallenge"/>
             <evaluate expression="environment" result="viewScope.environment"/>
             <evaluate expression="opensamlProfileRequestContext" result="viewScope.profileRequestContext"/>
             <evaluate expression="opensamlProfileRequestContext.getSubcontext(T(net.shibboleth.idp.authn.context.AuthenticationContext))"
@@ -42,7 +44,15 @@
 
         <transition on="passkey" to="piAuthenticator"/>
         <transition on="proceed" to="checkAuthenticationFlow"/>
+        <transition on="passwordRequested" to="checkPasswordStep"/>
     </view-state>
+
+    <!-- password_by_idp: end with the event PasswordRequested only if the first page offered the password step.
+         The MFA transition map sends this event to authn/Password. -->
+    <decision-state id="checkPasswordStep">
+        <if test="opensamlProfileRequestContext.getSubcontext(T(net.shibboleth.idp.authn.context.AuthenticationContext)).getSubcontext(T(org.privacyidea.context.PIFormContext)).isPasswordStepOffered()"
+            then="PasswordRequested" else="displayUsernamePasswordForm"/>
+    </decision-state>
 
     <action-state id="checkAuthenticationFlow">
         <evaluate expression="alternativeAuthenticationFlows"/>
@@ -102,6 +112,8 @@
         <transition on="unknownUser" to="RestartAuthentication" />
         <transition on="success" to="proceed" />
     </action-state>
+
+    <end-state id="PasswordRequested"/>
 
     <bean-import resource="plugin-beans.xml"/>
 </flow>

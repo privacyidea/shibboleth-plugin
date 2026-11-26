@@ -45,6 +45,11 @@ public class PIContext extends BaseContext
     private String passkeySignResponse = null;
     @Nullable
     private String passkeyTransactionID = null;
+    /**
+     * passkey_ui conditional or immediate: the plugin created the passkey challenge for the username form before the
+     * user clicked. The page then starts the autofill or the immediate request, not the browser dialog.
+     */
+    private boolean passkeyPrepared = false;
     @Nullable
     private String formErrorMessage = null;
     @Nullable
@@ -130,6 +135,18 @@ public class PIContext extends BaseContext
 
     @Nullable
     public String getPasskeyTransactionID() {return passkeyTransactionID;}
+
+    public boolean isPasskeyPrepared() {return passkeyPrepared;}
+
+    public void setPasskeyPrepared(boolean passkeyPrepared) {this.passkeyPrepared = passkeyPrepared;}
+
+    /** Remove the passkey challenge and its transaction, so that no page starts a request for it. */
+    public void clearPasskeyChallenge()
+    {
+        this.passkeyChallenge = "";
+        this.passkeyTransactionID = null;
+        this.passkeyPrepared = false;
+    }
 
     @Nullable
     public String getOrigin() {return origin;}
