@@ -81,6 +81,7 @@ public class InitializePIContext extends AbstractAuthenticationAction
     private String pollInBrowserUrl;
     private boolean debug;
     private boolean skipFirstStep = true;
+    private boolean passwordByIdp;
     @Nullable
     private RememberMeManager rememberMeManager;
 
@@ -146,6 +147,7 @@ public class InitializePIContext extends AbstractAuthenticationAction
                                                         rememberMeOffered);
         // Only the default flow sends the password to privacyIDEA. The other flows ignore it, so they do not ask for it.
         piFormContext.setPasswordFieldShown("default".equals(piServerConfigContext.getConfigParams().getAuthenticationFlow()));
+        piFormContext.setPasswordStepOffered(isPasswordStepOffered(authenticationContext));
         log.info("{} Create PIFormContext", this.getLogPrefix());
         authenticationContext.addSubcontext(piFormContext);
 
@@ -216,6 +218,30 @@ public class InitializePIContext extends AbstractAuthenticationAction
         {
             log.info("{} Principal name '{}' already available via CanonicalUsernameLookupStrategy. Skipping username-password-form.", getLogPrefix(), user.getUsername());
         }
+    }
+
+    /**
+     * password_by_idp: the first run of the plugin in an MFA process offers a passkey or the IdP's own password flow.
+     * The plugin ends with the event {@code PasswordRequested}, and the MFA transition map sends it to
+     * {@code authn/Password}. After the password flow, the plugin runs again as the second factor. That run has a
+     * fresh result, so it does not offer the password step again.
+     *
+     * @return {@code true} if the first page offers the button for the IdP's password flow
+     */
+    private boolean isPasswordStepOffered(@Nonnull AuthenticationContext authenticationContext)
+    {
+        if (!passwordByIdp)
+        {
+            return false;
+        }
+        if (authenticationContext.getSubcontext(MultiFactorAuthenticationContext.class) == null)
+        {
+            // Only the MFA flow can send the event to authn/Password. Without it, the event ends the login with an error.
+            log.warn("{} password_by_idp is set, but the plugin does not run in the MFA flow. The password step is not offered.",
+                     getLogPrefix());
+            return false;
+        }
+        return !hasFreshAuthenticationResult(authenticationContext);
     }
 
     private boolean hasFreshAuthenticationResult(@Nonnull AuthenticationContext authenticationContext)
@@ -363,6 +389,8 @@ public class InitializePIContext extends AbstractAuthenticationAction
     public void setDebug(boolean debug)                                   {this.debug = debug;}
 
     public void setSkipFirstStep(boolean skipFirstStep)                   {this.skipFirstStep = skipFirstStep;}
+
+    public void setPasswordByIdp(boolean passwordByIdp)                   {this.passwordByIdp = passwordByIdp;}
 
     public void setRememberMeManager(@Nullable RememberMeManager rememberMeManager) {this.rememberMeManager = rememberMeManager;}
 }

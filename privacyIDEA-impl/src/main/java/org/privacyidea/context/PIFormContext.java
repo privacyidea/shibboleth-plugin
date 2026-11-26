@@ -54,6 +54,8 @@ public class PIFormContext extends BaseContext
     private List<TokenListEntry> tokens = Collections.emptyList();
     /** Whether the username form shows the password field: only the default flow sends the password to privacyIDEA. */
     private boolean passwordFieldShown = true;
+    /** Whether the first page offers the IdP's own password flow instead of the username field (password_by_idp). */
+    private boolean passwordStepOffered;
 
     public PIFormContext(@Nullable String defaultMessage, @Nullable Integer otpLength, @Nullable String pollingInterval, boolean pollInBrowser, @Nullable String pollInBrowserUrl, boolean disablePasskey, boolean rememberMeEnabled)
     {
@@ -127,4 +129,8 @@ public class PIFormContext extends BaseContext
     public void setPasswordFieldShown(boolean passwordFieldShown) {this.passwordFieldShown = passwordFieldShown;}
 
     public boolean isPasswordFieldShown() {return passwordFieldShown;}
+
+    public void setPasswordStepOffered(boolean passwordStepOffered) {this.passwordStepOffered = passwordStepOffered;}
+
+    public boolean isPasswordStepOffered() {return passwordStepOffered;}
 }

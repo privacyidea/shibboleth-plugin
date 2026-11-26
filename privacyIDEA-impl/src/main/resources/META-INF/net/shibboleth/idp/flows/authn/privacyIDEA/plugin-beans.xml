@@ -49,6 +49,7 @@
           p:pluginVersion="%{privacyidea.plugin_version:#{null}}"
           p:debug="%{privacyidea.debug:false}"
           p:skipFirstStep="%{privacyidea.skip_first_step:true}"
+          p:passwordByIdp="%{privacyidea.password_by_idp:false}"
           p:rememberMeManager-ref="piRememberMe"
           p:privacyIDEA-ref="privacyIDEAClient"/>
 
