@@ -227,4 +227,20 @@ public class AlternativeAuthenticationFlowsTest
         assertNull(executeAndGetEvent());
         assertEquals(piFormContext.getTokens().stream().map(TokenListEntry::getSerial).toList(), List.of("HOTP1", "PW1"));
     }
+
+    @Test
+    public void preparedPasskeyChallengeEndsWhenUsernameIsSubmitted() throws Exception
+    {
+        // passkey_ui conditional: the user typed the username instead of using the passkey autofill.
+        setUp("default", "secret");
+        piContext.setPasskeyChallenge("{\"challenge\":\"abc\"}");
+        piContext.setPasskeyTransactionID("tx1");
+        piContext.setPasskeyPrepared(true);
+        when(privacyIDEA.validateCheck(eq("alice"), eq("secret"), anyMap())).thenReturn(reject());
+
+        executeAndGetEvent();
+
+        assertEquals(piContext.getPasskeyChallenge(), "");
+        assertNull(piContext.getPasskeyTransactionID());
+    }
 }

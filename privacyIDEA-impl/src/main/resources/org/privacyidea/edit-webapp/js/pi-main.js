@@ -69,53 +69,198 @@ function bytesToBase64 (bytes)
     return btoa(binString);
 }
 
-// Passkey authentication
-function passkeyAuthentication ()
+// Read the passkey challenge from the hidden field "passkeyChallenge".
+// Returns the transaction ID and the publicKey options for navigator.credentials.get(), or null without a challenge.
+function piPasskeyRequest ()
+{
+    let passkeyChallenge = piGetValue("passkeyChallenge");
+    if (!passkeyChallenge)
+    {
+        return null;
+    }
+    let challengeObject = JSON.parse(passkeyChallenge.replace(/(&quot;)/g, "\""));
+    let userVerification = "preferred";
+    // /validate/initialize uses snake_case (user_verification); PIN-triggered passkey via
+    // /validate/check uses camelCase (userVerification). Accept either.
+    const uv = challengeObject.user_verification || challengeObject.userVerification;
+    if ([ "required", "preferred", "discouraged" ].includes(uv))
+    {
+        userVerification = uv;
+    }
+    // No allowCredentials: the request is usernameless. The conditional and the immediate requests also require this.
+    return {
+        transactionId: challengeObject.transaction_id,
+        publicKey: {
+            challenge: Uint8Array.from(challengeObject.challenge, c => c.charCodeAt(0)),
+            rpId: challengeObject.rpId, userVerification: userVerification,
+        },
+    };
+}
+
+// Put the passkey assertion into the form and submit it with the event "passkey".
+function piSubmitPasskeyCredential (credential, transactionId)
+{
+    let params = {
+        transaction_id: transactionId, credential_id: credential.id,
+        authenticatorData: bytesToBase64(new Uint8Array(credential.response.authenticatorData)),
+        clientDataJSON: bytesToBase64(new Uint8Array(credential.response.clientDataJSON)),
+        signature: bytesToBase64(new Uint8Array(credential.response.signature)),
+    };
+    // userHandle is nullable per the WebAuthn spec — only include it when the authenticator returned one.
+    if (credential.response.userHandle)
+    {
+        params.userHandle = bytesToBase64(new Uint8Array(credential.response.userHandle));
+    }
+    piSetValue("passkeySignResponse", JSON.stringify(params));
+    piSubmitPasskey();
+}
+
+// Passkey authentication with the browser dialog. onError (optional) runs after a cancel or an error.
+function passkeyAuthentication (onError)
 {
     if (piGetValue("mode") === "push")
     {
         piChangeMode("passkey");
     }
-    let passkeyChallenge = piGetValue("passkeyChallenge");
-    if (!passkeyChallenge)
+    const request = piPasskeyRequest();
+    if (!request)
     {
         console.log("Passkey Authentication: Challenge data is empty!");
     }
     else
     {
         piSetValue("passkeyLoginCancelled", "0");
-        let challengeObject = JSON.parse(passkeyChallenge.replace(/(&quot;)/g, "\""));
-        let userVerification = "preferred";
-        // /validate/initialize uses snake_case (user_verification); PIN-triggered passkey via
-        // /validate/check uses camelCase (userVerification). Accept either.
-        const uv = challengeObject.user_verification || challengeObject.userVerification;
-        if ([ "required", "preferred", "discouraged" ].includes(uv))
-        {
-            userVerification = uv;
-        }
-        navigator.credentials.get({
-                                      publicKey: {
-                                          challenge: Uint8Array.from(challengeObject.challenge, c => c.charCodeAt(0)),
-                                          rpId: challengeObject.rpId, userVerification: userVerification,
-                                      },
-                                  }).then(credential => {
-            let params = {
-                transaction_id: challengeObject.transaction_id, credential_id: credential.id,
-                authenticatorData: bytesToBase64(new Uint8Array(credential.response.authenticatorData)),
-                clientDataJSON: bytesToBase64(new Uint8Array(credential.response.clientDataJSON)),
-                signature: bytesToBase64(new Uint8Array(credential.response.signature)),
-            };
-            // userHandle is nullable per the WebAuthn spec — only include it when the authenticator returned one.
-            if (credential.response.userHandle)
-            {
-                params.userHandle = bytesToBase64(new Uint8Array(credential.response.userHandle));
-            }
-            piSetValue("passkeySignResponse", JSON.stringify(params));
-            piSubmitPasskey();
+        navigator.credentials.get({publicKey: request.publicKey}).then(credential => {
+            piSubmitPasskeyCredential(credential, request.transactionId);
         }, function (error) {
             console.log("Error during passkey authentication: " + error);
             piSetValue("passkeyLoginCancelled", "1");
+            if (typeof onError === "function")
+            {
+                onError(error);
+            }
         });
+    }
+}
+
+// passkey_ui conditional: stops the pending autofill request before the browser dialog opens.
+// The browser allows only one WebAuthn request at a time.
+let piPasskeyAutofillAbort = null;
+
+function piShowPasskeyButton ()
+{
+    const wrapper = document.getElementById("passkey");
+    if (wrapper)
+    {
+        wrapper.style.display = "";
+    }
+}
+
+// passkey_ui conditional: the autofill of the username field lists the passkeys. The request waits until the user
+// picks one, or until the page stops it.
+function piStartPasskeyAutofill ()
+{
+    const request = piPasskeyRequest();
+    if (!request)
+    {
+        return;
+    }
+    piPasskeyAutofillAbort = new AbortController();
+    navigator.credentials.get({mediation: "conditional", publicKey: request.publicKey, signal: piPasskeyAutofillAbort.signal})
+             .then(credential => piSubmitPasskeyCredential(credential, request.transactionId),
+                   error => console.log("Passkey autofill ended: " + error));
+}
+
+// passkey_ui immediate: the click on the submit button first asks the browser for a passkey on this device.
+// Without one, the browser rejects the request at once with NotAllowedError, and the form submits as usual.
+// The request needs the click (user activation), so it cannot start when the page loads.
+function piUseImmediatePasskey ()
+{
+    const submitButton = document.getElementById("passwordStepButton") || document.getElementById("pi-form-submit-button");
+    if (!submitButton)
+    {
+        piShowPasskeyButton();
+        return;
+    }
+    let asked = false;
+    submitButton.addEventListener("click", function (event) {
+        const request = piPasskeyRequest();
+        if (asked || !request)
+        {
+            return;
+        }
+        event.preventDefault();
+        asked = true;
+        navigator.credentials.get({publicKey: request.publicKey, uiMode: "immediate"})
+                 .then(credential => piSubmitPasskeyCredential(credential, request.transactionId),
+                       error => {
+                           console.log("No passkey from the immediate request: " + error);
+                           // The second click submits the form with the event of this button.
+                           submitButton.click();
+                       });
+    });
+}
+
+// passkey_ui conditional or immediate: the server created the challenge for this page view.
+async function piInitPasskeyUi (passkeyUi)
+{
+    if (!window.PublicKeyCredential)
+    {
+        piShowPasskeyButton();
+        return;
+    }
+    // The page has a challenge, so the passkey button opens the browser dialog without a server request.
+    const passkeyButton = document.getElementById("initPasskeyLogin");
+    if (passkeyButton)
+    {
+        passkeyButton.addEventListener("click", function (event) {
+            event.preventDefault();
+            piSetValue("passkeyLoginRequested", "0");
+            if (piPasskeyAutofillAbort)
+            {
+                piPasskeyAutofillAbort.abort();
+                piPasskeyAutofillAbort = null;
+            }
+            passkeyAuthentication(function () {
+                // The challenge is still valid after a cancel. Offer the passkeys in the autofill again.
+                piSetValue("passkeyLoginCancelled", "0");
+                if (passkeyUi === "conditional")
+                {
+                    piStartPasskeyAutofill();
+                }
+            });
+        });
+    }
+
+    let supported = false;
+    try
+    {
+        if (passkeyUi === "conditional" && typeof PublicKeyCredential.isConditionalMediationAvailable === "function")
+        {
+            supported = await PublicKeyCredential.isConditionalMediationAvailable();
+        }
+        else if (passkeyUi === "immediate" && typeof PublicKeyCredential.getClientCapabilities === "function")
+        {
+            const capabilities = await PublicKeyCredential.getClientCapabilities();
+            supported = !!(capabilities && capabilities.immediateGet);
+        }
+    }
+    catch (error)
+    {
+        console.log("Could not check the passkey support of the browser: " + error);
+    }
+
+    if (!supported)
+    {
+        piShowPasskeyButton();
+    }
+    else if (passkeyUi === "conditional")
+    {
+        piStartPasskeyAutofill();
+    }
+    else
+    {
+        piUseImmediatePasskey();
     }
 }
 

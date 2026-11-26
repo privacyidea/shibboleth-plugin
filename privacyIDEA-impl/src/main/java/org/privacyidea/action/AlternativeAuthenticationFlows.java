@@ -48,7 +48,14 @@ public class AlternativeAuthenticationFlows extends ChallengeResponseAction
     protected final void doExecute(@Nonnull ProfileRequestContext profileRequestContext, @Nonnull PIContext piContext, @Nonnull PIServerConfigContext piServerConfigContext)
     {
         HttpServletRequest request = Objects.requireNonNull(getHttpServletRequestSupplier()).get();
-        
+
+        // passkey_ui conditional or immediate: the user left the username form without the passkey. Remove its
+        // challenge, because the OTP page hides its own passkey button while a challenge is set.
+        if (piContext.isPasskeyPrepared())
+        {
+            piContext.clearPasskeyChallenge();
+        }
+
         // Fix the user and the standalone flag from server-side state. With a preceding factor privacyIDEA
         // is a second factor: the user is that factor's result and the submitted username/standalone fields
         // are ignored, so the token is checked for — and the login completes as — the established identity.
